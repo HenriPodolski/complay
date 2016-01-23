@@ -1,0 +1,35 @@
+{
+  "name": "conduitjs",
+  "version": "0.0.1",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "aliasify": "^1.8.0",
+    "babelify": "^6.1.3",
+    "chai": "^3.2.0",
+    "grunt": "^0.4.5",
+    "grunt-browserify": "*",
+    "grunt-karma": "*",
+    "jquery": "^2.1.4",
+    "karma-browserify": "*",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^0.2.0",
+    "karma-firefox-launcher": "^0.1.6",
+    "karma-ie-launcher": "^0.2.0",
+    "karma-mocha": "*",
+    "karma-mocha-reporter": "^1.0.3",
+    "karma-phantomjs-launcher": "*",
+    "karma-sinon": "^1.0.4",
+    "respimage": "^1.4.2",
+    "sinon": "^1.15.4"
+  },
+  "dependencies": {
+    "plite": "0.0.3"
+  }
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Basic component with default plugins.</title>
+	</head>
+	<body>
+		<button data-js-module="button-component" data-js-options="{'string': 'string', 'number': 1, 'boolean': true, 'array': ['1','2','3'], 'object': {'key': 'value'}}">Button Component</button>
+		<script src="../conduit.js"></script>
+		<script>
+
+			var ButtonComponent = Conduit.Component.extend({
+				
+				name: 'ButtonComponent',
+
+				events: {
+					'click': 'onClick'
+				},
+
+				constructor: function(options) {
+					Conduit.Component.apply(this, arguments);
+				},
+
+				onClick: function() {
+					console.log(this + '.onClick()', this.options);
+				}
+			});
+
+			var Application = Conduit.ApplicationFacade.extend({
+				name: 'Application'
+			});
+
+			var app = new Application();
+			app.start(ButtonComponent);
+		</script>
+	</body>
+</html>
