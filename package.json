@@ -26,7 +26,6 @@
     "karma-mocha-reporter": "^1.0.3",
     "karma-phantomjs-launcher": "*",
     "karma-sinon": "^1.0.4",
-    "respimage": "^1.4.2",
     "sinon": "^1.15.4"
   },
   "dependencies": {
