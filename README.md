@@ -66,6 +66,7 @@ This lib make heavy use of great open source libraries and tools, including:
 * karma
 * mocha
 * chai
+* sinon
 * jquery
 * plite
 * and more
