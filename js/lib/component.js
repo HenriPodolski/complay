@@ -126,6 +126,10 @@ class Component extends Module {
 		this.undelegateEvents();
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
 	}
+
+	render() {
+		return this;
+	}
 }
 
 export default Component;

@@ -80,6 +80,10 @@ class Module {
 		this.name = this.generateName(this);
 		this.dashedName = this.generateDashedName(this);
 
+		if (options.app) {
+			this.app = options.app;
+		}
+
 		// for getting a proper name from instance in ApplicationFacade,
 		// namingInstance option is used for creating a temporary instance,
 		// so we don't need to init everything
@@ -89,6 +93,7 @@ class Module {
 
 			if (box && box.vent) {
 				this.vent = box.vent(options.app);
+				this.vents = {};
 			}
 			
 			this.uid = this.generateUid(this);
@@ -129,6 +134,19 @@ class Module {
 
 	delegateVents() {
 
+		for (let vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				let callback = this.vents[vent];
+				
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback]
+				} else if(typeof callback !== 'function') {
+					throw new Error('Expected callback method');
+				}
+				
+				this.vent.on(vent, callback, this);
+			}
+		}
 	}
 
 	undelegateVents() {
