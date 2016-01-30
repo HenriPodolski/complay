@@ -27,6 +27,11 @@ class ApplicationFacade extends Module {
 		this.Component = Component;
 
 		this.moduleNodes = [];
+		this.namedModules = {
+			modules: {},
+			services: {},
+			components: {}
+		};
 
 		if (args.length) {
 			this.start.apply(this, args);
@@ -187,11 +192,7 @@ class ApplicationFacade extends Module {
 
 	startModule(item, options) {
 
-		if (typeof item === 'function') {
-			item = new item(options);
-		} else {
-			item.options = options;
-		}
+		item = new item(options);
 
 		this.initModule(item);
 		this.register(item);
@@ -218,9 +219,9 @@ class ApplicationFacade extends Module {
 		}
 
 		if (elementArray.length === 0) {
-			// context already queried for data-js-module and saved?
+			// context or parent context already queried for data-js-module and saved?
 			let modNodes = this.moduleNodes.filter((node) => {
-				return node.context === context && node.componentClass === item;
+				return (node.context === context || node.context.contains(context)) && node.componentClass === item;
 			});
 
 			let modNode = modNodes[0];
@@ -247,6 +248,8 @@ class ApplicationFacade extends Module {
 			}
 		}
 
+		// still empty? create a div for ensuring that the component 
+		// gets initialized and registered
 		if (elementArray.length === 0) {
 			elementArray = [document.createElement('div')];
 		}
@@ -269,25 +272,18 @@ class ApplicationFacade extends Module {
 
 	startService(item, options) {
 
-		if (typeof item === 'function') {
-			item = new item(options);
-		} else {
-			item.options = options;
-		}
+		item = new item(options);
 
 		this.initService(item);
 		this.register(item);
 	}
 
-	/**
-	 * @private 
-	 */
 	parseOptions(el) {
 
 		let options = el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
-			// if <div data-setup="{'show': true}"> is used, instead of <div data-setup='{"show": true}'>
+			// if <div data-js-options="{'show': true}"> is used, instead of <div data-js-options='{"show": true}'>
 			// convert to valid json string and parse to JSON
 			options = options
 				.replace(/\\'/g, '\'')
