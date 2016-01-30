@@ -83,7 +83,7 @@ class Component extends Module {
 	setElement(el) {
 		
 		this.undelegateEvents();
-		this.ensureElement({el: element});
+		this.ensureElement({el});
 		this.delegateEvents();
 		
 		return this;

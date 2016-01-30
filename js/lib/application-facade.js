@@ -200,6 +200,8 @@ class ApplicationFacade extends Module {
 		let elementArray = [];
 		let context = document;
 
+		item = new item();
+
 		if (typeof options.context === 'string') {
 			options.context = document.querySelector(options.context);
 		}
@@ -208,21 +210,12 @@ class ApplicationFacade extends Module {
 			context = options.context;
 		}
 
-		 if(item.el && item.el.nodeType === Node.ELEMENT_NODE) {
-			elementArray = [item.el];
-		} else if (options.el && options.el.nodeType === Node.ELEMENT_NODE) {
+		if (options.el && options.el.nodeType === Node.ELEMENT_NODE) {
 			elementArray = [options.el];
 		} else if(typeof options.el === 'string') {
 			elementArray = Array.from(context.querySelectorAll(options.el));
 		} else {
-
-			let tmpItem = item;
-
-			if (typeof tmpItem === 'function') {
-				tmpItem = new item({namingInstance: true});
-			}
-
-			elementArray = Array.from(context.querySelectorAll(`[data-js-module="${tmpItem.dashedName}"]`));
+			elementArray = Array.from(context.querySelectorAll(`[data-js-module="${item.dashedName}"]`));
 		}
 
 		if (elementArray.length === 0) {
@@ -239,12 +232,8 @@ class ApplicationFacade extends Module {
 		
 		options = Object.assign(this.parseOptions(options.el), options);
 
-		if (typeof item === 'function') {
-			item = new item(options);
-		} else {
-			item.options = options;
-			item.setElement(options.el);
-		}
+		item.options = options;
+		item.setElement(options.el);
 
 		this.initComponent(item);
 		this.register(item);
