@@ -4,6 +4,7 @@ import Component from './component';
 
 import from from '../helpers/array/from';
 import assign from '../helpers/object/assign';
+import dasherize from '../helpers/string/dasherize';
 
 const UNKNOW_TYPE = 'unknown';
 const MODULE_TYPE = 'module';
@@ -24,6 +25,8 @@ class ApplicationFacade extends Module {
 		this.Module = Module;
 		this.Service = Service;
 		this.Component = Component;
+
+		this.moduleNodes = [];
 
 		if (args.length) {
 			this.start.apply(this, args);
@@ -198,6 +201,7 @@ class ApplicationFacade extends Module {
 		
 		let elementArray = [];
 		let context = document;
+		let isJsModule = false;
 
 		if (typeof options.context === 'string') {
 			options.context = document.querySelector(options.context);
@@ -211,22 +215,50 @@ class ApplicationFacade extends Module {
 			elementArray = [options.el];
 		} else if(typeof options.el === 'string') {
 			elementArray = Array.from(context.querySelectorAll(options.el));
-		} else {
-			elementArray = Array.from(context.querySelectorAll(`[data-js-module="${item.dashedName}"]`));
 		}
 
 		if (elementArray.length === 0) {
-			elementArray = [document.createElement('div')]
+			// context already queried for data-js-module and saved?
+			let modNodes = this.moduleNodes.filter((node) => {
+				return node.context === context && node.componentClass === item;
+			});
+
+			let modNode = modNodes[0];
+			// use saved elements for context!
+			if (modNode && modNode.elements) {
+				elementArray = modNode.elements;
+			} else {
+				
+				// query elements for context!
+				elementArray = Array.from(context.querySelectorAll(`[data-js-module]`));
+
+				elementArray = elementArray.filter((domNode) => {
+					return domNode.dataset.jsModule === dasherize(item.name);
+				});
+				
+				if (elementArray.length) {
+					// save all data-js-module for later use!
+					this.moduleNodes.push({
+						context,
+						componentClass: item,
+						elements: elementArray
+					});
+				}
+			}
+		}
+
+		if (elementArray.length === 0) {
+			elementArray = [document.createElement('div')];
 		}
 
 		elementArray.forEach((domNode) => {
-			options.el = domNode;
-			this.startComponent(item, options);
+			this.startComponent(item, options, domNode);
 		});
 	}
 
-	startComponent(item, options) {
-		
+	startComponent(item, options, domNode) {
+
+		options.el = domNode;
 		options = Object.assign(this.parseOptions(options.el), options);
 
 		item = new item(options);

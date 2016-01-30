@@ -51,11 +51,19 @@ class Component extends Module {
 		this.delegateEvents();
 	}
 
+	createDom(str) {
+		let div = document.createElement('div');
+		div.innerHTML = str;
+		return div.childNodes[0] || div;
+	}
+
 	ensureElement(options) {
 		if (!this.el && (!options || !options.el)) {
 			this.el = document.createElement('div');
 		} else if (options.el instanceof Element) {
 			this.el = options.el;
+		} else if (typeof options.el === 'string') {
+			this.el = this.createDom(options.el);
 		} else {
 			throw new TypeError(`Parameter options.el of type ${typeof options.el} is not a dom element.`);
 		}
