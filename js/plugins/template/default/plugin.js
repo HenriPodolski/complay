@@ -1,6 +1,7 @@
 export default {
 	type: 'template',
 	api: function() {
-		throw new Error('No template engine assigned to Box.use().');
+		console.warn('No template engine implemented.');
+		return arguments[0];
 	}
 }

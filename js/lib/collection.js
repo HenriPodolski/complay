@@ -15,8 +15,8 @@ class BaseCollection {
 		
 		if (isArrayLike(data)) {
 			merge(this, data);
-		} else {
-			this[this.length++] = data;
+		} else if(data) {
+			this.add(data);
 		}
 	}
 
@@ -48,7 +48,10 @@ class BaseCollection {
 	}
 
 	add(item) {
-		this[this.length - 1] = item;
+		
+		if (item) {
+			this[this.length++] = item;
+		}
 	}
 }
 

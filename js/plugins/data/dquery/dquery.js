@@ -45,8 +45,6 @@ export default (function() {
 
 			super(selector, context);
 		}
-
-		
 	}
 
 	return dQuery;
