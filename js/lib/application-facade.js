@@ -200,8 +200,6 @@ class ApplicationFacade extends Module {
 		let elementArray = [];
 		let context = document;
 
-		item = new item();
-
 		if (typeof options.context === 'string') {
 			options.context = document.querySelector(options.context);
 		}
@@ -232,8 +230,7 @@ class ApplicationFacade extends Module {
 		
 		options = Object.assign(this.parseOptions(options.el), options);
 
-		item.options = options;
-		item.setElement(options.el);
+		item = new item(options);
 
 		this.initComponent(item);
 		this.register(item);
