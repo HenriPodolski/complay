@@ -149,7 +149,8 @@ class ApplicationFacade extends Module {
 	startRegisteredModule(registryItem) {
 
 		if (registryItem.running) {
-			console.warn(`Module with uid ${registryItem.uid} is already running.`);
+			console.warn(`Module with uid ${registryItem.uid} 
+				is already running.`);
 			return;
 		}
 
@@ -183,7 +184,9 @@ class ApplicationFacade extends Module {
 		} else if(item.type === MODULE_TYPE) {
 			this.startModule(item, options);
 		} else {
-			throw new Error(`Expected Module of type ${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, Module of type ${item.type} is not allowed.`);
+			throw new Error(`Expected Module of type 
+				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
+				Module of type ${item.type} is not allowed.`);
 		}
 
 		let registryItem = this._modules[this._modules.length - 1];
@@ -221,7 +224,9 @@ class ApplicationFacade extends Module {
 		if (elementArray.length === 0) {
 			// context or parent context already queried for data-js-module and saved?
 			let modNodes = this.moduleNodes.filter((node) => {
-				return (node.context === context || node.context.contains(context)) && node.componentClass === item;
+				return (node.context === context || 
+						node.context.contains(context)) && 
+						node.componentClass === item;
 			});
 
 			let modNode = modNodes[0];
@@ -250,7 +255,7 @@ class ApplicationFacade extends Module {
 
 		// still empty? create a div for ensuring that the component 
 		// gets initialized and registered
-		if (elementArray.length === 0) {
+		if (elementArray.length === 0 && !options.omitOnMissingNode) {
 			elementArray = [document.createElement('div')];
 		}
 
@@ -283,7 +288,8 @@ class ApplicationFacade extends Module {
 		let options = el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
-			// if <div data-js-options="{'show': true}"> is used, instead of <div data-js-options='{"show": true}'>
+			// if <div data-js-options="{'show': true}"> is used, 
+			// instead of <div data-js-options='{"show": true}'>
 			// convert to valid json string and parse to JSON
 			options = options
 				.replace(/\\'/g, '\'')
@@ -353,10 +359,10 @@ class ApplicationFacade extends Module {
 		if (module.type === SERVICE_TYPE || module.type === COMPONENT_TYPE || module.type === MODULE_TYPE) {
 			registryItem.type = module.type;
 		} else {
-			throw new Error(`Expected Module of type ${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, Module of type ${module.type} cannot be registered.`);
+			throw new Error(`Expected Module of type 
+				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
+				Module of type ${module.type} cannot be registered.`);
 		}
-
-		console.log(module);
 
 		registryItem.autostart = !!(module.autostart),
 

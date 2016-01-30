@@ -7,6 +7,8 @@
 import Module from './module';
 import ComponentBox from './component-box';
 
+import assign from '../helpers/object/assign';
+
 const COMPONENT_TYPE = 'component';
 
 const DELEGATE_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
@@ -90,6 +92,33 @@ class Component extends Module {
 		this.delegateEvents();
 		
 		return this;
+	}
+
+	observe(options={}) {
+
+		let config = {
+			attributes: true,
+			childList: true,
+			characterData: true
+		};
+
+		config = Object.assign(options.config || {}, config);
+
+		this.observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.addedNodes) {
+					console.log(this.app);
+					this.app.onAddedNodes(mutation.addedNodes);
+				}
+			});
+		});
+		
+		this.observer.observe(this.el, config);
+	}
+
+	stopObserving() {
+
+		this.observer.disconnect();
 	}
 
 	/**
