@@ -44,16 +44,11 @@ class Component extends Module {
 
 		super(options);
 
-		// for getting a proper name from instance in ApplicationFacade,
-		// namingInstance option is used for creating a temporary instance,
-		// so we don't need to init everything
-		if (!options.namingInstance) {
-			this.dom = box.dom;
-			this.template = box.template;
+		this.dom = box.dom;
+		this.template = box.template;
 
-			this.ensureElement(options);
-			this.delegateEvents();
-		}
+		this.ensureElement(options);
+		this.delegateEvents();
 	}
 
 	ensureElement(options) {

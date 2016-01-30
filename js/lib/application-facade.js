@@ -50,7 +50,6 @@ class ApplicationFacade extends Module {
 	/**
 	 * 
 	 * @param  {Mixed} args Single or Array of 
-	 *                      Module  instance, Service  instance, Component instance or
 	 *                      Module.prototype, Service.prototype, Component.prototype or
 	 *                      Object {module: ..., options: {}}, value for module could be one of above
 	 * @return {Void}

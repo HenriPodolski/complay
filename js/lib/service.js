@@ -42,21 +42,16 @@ class Service extends Module {
 
 		super(options);
 
-		// for getting a proper name from instance in ApplicationFacade,
-		// namingInstance option is used for creating a temporary instance,
-		// so we don't need to init everything
-		if (!options.namingInstance) {
 
-			if (!options.resource && box.resource) {
-				options.resource = box.resource;
-			}
+		if (!options.resource && box.resource) {
+			options.resource = box.resource;
+		}
 
-			this.data = box.data();
-			this.resource = options.resource;
+		this.data = box.data();
+		this.resource = options.resource;
 
-			if (options.data) {
-				this.create(options.data);
-			}
+		if (options.data) {
+			this.create(options.data);
 		}
 	}
 

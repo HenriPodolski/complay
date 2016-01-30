@@ -84,27 +84,18 @@ class Module {
 			this.app = options.app;
 		}
 
-		// for getting a proper name from instance in ApplicationFacade,
-		// namingInstance option is used for creating a temporary instance,
-		// so we don't need to init everything
-		if (!options.namingInstance) {
+		let box = options.box;
 
-			let box = options.box;
-
-			if (box && box.vent) {
-				this.vent = box.vent(options.app);
-				this.vents = {};
-			}
-			
-			this.uid = this.generateUid(this);
-
-			this.group = options.group;
-
-			this.autostart = !!(options.autostart) 
-				|| !!(options.options && options.options.autostart)
-				|| !!(options.options && options.options.autorender)
-				|| !!(options.options && options.options.autofetch);
+		if (box && box.vent) {
+			this.vent = box.vent(options.app);
+			this.vents = {};
 		}
+		
+		this.uid = this.generateUid(this);
+
+		this.group = options.group;
+
+		this.autostart = !!(options.autostart);
 	}
 
 	generateName(obj) {
