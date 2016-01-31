@@ -2,6 +2,7 @@ import dasherize from '../helpers/string/dasherize';
 import extractObjectName from '../helpers/string/extract-object-name';
 import namedUid from '../helpers/string/named-uid';
 import getGlobalObject from '../helpers/environment/get-global-object';
+import Box from './box';
 import Plite from 'plite';
 
 let root = getGlobalObject();
@@ -84,7 +85,7 @@ class Module {
 			this.app = options.app;
 		}
 
-		let box = options.box;
+		let box = options.box || new Box();
 
 		if (box && box.vent) {
 			this.vent = box.vent(options.app);
