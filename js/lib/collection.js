@@ -1,6 +1,7 @@
 import isArrayLike from '../helpers/array/is-array-like';
 import merge from '../helpers/array/merge';
 
+
 class BaseCollection {
 
 	constructor(obj, context) {
@@ -8,7 +9,7 @@ class BaseCollection {
 		this.context = context || this;
 		this.length = 0;
 
-		this.init.apply(this, arguments);
+		this.init(obj);
 	}
 
 	init(data) {
@@ -44,7 +45,7 @@ class BaseCollection {
 			}
 		}
 
-		return obj;
+		return this;
 	}
 
 	add(item) {
@@ -52,6 +53,44 @@ class BaseCollection {
 		if (item) {
 			this[this.length++] = item;
 		}
+
+		return this;
+	}
+
+	reset() {
+		let i = 0;
+		
+		this.each((i) => {
+			delete this[i];
+		});
+
+		this.length = 0;
+	}
+
+	toArray() {
+		let arr = [];
+		let i = 0;
+
+		this.each((i) => {
+			arr.push(this[i]);
+		});
+
+		return arr;
+	}
+
+	findIndex(item) {
+
+		return this.toArray().indexOf(item);
+	}
+
+	remove(index, howMuch = 1) {
+
+		let tmpArray = this.toArray()
+		tmpArray.splice(index, howMuch);
+		this.reset();
+		this.init(tmpArray);
+
+		return this;
 	}
 }
 

@@ -41,9 +41,13 @@ export default (function() {
 		
 		constructor(selector, options={}) {
 
-			let context = options.context || (typeof options === 'object') ? options : null;
+			let context = options.context || ((typeof options !== 'object') ? options : null);
 
 			super(selector, context);
+		}
+		
+		fetch(reduce, resource, options={}) {
+
 		}
 	}
 

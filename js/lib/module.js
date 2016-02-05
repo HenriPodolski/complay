@@ -12,6 +12,29 @@ const MODULE_TYPE = 'module';
 // shim promises
 !root.Promise && (root.Promise = Plite);
 
+/**
+ * iterates vents method, don't forget to bind 
+ * Module instance scope
+ * @param  {function} ventMethod method that should be called
+ * @return {Void}
+ */
+function iterateVents(ventMethod) {
+
+	for (let vent in this.vents) {
+		if (this.vents.hasOwnProperty(vent)) {
+			let callback = this.vents[vent];
+			
+			if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+				callback = this[callback]
+			} else if(typeof callback !== 'function') {
+				throw new Error('Expected callback method');
+			}
+			
+			ventMethod(vent, callback, this);
+		}
+	}
+}
+
 class Module {
 
 	static get type() {
@@ -36,10 +59,6 @@ class Module {
 
 	get vents() {
 		return this._vents;
-	}
-
-	set group(group) {
-		this._group = group;
 	}
 
 	get group() {
@@ -126,23 +145,12 @@ class Module {
 
 	delegateVents() {
 
-		for (let vent in this.vents) {
-			if (this.vents.hasOwnProperty(vent)) {
-				let callback = this.vents[vent];
-				
-				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
-					callback = this[callback]
-				} else if(typeof callback !== 'function') {
-					throw new Error('Expected callback method');
-				}
-				
-				this.vent.on(vent, callback, this);
-			}
-		}
+		iterateVents.bind(this, this.vent.on);
 	}
 
 	undelegateVents() {
 
+		iterateVents.bind(this, this.vent.off);
 	}
 
 	toString() {

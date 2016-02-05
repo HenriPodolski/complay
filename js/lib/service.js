@@ -2,7 +2,7 @@
  * @module  lib/Service
  * used to create models
  * uses mixin properties from ServiceBox either as adapter or proxy,
- * according as the underlying API is normalized of full implemented
+ * according as the underlying API is normalized or full implemented
  */
 import Module from './module';
 import ServiceBox from './service-box';
@@ -42,13 +42,8 @@ class Service extends Module {
 
 		super(options);
 
-
-		if (!options.resource && box.resource) {
-			options.resource = box.resource;
-		}
-
-		this.data = box.data();
-		this.resource = options.resource;
+		this.data = box.data;
+		this.resource = options.resource || this;
 
 		if (options.data) {
 			this.create(options.data);
@@ -60,15 +55,16 @@ class Service extends Module {
 	 * @return {mixed} data or promise
 	 */
 	connect() {
-		return this.data.connect && this.data.connect();
+		this.data.connect && this.data.connect(this.resource);
+		return this;
 	}
 
 	/**
 	 * disconnect from service box data
-	 * @return {void}
+	 * @return {boolean}
 	 */
 	disconnect() {
-		this.data.disconnect && this.data.disconnect();
+		return this.data.disconnect && this.data.disconnect();
 	}
 
 	/**
@@ -77,7 +73,26 @@ class Service extends Module {
 	 * @return {Promise} resolve or error
 	 */
 	fetch(reduce) {
-		return this.data.fetch(reduce);
+		let fetchPromise = this.data.fetch(reduce, this.resource, this.options);
+		return fetchPromise || this;
+	}
+
+	/**
+	 * drop in replacement when working with this object instead of promises
+	 * @return {[type]} [description]
+	 */
+	then(cb) {
+		cb(this.data);
+		return this;
+	}
+
+	/**
+	 * drop in replacement when working with this object instead of promises
+	 * @return {[type]} [description]
+	 */
+	catch() {
+		// never an error, while working with vanilla js
+		return this;
 	}
 
 	/**
@@ -87,7 +102,19 @@ class Service extends Module {
 	 * @return {mixed} newly created item or collection
 	 */
 	create(data) {
-		return this.data.create(data);
+		this.data = this.data(data);
+		return this;
+	}
+
+	/**
+	 * adds an item
+	 * @param  {mixed} data to be created on this service and on remote when save is called or
+	 *                      param remote is true
+	 * @return {mixed} newly created item or collection
+	 */
+	add(data) {
+		this.data = this.data.add(data);
+		return this;
 	}
 
 	/**
@@ -104,8 +131,14 @@ class Service extends Module {
 	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {mixed} updated data set
 	 */
-	update(reduce) {
-		return this.data.update(data);
+	update(reduce, data) {
+		this.data = this.data.update(reduce, data);
+		return this;
+	}
+	
+	reset() {
+		this.data.reset();
+		return this;
 	}
 
 	/**
@@ -113,8 +146,9 @@ class Service extends Module {
 	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {[type]} [description]
 	 */
-	delete(reduce) {
-		return this.data.delete(reduce);
+	remove(reduce) {
+		this.data = this.data.remove(reduce);
+		return this;
 	}
 
 	/**
@@ -123,7 +157,8 @@ class Service extends Module {
 	 * @return {Promise} resolve or error
 	 */
 	save() {
-		return this.data.save();
+		let fetchPromise = this.data.save(this.resource);
+		return fetchPromise || this;
 	}
 }
 

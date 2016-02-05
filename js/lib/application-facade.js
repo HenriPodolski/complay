@@ -5,6 +5,7 @@ import Component from './component';
 import from from '../helpers/array/from';
 import assign from '../helpers/object/assign';
 import dasherize from '../helpers/string/dasherize';
+import domNodeArray from '../helpers/dom/dom-node-array';
 
 const UNKNOW_TYPE = 'unknown';
 const MODULE_TYPE = 'module';
@@ -132,14 +133,16 @@ class ApplicationFacade extends Module {
 
 			// stop	
 			this.stop(registryItem);
-			// remove if component
+
 			if (module.type === COMPONENT_TYPE) {
 				// remove if component
 				module.remove();
-			}
-			else if (module.type === SERVICE_TYPE) {
+			} else if (module.type === SERVICE_TYPE) {
 				// destroy if service
 				module.destroy();
+			} else {
+				// undelegateVents if module
+				module.undelegateVents();
 			}
 		});
 
@@ -205,21 +208,25 @@ class ApplicationFacade extends Module {
 		
 		let elementArray = [];
 		let context = document;
+		let contexts = [];
 		let isJsModule = false;
 
-		if (typeof options.context === 'string') {
-			options.context = document.querySelector(options.context);
-		}
-
+		// checks for type of given context
 		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
+			// dom node case
 			context = options.context;
+		} else if(options.context) {
+			// selector or nodelist case
+			domNodeArray(options.context).forEach((context) => {
+				// pass current node element to options.context
+				options.context = context;
+				this.startComponents(item, options);
+			});
+
+			return;
 		}
 
-		if (options.el && options.el.nodeType === Node.ELEMENT_NODE) {
-			elementArray = [options.el];
-		} else if(typeof options.el === 'string') {
-			elementArray = Array.from(context.querySelectorAll(options.el));
-		}
+		elementArray = domNodeArray(options.el);
 
 		if (elementArray.length === 0) {
 			// context or parent context already queried for data-js-module and saved?

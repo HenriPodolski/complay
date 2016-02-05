@@ -27,10 +27,6 @@ describe('Conduitjs JS Service Box', ()=>{
 			expect(box).to.have.property('data');
 		});
 
-		it('should have a getter for resource property', ()=> {
-
-			expect(box).to.have.property('resource');
-		});
 
 		it('should have a getter for vent object', ()=> {
 

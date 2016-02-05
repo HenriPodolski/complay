@@ -15,16 +15,6 @@ class ServiceBox extends Box {
 		return this._data || null;
 	}
 
-	set resource(resource) {
-
-		this._resource = resource
-	}
-
-	get resource() {
-
-		return this._resource || null;
-	}
-
 	constructor() {
 
 		super();

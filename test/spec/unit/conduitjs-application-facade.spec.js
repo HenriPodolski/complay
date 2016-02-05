@@ -90,10 +90,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 		it('should unregister all modules with the same name, when name is passed to unregister', () => {
 			class SomeModule extends Module {}
 
-			let someModule1 = new SomeModule();
-			let someModule2 = new SomeModule();
-
-			let app = new Application(someModule1, someModule2);
+			let app = new Application(SomeModule, SomeModule);
 			expect(app.modules.length).to.equal(2);
 
 			app.destroy('SomeModule');
@@ -161,9 +158,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 		it('should run a module, when told to do so', () => {
 			class SomeModule extends Module {}
 
-			let someModule = new SomeModule();
-
-			application.start(someModule);
+			application.start(SomeModule);
 
 			expect(application.modules[0].running).to.equal(true);
 		});
@@ -171,9 +166,9 @@ describe('Conduitjs JS Application Facade', ()=>{
 		it('should fetch all resources when service module with option autostart is passed', () => {
 			class SomeService extends Service {}
 
-			application.start({module: SomeService, options: {autostart: true}});
+			application.start({module: SomeService, options: {autostart: true, reduce: 0, data: ['val-1', 'val-2', 'val-3']}});
 
-			expect(false).to.equal(true);
+			expect(application.modules[0].module.data.length).to.equal(3);
 		})
 	});
 });

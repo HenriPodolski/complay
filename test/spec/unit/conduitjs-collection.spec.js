@@ -1,6 +1,6 @@
 import chai from 'chai';
 import isArrayLike from '../../../js/helpers/array/is-array-like';
-import Collection from '../../../js/lib/collection';
+import Collection, {BaseCollection} from '../../../js/lib/collection';
 
 var expect = chai.expect;
 var asset = chai.assert;
@@ -64,6 +64,16 @@ describe('Conduitjs JS Collection', ()=>{
 			expect(collection[0]).to.equal(2);
 			expect(collection[1]).to.equal(3);
 			expect(collection[2]).to.equal(4);
+		});
+
+		it('should remove an item', () => {
+			let collection = Collection([1,2,3]);
+			
+			collection.remove(1);
+
+			expect(collection.length).to.equal(2);
+			expect(collection[0]).to.equal(1);
+			expect(collection[1]).to.equal(3);
 		});
 	});
 });
