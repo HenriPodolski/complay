@@ -42,7 +42,9 @@ class Service extends Module {
 
 		super(options);
 
-		this.data = box.data;
+		this.dataLib = box.data();
+		// set reference to initial state
+		this.data = this.dataLib;
 		this.resource = options.resource || this;
 
 		if (options.data) {
@@ -55,7 +57,7 @@ class Service extends Module {
 	 * @return {mixed} data or promise
 	 */
 	connect() {
-		this.data.connect && this.data.connect(this.resource);
+		this.dataLib.connect && this.dataLib.connect(this.resource);
 		return this;
 	}
 
@@ -64,7 +66,7 @@ class Service extends Module {
 	 * @return {boolean}
 	 */
 	disconnect() {
-		return this.data.disconnect && this.data.disconnect();
+		return this.dataLib.disconnect && this.dataLib.disconnect();
 	}
 
 	/**
@@ -73,7 +75,7 @@ class Service extends Module {
 	 * @return {Promise} resolve or error
 	 */
 	fetch(reduce) {
-		let fetchPromise = this.data.fetch(reduce, this.resource, this.options);
+		let fetchPromise = this.dataLib.fetch(reduce, this.resource, this.options);
 		return fetchPromise || this;
 	}
 
@@ -102,7 +104,7 @@ class Service extends Module {
 	 * @return {mixed} newly created item or collection
 	 */
 	create(data) {
-		this.data = this.data(data);
+		this.data = this.dataLib(data);
 		return this;
 	}
 
@@ -113,7 +115,7 @@ class Service extends Module {
 	 * @return {mixed} newly created item or collection
 	 */
 	add(data) {
-		this.data = this.data.add(data);
+		this.data = this.dataLib.add(data);
 		return this;
 	}
 
@@ -123,7 +125,7 @@ class Service extends Module {
 	 * @return {mixed} 
 	 */
 	read(reduce) {
-		return this.data.read(data);
+		return this.dataLib.read(data);
 	}
 
 	/**
@@ -132,7 +134,7 @@ class Service extends Module {
 	 * @return {mixed} updated data set
 	 */
 	update(reduce, data) {
-		this.data = this.data.update(reduce, data);
+		this.data = this.dataLib.update(reduce, data);
 		return this;
 	}
 	
@@ -147,7 +149,7 @@ class Service extends Module {
 	 * @return {[type]} [description]
 	 */
 	remove(reduce) {
-		this.data = this.data.remove(reduce);
+		this.data = this.dataLib.remove(reduce);
 		return this;
 	}
 
@@ -157,7 +159,7 @@ class Service extends Module {
 	 * @return {Promise} resolve or error
 	 */
 	save() {
-		let fetchPromise = this.data.save(this.resource);
+		let fetchPromise = this.dataLib.save(this.resource);
 		return fetchPromise || this;
 	}
 }

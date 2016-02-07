@@ -20,19 +20,9 @@ const MODULE_TYPE = 'module';
  */
 function iterateVents(ventMethod) {
 
-	for (let vent in this.vents) {
-		if (this.vents.hasOwnProperty(vent)) {
-			let callback = this.vents[vent];
-			
-			if (typeof callback !== 'function' && typeof this[callback] === 'function') {
-				callback = this[callback]
-			} else if(typeof callback !== 'function') {
-				throw new Error('Expected callback method');
-			}
-			
-			ventMethod(vent, callback, this);
-		}
-	}
+	console.log(this.vents, ventMethod);
+
+	
 }
 
 class Module {
@@ -108,7 +98,7 @@ class Module {
 
 		if (box && box.vent) {
 			this.vent = box.vent(options.app);
-			this.vents = {};
+			this.vents = options.vents || {};
 		}
 		
 		this.uid = this.generateUid(this);
@@ -145,12 +135,36 @@ class Module {
 
 	delegateVents() {
 
-		iterateVents.bind(this, this.vent.on);
+		for (let vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				let callback = this.vents[vent];
+				
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback]
+				} else if(typeof callback !== 'function') {
+					throw new Error('Expected callback method');
+				}
+				
+				this.vent.on(vent, callback, this);
+			}
+		}
 	}
 
 	undelegateVents() {
 
-		iterateVents.bind(this, this.vent.off);
+		for (let vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				let callback = this.vents[vent];
+				
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback]
+				} else if(typeof callback !== 'function') {
+					throw new Error('Expected callback method');
+				}
+				
+				this.vent.off(vent, callback, this);
+			}
+		}
 	}
 
 	toString() {

@@ -46,6 +46,7 @@ class Component extends Module {
 
 		super(options);
 
+		this.events = {};
 		this.dom = box.dom;
 		this.template = box.template;
 
@@ -139,7 +140,6 @@ class Component extends Module {
 	}
 
 	delegate(eventName, selector, listener) {
-		console.log(this.$el, this.$el.selection, eventName, selector, listener);
 		this.$el.on(eventName + '.delegateEvents' + this.uid, selector, listener);
 		return this;
 	}

@@ -18,6 +18,19 @@ class ApplicationFacade extends Module {
 		return this._modules;
 	}
 
+	getModuleInstanceByName(moduleConstructorName, index) {
+
+		let foundModuleInstances = this.findMatchingRegistryItems(moduleConstructorName);
+
+		if (isNaN(index)) {
+			return foundModuleInstances.map((inst) => {
+				return inst.module;
+			});
+		} else if (foundModuleInstances[index] && foundModuleInstances[index].module) {
+			return foundModuleInstances[index].module;
+		}
+	}
+
 	constructor(...args) {
 		super();
 		this._modules = [];
@@ -28,11 +41,6 @@ class ApplicationFacade extends Module {
 		this.Component = Component;
 
 		this.moduleNodes = [];
-		this.namedModules = {
-			modules: {},
-			services: {},
-			components: {}
-		};
 
 		if (args.length) {
 			this.start.apply(this, args);
@@ -49,7 +57,7 @@ class ApplicationFacade extends Module {
 			if (mod === item || 
 			mod.uid === item || 
 			mod.module === item || 
-			(typeof mod.module !== 'function' && mod.module.name === item) || 
+			(typeof item === 'string' && mod.module.name === item) || 
 			mod.module.group === item) {
 				return mod;
 			}
