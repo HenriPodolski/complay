@@ -9,10 +9,10 @@ class BaseCollection {
 		this.context = context || this;
 		this.length = 0;
 
-		this.init(obj);
+		this.create(obj);
 	}
 
-	init(data) {
+	create(data) {
 		
 		if (isArrayLike(data)) {
 			merge(this, data);
@@ -88,7 +88,7 @@ class BaseCollection {
 		let tmpArray = this.toArray()
 		tmpArray.splice(index, howMuch);
 		this.reset();
-		this.init(tmpArray);
+		this.create(tmpArray);
 
 		return this;
 	}

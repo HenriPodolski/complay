@@ -166,9 +166,9 @@ describe('Conduitjs JS Application Facade', ()=>{
 		it('should fetch all resources when service module with option autostart is passed', () => {
 			class SomeService extends Service {}
 
-			application.start({module: SomeService, options: {autostart: true, reduce: 0, data: ['val-1', 'val-2', 'val-3']}});
+			application.start({module: SomeService, options: {autostart: true, data: ['val-1', 'val-2', 'val-3']}});
 
-			expect(application.modules[0].module.data.length).to.equal(3);
+			expect(application.modules[0].module.length).to.equal(3);
 		})
 	});
 });

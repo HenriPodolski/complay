@@ -6,6 +6,8 @@
  */
 import Module from './module';
 import ServiceBox from './service-box';
+import isArrayLike from '../helpers/array/is-array-like';
+import merge from '../helpers/array/merge';
 
 const SERVICE_TYPE = 'service';
 
@@ -17,14 +19,6 @@ class Service extends Module {
 
 	get type() {
 		return SERVICE_TYPE;
-	}
-
-	set data(data) {
-		this._data = data;
-	}
-
-	get data() {
-		return this._data;
 	}
 
 	set resource(resource) {
@@ -42,14 +36,11 @@ class Service extends Module {
 
 		super(options);
 
-		this.dataLib = box.data();
-		// set reference to initial state
-		this.data = this.dataLib;
+		this.length = 0;
+
 		this.resource = options.resource || this;
 
-		if (options.data) {
-			this.create(options.data);
-		}
+		this.create(options.data);
 	}
 
 	/**
@@ -57,7 +48,6 @@ class Service extends Module {
 	 * @return {mixed} data or promise
 	 */
 	connect() {
-		this.dataLib.connect && this.dataLib.connect(this.resource);
 		return this;
 	}
 
@@ -66,7 +56,7 @@ class Service extends Module {
 	 * @return {boolean}
 	 */
 	disconnect() {
-		return this.dataLib.disconnect && this.dataLib.disconnect();
+		return this;
 	}
 
 	/**
@@ -75,8 +65,7 @@ class Service extends Module {
 	 * @return {Promise} resolve or error
 	 */
 	fetch(reduce) {
-		let fetchPromise = this.dataLib.fetch(reduce, this.resource, this.options);
-		return fetchPromise || this;
+		return this;
 	}
 
 	/**
@@ -104,20 +93,16 @@ class Service extends Module {
 	 * @return {mixed} newly created item or collection
 	 */
 	create(data) {
-		this.data = this.dataLib(data);
+		
+		if (isArrayLike(data)) {
+			merge(this, data);
+		} else if(data) {
+			this.add(data);
+		}
+
 		return this;
 	}
 
-	/**
-	 * adds an item
-	 * @param  {mixed} data to be created on this service and on remote when save is called or
-	 *                      param remote is true
-	 * @return {mixed} newly created item or collection
-	 */
-	add(data) {
-		this.data = this.dataLib.add(data);
-		return this;
-	}
 
 	/**
 	 * reads a data set, reduced by reduced parameter
@@ -125,7 +110,7 @@ class Service extends Module {
 	 * @return {mixed} 
 	 */
 	read(reduce) {
-		return this.dataLib.read(data);
+		return this.findIndex(reduce);
 	}
 
 	/**
@@ -134,13 +119,50 @@ class Service extends Module {
 	 * @return {mixed} updated data set
 	 */
 	update(reduce, data) {
-		this.data = this.dataLib.update(reduce, data);
+		// this.data = this.dataLib.update(reduce, data);
+		console.error('Not implemented yet');
 		return this;
 	}
 	
-	reset() {
-		this.data.reset();
+	/**
+	 * adds an item
+	 * @param  {mixed} data to be created on this service and on remote when save is called or
+	 *                      param remote is true
+	 * @return {mixed} newly created item or collection
+	 */
+	add(item) {
+		
+		if (item) {
+			this[this.length++] = item;
+		}
+
 		return this;
+	}
+
+	reset() {
+		let i = 0;
+		
+		this.each((i) => {
+			delete this[i];
+		});
+
+		this.length = 0;
+	}
+
+	toArray() {
+		let arr = [];
+		let i = 0;
+
+		this.each((i) => {
+			arr.push(this[i]);
+		});
+
+		return arr;
+	}
+
+	findIndex(item) {
+
+		return this.toArray().indexOf(item);
 	}
 
 	/**
@@ -148,8 +170,13 @@ class Service extends Module {
 	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {[type]} [description]
 	 */
-	remove(reduce) {
-		this.data = this.dataLib.remove(reduce);
+	remove(index, howMuch = 1) {
+
+		let tmpArray = this.toArray()
+		tmpArray.splice(index, howMuch);
+		this.reset();
+		this.create(tmpArray);
+
 		return this;
 	}
 
@@ -159,8 +186,7 @@ class Service extends Module {
 	 * @return {Promise} resolve or error
 	 */
 	save() {
-		let fetchPromise = this.dataLib.save(this.resource);
-		return fetchPromise || this;
+		return this;
 	}
 }
 
