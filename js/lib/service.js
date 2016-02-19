@@ -39,8 +39,33 @@ class Service extends Module {
 		this.length = 0;
 
 		this.resource = options.resource || this;
+	}
 
-		this.create(options.data);
+	each(obj, callback) {
+		
+		if (typeof obj === 'function') {
+			callback = obj;
+			obj = this;
+		}
+		
+		let isLikeArray = isArrayLike(obj);
+		let value;
+		let i = 0;
+
+		if (isLikeArray) {
+
+			let length = obj.length;
+
+			for (; i < length; i++) {
+				value = callback.call(obj[i], i, obj[i]);
+
+				if (value === false) {
+					break;
+				}
+			}
+		}
+
+		return this;
 	}
 
 	/**
@@ -86,6 +111,15 @@ class Service extends Module {
 		return this;
 	}
 
+	init(data) {
+
+		if (isArrayLike(data)) {
+			merge(this, data);
+		} else if(data) {
+			this.add(data);
+		}
+	}
+
 	/**
 	 * creates a new item or a whole data set
 	 * @param  {mixed} data to be created on this service and on remote when save is called or
@@ -93,14 +127,43 @@ class Service extends Module {
 	 * @return {mixed} newly created item or collection
 	 */
 	create(data) {
-		
-		if (isArrayLike(data)) {
-			merge(this, data);
-		} else if(data) {
-			this.add(data);
-		}
+
+		this.init(data);
 
 		return this;
+	}
+
+	where(characteristics) {
+
+		if (!this.isSynced) {
+			console.warn(`${this} is out of sync!`);
+		}
+
+		let results = {};
+		results.length = 0;
+
+		this.each((i, item) => {
+			if (typeof characteristics === 'function' && characteristics(item)) {
+				results[i] = item;
+				results.length += 1;
+			} else if (typeof characteristics === 'object') {
+
+				let hasCharacteristics = true;
+
+				for (let key in characteristics) {
+					if (!item.hasOwnProperty(key) || item[key] !== characteristics[key]) {
+						hasCharacteristics = false;
+					}
+				}
+
+				if (hasCharacteristics) {
+					results[i] = item;
+					results.length += 1;
+				}
+			}
+		})
+
+		return results;
 	}
 
 
