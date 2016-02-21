@@ -12,19 +12,6 @@ const MODULE_TYPE = 'module';
 // shim promises
 !root.Promise && (root.Promise = Plite);
 
-/**
- * iterates vents method, don't forget to bind 
- * Module instance scope
- * @param  {function} ventMethod method that should be called
- * @return {Void}
- */
-function iterateVents(ventMethod) {
-
-	console.log(this.vents, ventMethod);
-
-	
-}
-
 class Module {
 
 	static get type() {
@@ -97,7 +84,7 @@ class Module {
 		let box = options.box || new Box();
 
 		if (box && box.vent) {
-			this.vent = box.vent(options.app);
+			this.vent = box.vent(options.app || this);
 			this.vents = options.vents || {};
 		}
 		
@@ -134,7 +121,6 @@ class Module {
 	}
 
 	delegateVents() {
-
 		for (let vent in this.vents) {
 			if (this.vents.hasOwnProperty(vent)) {
 				let callback = this.vents[vent];

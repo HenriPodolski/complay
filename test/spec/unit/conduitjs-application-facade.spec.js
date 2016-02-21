@@ -115,7 +115,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			class SecondModule extends Module {}
 			class ThirdModule extends Module {}
 
-			let app = new Application(FirstModule, SecondModule, ThirdModule);
+			let app = new Application({modules: [FirstModule, SecondModule, ThirdModule]});
 
 			expect(app.modules.length).to.equal(3);
 		});

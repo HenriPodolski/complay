@@ -31,8 +31,8 @@ class ApplicationFacade extends Module {
 		}
 	}
 
-	constructor(...args) {
-		super();
+	constructor(options={}) {
+		super(options);
 		this._modules = [];
 
 		// expose framework classes
@@ -42,8 +42,8 @@ class ApplicationFacade extends Module {
 
 		this.moduleNodes = [];
 
-		if (args.length) {
-			this.start.apply(this, args);
+		if (options.modules) {
+			this.start.apply(this, options.modules);
 		}
 	}
 
@@ -93,9 +93,9 @@ class ApplicationFacade extends Module {
 		if (registryItem.length) {
 			// case if it is a registered module which get's restarted
 			// @todo needs test
-			this.startRegisteredModule(registryItem[0]);
+			return this.startRegisteredModule(registryItem[0]);
 		} else {
-			this.startUnregisteredModules(item, options);
+			return this.startUnregisteredModules(item, options);
 		}
 	}
 
@@ -182,6 +182,8 @@ class ApplicationFacade extends Module {
 		registryItem.running = true;
 
 		this._modules[index] = registryItem;
+
+		return registryItem.module;
 	}
 
 	startUnregisteredModules(item, options) {
@@ -202,6 +204,8 @@ class ApplicationFacade extends Module {
 
 		let registryItem = this._modules[this._modules.length - 1];
 		registryItem.running = true;
+
+		return registryItem.module;
 	}
 
 	startModule(item, options) {
