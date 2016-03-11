@@ -72,7 +72,7 @@ Conduit.Component.extend = _helpersObjectExtend2['default'];
 
 // replace or create in global namespace
 root.Conduit = Conduit;
-},{"./default-config":2,"./helpers/environment/get-global-object":7,"./helpers/object/extend":9,"./lib/application-facade":13,"./lib/box":14,"./lib/component":17,"./lib/component-box":16,"./lib/module":18,"./lib/service":20,"./lib/service-box":19,"plite":28}],2:[function(require,module,exports){
+},{"./default-config":2,"./helpers/environment/get-global-object":8,"./helpers/object/extend":10,"./lib/application-facade":14,"./lib/box":15,"./lib/component":18,"./lib/component-box":17,"./lib/module":19,"./lib/service":21,"./lib/service-box":20,"plite":29}],2:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -104,7 +104,7 @@ var defaultConfig = {
 
 exports['default'] = defaultConfig;
 module.exports = exports['default'];
-},{"./plugins/data/default/plugin":21,"./plugins/dom/default/plugin":23,"./plugins/template/default/plugin":25,"./plugins/vent/default/plugin":26}],3:[function(require,module,exports){
+},{"./plugins/data/default/plugin":22,"./plugins/dom/default/plugin":24,"./plugins/template/default/plugin":26,"./plugins/vent/default/plugin":27}],3:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -170,6 +170,32 @@ function uniques(arr) {
 
 module.exports = exports['default'];
 },{}],7:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+exports['default'] = domNodeArray;
+
+function domNodeArray(item) {
+
+	var retArray = [];
+
+	// checks for type of given context
+	if (item && item.nodeType === Node.ELEMENT_NODE) {
+		// dom node case
+		retArray = [item];
+	} else if (typeof item === 'string') {
+		// selector case
+		retArray = Array.from(document.querySelectorAll(item));
+	} else if (item && item.length && Array.from(item).length > 1) {
+		// nodelist case
+		retArray = Array.from(item);
+	}
+
+	return retArray;
+}
+
+module.exports = exports['default'];
+},{}],8:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -191,7 +217,7 @@ function getGlobalObject() {
 
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -242,7 +268,7 @@ exports['default'] = (function () {
 })();
 
 module.exports = exports['default'];
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -297,7 +323,7 @@ function extend(protoProps, staticProps) {
 
 ;
 module.exports = exports['default'];
-},{"./assign":8}],10:[function(require,module,exports){
+},{"./assign":9}],11:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -311,7 +337,7 @@ function dasherize(str) {
 
 ;
 module.exports = exports['default'];
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -333,7 +359,7 @@ var extractObjectName = (function () {
 
 exports['default'] = extractObjectName;
 module.exports = exports['default'];
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -380,7 +406,7 @@ var namedUid = (function () {
 
 exports['default'] = namedUid;
 module.exports = exports['default'];
-},{"./extract-object-name":11}],13:[function(require,module,exports){
+},{"./extract-object-name":12}],14:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -417,6 +443,10 @@ var _helpersStringDasherize = require('../helpers/string/dasherize');
 
 var _helpersStringDasherize2 = _interopRequireDefault(_helpersStringDasherize);
 
+var _helpersDomDomNodeArray = require('../helpers/dom/dom-node-array');
+
+var _helpersDomDomNodeArray2 = _interopRequireDefault(_helpersDomDomNodeArray);
+
 var UNKNOW_TYPE = 'unknown';
 var MODULE_TYPE = 'module';
 var SERVICE_TYPE = 'service';
@@ -424,6 +454,19 @@ var COMPONENT_TYPE = 'component';
 
 var ApplicationFacade = (function (_Module) {
 	_inherits(ApplicationFacade, _Module);
+
+	ApplicationFacade.prototype.getModuleInstanceByName = function getModuleInstanceByName(moduleConstructorName, index) {
+
+		var foundModuleInstances = this.findMatchingRegistryItems(moduleConstructorName);
+
+		if (isNaN(index)) {
+			return foundModuleInstances.map(function (inst) {
+				return inst.module;
+			});
+		} else if (foundModuleInstances[index] && foundModuleInstances[index].module) {
+			return foundModuleInstances[index].module;
+		}
+	};
 
 	_createClass(ApplicationFacade, [{
 		key: 'modules',
@@ -433,9 +476,11 @@ var ApplicationFacade = (function (_Module) {
 	}]);
 
 	function ApplicationFacade() {
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
 		_classCallCheck(this, ApplicationFacade);
 
-		_Module.call(this);
+		_Module.call(this, options);
 		this._modules = [];
 
 		// expose framework classes
@@ -444,18 +489,9 @@ var ApplicationFacade = (function (_Module) {
 		this.Component = _component2['default'];
 
 		this.moduleNodes = [];
-		this.namedModules = {
-			modules: {},
-			services: {},
-			components: {}
-		};
 
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		if (args.length) {
-			this.start.apply(this, args);
+		if (options.modules) {
+			this.start.apply(this, options.modules);
 		}
 	}
 
@@ -466,7 +502,7 @@ var ApplicationFacade = (function (_Module) {
 		}
 
 		return this._modules.filter(function (mod) {
-			if (mod === item || mod.uid === item || mod.module === item || typeof mod.module !== 'function' && mod.module.name === item || mod.module.group === item) {
+			if (mod === item || mod.uid === item || mod.module === item || typeof item === 'string' && mod.module.name === item || mod.module.group === item) {
 				return mod;
 			}
 		});
@@ -483,8 +519,8 @@ var ApplicationFacade = (function (_Module) {
 	ApplicationFacade.prototype.start = function start() {
 		var _this = this;
 
-		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-			args[_key2] = arguments[_key2];
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
 		}
 
 		if (args.length > 1) {
@@ -509,17 +545,17 @@ var ApplicationFacade = (function (_Module) {
 		if (registryItem.length) {
 			// case if it is a registered module which get's restarted
 			// @todo needs test
-			this.startRegisteredModule(registryItem[0]);
+			return this.startRegisteredModule(registryItem[0]);
 		} else {
-			this.startUnregisteredModules(item, options);
+			return this.startUnregisteredModules(item, options);
 		}
 	};
 
 	ApplicationFacade.prototype.stop = function stop() {
 		var _this2 = this;
 
-		for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-			args[_key3] = arguments[_key3];
+		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+			args[_key2] = arguments[_key2];
 		}
 
 		if (args.length > 1) {
@@ -552,8 +588,8 @@ var ApplicationFacade = (function (_Module) {
 	ApplicationFacade.prototype.destroy = function destroy() {
 		var _this3 = this;
 
-		for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-			args[_key4] = arguments[_key4];
+		for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+			args[_key3] = arguments[_key3];
 		}
 
 		if (args.length > 1) {
@@ -571,13 +607,16 @@ var ApplicationFacade = (function (_Module) {
 
 			// stop	
 			_this3.stop(registryItem);
-			// remove if component
+
 			if (module.type === COMPONENT_TYPE) {
 				// remove if component
 				module.remove();
 			} else if (module.type === SERVICE_TYPE) {
 				// destroy if service
 				module.destroy();
+			} else {
+				// undelegateVents if module
+				module.undelegateVents();
 			}
 		});
 
@@ -608,6 +647,8 @@ var ApplicationFacade = (function (_Module) {
 		registryItem.running = true;
 
 		this._modules[index] = registryItem;
+
+		return registryItem.module;
 	};
 
 	ApplicationFacade.prototype.startUnregisteredModules = function startUnregisteredModules(item, options) {
@@ -626,6 +667,8 @@ var ApplicationFacade = (function (_Module) {
 
 		var registryItem = this._modules[this._modules.length - 1];
 		registryItem.running = true;
+
+		return registryItem.module;
 	};
 
 	ApplicationFacade.prototype.startModule = function startModule(item, options) {
@@ -641,21 +684,25 @@ var ApplicationFacade = (function (_Module) {
 
 		var elementArray = [];
 		var context = document;
+		var contexts = [];
 		var isJsModule = false;
 
-		if (typeof options.context === 'string') {
-			options.context = document.querySelector(options.context);
-		}
-
+		// checks for type of given context
 		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
+			// dom node case
 			context = options.context;
+		} else if (options.context) {
+			// selector or nodelist case
+			_helpersDomDomNodeArray2['default'](options.context).forEach(function (context) {
+				// pass current node element to options.context
+				options.context = context;
+				_this4.startComponents(item, options);
+			});
+
+			return;
 		}
 
-		if (options.el && options.el.nodeType === Node.ELEMENT_NODE) {
-			elementArray = [options.el];
-		} else if (typeof options.el === 'string') {
-			elementArray = Array.from(context.querySelectorAll(options.el));
-		}
+		elementArray = _helpersDomDomNodeArray2['default'](options.el);
 
 		if (elementArray.length === 0) {
 			// context or parent context already queried for data-js-module and saved?
@@ -818,7 +865,7 @@ var ApplicationFacade = (function (_Module) {
 
 exports['default'] = ApplicationFacade;
 module.exports = exports['default'];
-},{"../helpers/array/from":3,"../helpers/object/assign":8,"../helpers/string/dasherize":10,"./component":17,"./module":18,"./service":20}],14:[function(require,module,exports){
+},{"../helpers/array/from":3,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":11,"./component":18,"./module":19,"./service":21}],15:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -878,7 +925,7 @@ var Box = (function () {
 
 exports['default'] = Box;
 module.exports = exports['default'];
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -902,10 +949,10 @@ var BaseCollection = (function () {
 		this.context = context || this;
 		this.length = 0;
 
-		this.init.apply(this, arguments);
+		this.create(obj);
 	}
 
-	BaseCollection.prototype.init = function init(data) {
+	BaseCollection.prototype.create = function create(data) {
 
 		if (_helpersArrayIsArrayLike2['default'](data)) {
 			_helpersArrayMerge2['default'](this, data);
@@ -938,7 +985,7 @@ var BaseCollection = (function () {
 			}
 		}
 
-		return obj;
+		return this;
 	};
 
 	BaseCollection.prototype.add = function add(item) {
@@ -946,6 +993,49 @@ var BaseCollection = (function () {
 		if (item) {
 			this[this.length++] = item;
 		}
+
+		return this;
+	};
+
+	BaseCollection.prototype.reset = function reset() {
+		var _this = this;
+
+		var i = 0;
+
+		this.each(function (i) {
+			delete _this[i];
+		});
+
+		this.length = 0;
+	};
+
+	BaseCollection.prototype.toArray = function toArray() {
+		var _this2 = this;
+
+		var arr = [];
+		var i = 0;
+
+		this.each(function (i) {
+			arr.push(_this2[i]);
+		});
+
+		return arr;
+	};
+
+	BaseCollection.prototype.findIndex = function findIndex(item) {
+
+		return this.toArray().indexOf(item);
+	};
+
+	BaseCollection.prototype.remove = function remove(index) {
+		var howMuch = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
+
+		var tmpArray = this.toArray();
+		tmpArray.splice(index, howMuch);
+		this.reset();
+		this.create(tmpArray);
+
+		return this;
 	};
 
 	return BaseCollection;
@@ -957,7 +1047,7 @@ function Collection(data) {
 
 exports['default'] = Collection;
 exports.BaseCollection = BaseCollection;
-},{"../helpers/array/is-array-like":4,"../helpers/array/merge":5}],16:[function(require,module,exports){
+},{"../helpers/array/is-array-like":4,"../helpers/array/merge":5}],17:[function(require,module,exports){
 /**
  * @module lib/ComponentBox
  */
@@ -1020,7 +1110,7 @@ var ComponentBox = (function (_Box) {
 
 exports['default'] = ComponentBox;
 module.exports = exports['default'];
-},{"./box":14}],17:[function(require,module,exports){
+},{"./box":15}],18:[function(require,module,exports){
 /**
  * @module  lib/Component
  * used to create views and/or view mediators
@@ -1054,6 +1144,8 @@ var _helpersObjectAssign2 = _interopRequireDefault(_helpersObjectAssign);
 var COMPONENT_TYPE = 'component';
 
 var DELEGATE_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
+
+var matchesSelector = Element.prototype.matches || Element.prototype.webkitMatchesSelector || Element.prototype.mozMatchesSelector || Element.prototype.msMatchesSelector || Element.prototype.oMatchesSelector;
 
 var Component = (function (_Module) {
 	_inherits(Component, _Module);
@@ -1096,20 +1188,25 @@ var Component = (function (_Module) {
 
 		_Module.call(this, options);
 
+		this.events = {};
 		this.dom = box.dom;
 		this.template = box.template;
+
+		this._domEvents = [];
 
 		this.ensureElement(options);
 		this.delegateEvents();
 	}
 
 	Component.prototype.createDom = function createDom(str) {
+
 		var div = document.createElement('div');
 		div.innerHTML = str;
 		return div.childNodes[0] || div;
 	};
 
 	Component.prototype.ensureElement = function ensureElement(options) {
+
 		if (!this.el && (!options || !options.el)) {
 			this.el = document.createElement('div');
 		} else if (options.el instanceof Element) {
@@ -1174,11 +1271,8 @@ var Component = (function (_Module) {
 		this.observer.disconnect();
 	};
 
-	/**
-  * @todo refactor this to own needs, just copied from backbone
-  */
-
 	Component.prototype.delegateEvents = function delegateEvents(events) {
+
 		if (!(events || (events = this.events))) return this;
 		this.undelegateEvents();
 		for (var key in events) {
@@ -1193,27 +1287,81 @@ var Component = (function (_Module) {
 	};
 
 	Component.prototype.delegate = function delegate(eventName, selector, listener) {
-		console.log(this.$el, this.$el.selection, eventName, selector, listener);
-		this.$el.on(eventName + '.delegateEvents' + this.uid, selector, listener);
-		return this;
+
+		if (typeof selector === 'function') {
+			listener = selector;
+			selector = null;
+		}
+
+		var root = this.el;
+		var handler = selector ? function (e) {
+			var node = e.target || e.srcElement;
+
+			for (; node && node != root; node = node.parentNode) {
+				if (matchesSelector.call(node, selector)) {
+					e.delegateTarget = node;
+					listener(e);
+				}
+			}
+		} : listener;
+
+		Element.prototype.addEventListener.call(this.el, eventName, handler, false);
+		this._domEvents.push({ eventName: eventName, handler: handler, listener: listener, selector: selector });
+		return handler;
 	};
 
-	Component.prototype.undelegateEvents = function undelegateEvents() {
-		if (this.$el) this.$el.off('.delegateEvents' + this.uid);
-		return this;
-	};
+	// Remove a single delegated event. Either `eventName` or `selector` must
+	// be included, `selector` and `listener` are optional.
 
 	Component.prototype.undelegate = function undelegate(eventName, selector, listener) {
-		this.$el.off(eventName + '.delegateEvents' + this.uid, selector, listener);
+
+		if (typeof selector === 'function') {
+			listener = selector;
+			selector = null;
+		}
+
+		if (this.el) {
+			var handlers = this._domEvents.slice();
+			var i = handlers.length;
+
+			while (i--) {
+				var item = handlers[i];
+
+				var match = item.eventName === eventName && (listener ? item.listener === listener : true) && (selector ? item.selector === selector : true);
+
+				if (!match) continue;
+
+				Element.prototype.removeEventListener.call(this.el, item.eventName, item.handler, false);
+				this._domEvents.splice(i, 1);
+			}
+		}
+
+		return this;
+	};
+
+	// Remove all events created with `delegate` from `el`
+
+	Component.prototype.undelegateEvents = function undelegateEvents() {
+
+		if (this.el) {
+			for (var i = 0, len = this._domEvents.length; i < len; i++) {
+				var item = this._domEvents[i];
+				Element.prototype.removeEventListener.call(this.el, item.eventName, item.handler, false);
+			};
+			this._domEvents.length = 0;
+		}
+
 		return this;
 	};
 
 	Component.prototype.remove = function remove() {
+
 		this.undelegateEvents();
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
 	};
 
 	Component.prototype.render = function render() {
+
 		return this;
 	};
 
@@ -1222,7 +1370,7 @@ var Component = (function (_Module) {
 
 exports['default'] = Component;
 module.exports = exports['default'];
-},{"../helpers/object/assign":8,"./component-box":16,"./module":18}],18:[function(require,module,exports){
+},{"../helpers/object/assign":9,"./component-box":17,"./module":19}],19:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1248,6 +1396,10 @@ var _helpersStringNamedUid2 = _interopRequireDefault(_helpersStringNamedUid);
 var _helpersEnvironmentGetGlobalObject = require('../helpers/environment/get-global-object');
 
 var _helpersEnvironmentGetGlobalObject2 = _interopRequireDefault(_helpersEnvironmentGetGlobalObject);
+
+var _box = require('./box');
+
+var _box2 = _interopRequireDefault(_box);
 
 var _plite = require('plite');
 
@@ -1284,11 +1436,11 @@ var Module = (function () {
 		}
 	}, {
 		key: 'group',
-		set: function set(group) {
-			this._group = group;
-		},
 		get: function get() {
 			return this._group;
+		},
+		set: function set(group) {
+			this._group = group;
 		}
 	}, {
 		key: 'name',
@@ -1335,11 +1487,11 @@ var Module = (function () {
 			this.app = options.app;
 		}
 
-		var box = options.box;
+		var box = options.box || new _box2['default']();
 
 		if (box && box.vent) {
-			this.vent = box.vent(options.app);
-			this.vents = {};
+			this.vent = box.vent(options.app || this);
+			this.vents = options.vents || {};
 		}
 
 		this.uid = this.generateUid(this);
@@ -1375,7 +1527,6 @@ var Module = (function () {
 	};
 
 	Module.prototype.delegateVents = function delegateVents() {
-
 		for (var vent in this.vents) {
 			if (this.vents.hasOwnProperty(vent)) {
 				var callback = this.vents[vent];
@@ -1391,7 +1542,22 @@ var Module = (function () {
 		}
 	};
 
-	Module.prototype.undelegateVents = function undelegateVents() {};
+	Module.prototype.undelegateVents = function undelegateVents() {
+
+		for (var vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				var callback = this.vents[vent];
+
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback];
+				} else if (typeof callback !== 'function') {
+					throw new Error('Expected callback method');
+				}
+
+				this.vent.off(vent, callback, this);
+			}
+		}
+	};
 
 	Module.prototype.toString = function toString() {
 		return this.uid;
@@ -1402,7 +1568,7 @@ var Module = (function () {
 
 exports['default'] = Module;
 module.exports = exports['default'];
-},{"../helpers/environment/get-global-object":7,"../helpers/string/dasherize":10,"../helpers/string/extract-object-name":11,"../helpers/string/named-uid":12,"plite":28}],19:[function(require,module,exports){
+},{"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":11,"../helpers/string/extract-object-name":12,"../helpers/string/named-uid":13,"./box":15,"plite":29}],20:[function(require,module,exports){
 /**
  * @module lib/ServiceBox
  */
@@ -1435,16 +1601,6 @@ var ServiceBox = (function (_Box) {
 
 			return this._data || null;
 		}
-	}, {
-		key: 'resource',
-		set: function set(resource) {
-
-			this._resource = resource;
-		},
-		get: function get() {
-
-			return this._resource || null;
-		}
 	}]);
 
 	function ServiceBox() {
@@ -1469,12 +1625,12 @@ var ServiceBox = (function (_Box) {
 
 exports['default'] = ServiceBox;
 module.exports = exports['default'];
-},{"./box":14}],20:[function(require,module,exports){
+},{"./box":15}],21:[function(require,module,exports){
 /**
  * @module  lib/Service
  * used to create models
  * uses mixin properties from ServiceBox either as adapter or proxy,
- * according as the underlying API is normalized of full implemented
+ * according as the underlying API is normalized or full implemented
  */
 'use strict';
 
@@ -1496,6 +1652,14 @@ var _serviceBox = require('./service-box');
 
 var _serviceBox2 = _interopRequireDefault(_serviceBox);
 
+var _helpersArrayIsArrayLike = require('../helpers/array/is-array-like');
+
+var _helpersArrayIsArrayLike2 = _interopRequireDefault(_helpersArrayIsArrayLike);
+
+var _helpersArrayMerge = require('../helpers/array/merge');
+
+var _helpersArrayMerge2 = _interopRequireDefault(_helpersArrayMerge);
+
 var SERVICE_TYPE = 'service';
 
 var Service = (function (_Module) {
@@ -1505,14 +1669,6 @@ var Service = (function (_Module) {
 		key: 'type',
 		get: function get() {
 			return SERVICE_TYPE;
-		}
-	}, {
-		key: 'data',
-		set: function set(data) {
-			this._data = data;
-		},
-		get: function get() {
-			return this._data;
 		}
 	}, {
 		key: 'resource',
@@ -1539,17 +1695,37 @@ var Service = (function (_Module) {
 
 		_Module.call(this, options);
 
-		if (!options.resource && box.resource) {
-			options.resource = box.resource;
-		}
+		this.length = 0;
 
-		this.data = box.data();
-		this.resource = options.resource;
-
-		if (options.data) {
-			this.create(options.data);
-		}
+		this.resource = options.resource || this;
 	}
+
+	Service.prototype.each = function each(obj, callback) {
+
+		if (typeof obj === 'function') {
+			callback = obj;
+			obj = this;
+		}
+
+		var isLikeArray = _helpersArrayIsArrayLike2['default'](obj);
+		var value = undefined;
+		var i = 0;
+
+		if (isLikeArray) {
+
+			var _length = obj.length;
+
+			for (; i < _length; i++) {
+				value = callback.call(obj[i], i, obj[i]);
+
+				if (value === false) {
+					break;
+				}
+			}
+		}
+
+		return this;
+	};
 
 	/**
   * connect to a service box data
@@ -1557,16 +1733,16 @@ var Service = (function (_Module) {
   */
 
 	Service.prototype.connect = function connect() {
-		return this.data.connect && this.data.connect();
+		return this;
 	};
 
 	/**
   * disconnect from service box data
-  * @return {void}
+  * @return {boolean}
   */
 
 	Service.prototype.disconnect = function disconnect() {
-		this.data.disconnect && this.data.disconnect();
+		return this;
 	};
 
 	/**
@@ -1576,7 +1752,36 @@ var Service = (function (_Module) {
   */
 
 	Service.prototype.fetch = function fetch(reduce) {
-		return this.data.fetch(reduce);
+		return this;
+	};
+
+	/**
+  * drop in replacement when working with this object instead of promises
+  * @return {[type]} [description]
+  */
+
+	Service.prototype.then = function then(cb) {
+		cb(this.data);
+		return this;
+	};
+
+	/**
+  * drop in replacement when working with this object instead of promises
+  * @return {[type]} [description]
+  */
+
+	Service.prototype['catch'] = function _catch() {
+		// never an error, while working with vanilla js
+		return this;
+	};
+
+	Service.prototype.init = function init(data) {
+
+		if (_helpersArrayIsArrayLike2['default'](data)) {
+			_helpersArrayMerge2['default'](this, data);
+		} else if (data) {
+			this.add(data);
+		}
 	};
 
 	/**
@@ -1587,7 +1792,43 @@ var Service = (function (_Module) {
   */
 
 	Service.prototype.create = function create(data) {
-		return this.data.create(data);
+
+		this.init(data);
+
+		return this;
+	};
+
+	Service.prototype.where = function where(characteristics) {
+
+		if (!this.isSynced) {
+			console.warn(this + ' is out of sync!');
+		}
+
+		var results = {};
+		results.length = 0;
+
+		this.each(function (i, item) {
+			if (typeof characteristics === 'function' && characteristics(item)) {
+				results[i] = item;
+				results.length += 1;
+			} else if (typeof characteristics === 'object') {
+
+				var hasCharacteristics = true;
+
+				for (var key in characteristics) {
+					if (!item.hasOwnProperty(key) || item[key] !== characteristics[key]) {
+						hasCharacteristics = false;
+					}
+				}
+
+				if (hasCharacteristics) {
+					results[i] = item;
+					results.length += 1;
+				}
+			}
+		});
+
+		return results;
 	};
 
 	/**
@@ -1597,7 +1838,7 @@ var Service = (function (_Module) {
   */
 
 	Service.prototype.read = function read(reduce) {
-		return this.data.read(data);
+		return this.findIndex(reduce);
 	};
 
 	/**
@@ -1606,8 +1847,56 @@ var Service = (function (_Module) {
   * @return {mixed} updated data set
   */
 
-	Service.prototype.update = function update(reduce) {
-		return this.data.update(data);
+	Service.prototype.update = function update(reduce, data) {
+		// this.data = this.dataLib.update(reduce, data);
+		console.error('Not implemented yet');
+		return this;
+	};
+
+	/**
+  * adds an item
+  * @param  {mixed} data to be created on this service and on remote when save is called or
+  *                      param remote is true
+  * @return {mixed} newly created item or collection
+  */
+
+	Service.prototype.add = function add(item) {
+
+		if (item) {
+			this[this.length++] = item;
+		}
+
+		return this;
+	};
+
+	Service.prototype.reset = function reset() {
+		var _this = this;
+
+		var i = 0;
+
+		this.each(function (i) {
+			delete _this[i];
+		});
+
+		this.length = 0;
+	};
+
+	Service.prototype.toArray = function toArray() {
+		var _this2 = this;
+
+		var arr = [];
+		var i = 0;
+
+		this.each(function (i) {
+			arr.push(_this2[i]);
+		});
+
+		return arr;
+	};
+
+	Service.prototype.findIndex = function findIndex(item) {
+
+		return this.toArray().indexOf(item);
 	};
 
 	/**
@@ -1616,8 +1905,15 @@ var Service = (function (_Module) {
   * @return {[type]} [description]
   */
 
-	Service.prototype['delete'] = function _delete(reduce) {
-		return this.data['delete'](reduce);
+	Service.prototype.remove = function remove(index) {
+		var howMuch = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
+
+		var tmpArray = this.toArray();
+		tmpArray.splice(index, howMuch);
+		this.reset();
+		this.create(tmpArray);
+
+		return this;
 	};
 
 	/**
@@ -1627,7 +1923,7 @@ var Service = (function (_Module) {
   */
 
 	Service.prototype.save = function save() {
-		return this.data.save();
+		return this;
 	};
 
 	return Service;
@@ -1635,7 +1931,7 @@ var Service = (function (_Module) {
 
 exports['default'] = Service;
 module.exports = exports['default'];
-},{"./module":18,"./service-box":19}],21:[function(require,module,exports){
+},{"../helpers/array/is-array-like":4,"../helpers/array/merge":5,"./module":19,"./service-box":20}],22:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1651,7 +1947,7 @@ exports['default'] = {
 	api: _dqueryDqueryJs2['default']
 };
 module.exports = exports['default'];
-},{"../dquery/dquery.js":22}],22:[function(require,module,exports){
+},{"../dquery/dquery.js":23}],23:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1712,10 +2008,14 @@ exports['default'] = (function () {
 
 			_classCallCheck(this, DQuery);
 
-			var context = options.context || typeof options === 'object' ? options : null;
+			var context = options.context || (typeof options !== 'object' ? options : null);
 
 			_BaseCollection.call(this, selector, context);
 		}
+
+		DQuery.prototype.fetch = function fetch(reduce, resource) {
+			var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+		};
 
 		return DQuery;
 	})(_libCollection.BaseCollection);
@@ -1724,7 +2024,7 @@ exports['default'] = (function () {
 }).call(undefined);
 
 module.exports = exports['default'];
-},{"../../../helpers/array/uniques":6,"../../../lib/collection":15}],23:[function(require,module,exports){
+},{"../../../helpers/array/uniques":6,"../../../lib/collection":16}],24:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1740,7 +2040,7 @@ exports['default'] = {
 	api: _domSelectorDomSelectorJs2['default']
 };
 module.exports = exports['default'];
-},{"../dom-selector/dom-selector.js":24}],24:[function(require,module,exports){
+},{"../dom-selector/dom-selector.js":25}],25:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1826,7 +2126,7 @@ exports['default'] = (function () {
 }).call(undefined);
 
 module.exports = exports['default'];
-},{"../../../helpers/array/from":3,"../../../helpers/array/uniques":6,"../../../lib/collection":15}],25:[function(require,module,exports){
+},{"../../../helpers/array/from":3,"../../../helpers/array/uniques":6,"../../../lib/collection":16}],26:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1838,7 +2138,7 @@ exports['default'] = {
 	}
 };
 module.exports = exports['default'];
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1854,7 +2154,7 @@ exports['default'] = {
 	api: _vent2['default']
 };
 module.exports = exports['default'];
-},{"./vent":27}],27:[function(require,module,exports){
+},{"./vent":28}],28:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1904,7 +2204,7 @@ function Vent(newTarget) {
 }
 
 module.exports = exports['default'];
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 function Plite(resolver) {
   var emptyFn = function () {},
       chain = emptyFn,

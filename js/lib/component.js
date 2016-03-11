@@ -105,33 +105,6 @@ class Component extends Module {
 		return this;
 	}
 
-	observe(options={}) {
-
-		let config = {
-			attributes: true,
-			childList: true,
-			characterData: true
-		};
-
-		config = Object.assign(options.config || {}, config);
-
-		this.observer = new MutationObserver((mutations) => {
-			mutations.forEach((mutation) => {
-				if (mutation.addedNodes) {
-					console.log(this.app);
-					this.app.onAddedNodes(mutation.addedNodes);
-				}
-			});
-		});
-		
-		this.observer.observe(this.el, config);
-	}
-
-	stopObserving() {
-
-		this.observer.disconnect();
-	}
-
 	delegateEvents(events) {
 		
 		if (!(events || (events = this.events))) return this;

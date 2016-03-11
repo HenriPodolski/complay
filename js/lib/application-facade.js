@@ -45,6 +45,54 @@ class ApplicationFacade extends Module {
 		if (options.modules) {
 			this.start.apply(this, options.modules);
 		}
+
+		if (options.observe) {
+			this.observe();
+		}
+	}
+
+	observe(options={}) {
+
+		let config = {
+			attributes: true,
+			childList: true,
+			characterData: true
+		};
+
+		let observedNode = this.options.context || document.body;
+
+		config = Object.assign(options.config || {}, config);
+
+		this.observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.addedNodes) {
+					this.onAddedNodes(mutation.addedNodes);
+				}
+			});
+		});
+		
+		this.observer.observe(observedNode, config);
+	}
+
+	onAddedNodes(addedNodes) {
+
+		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach((item) => {
+			let mod = item.module;
+
+			console.log(domNodeArray(addedNodes), addedNodes);
+			
+			domNodeArray(addedNodes).forEach((ctx) => {				
+				if (ctx) {
+					this.startComponents(mod, {context: ctx}, true);
+					this.startComponents(mod, {el: ctx}, true);	
+				}				
+			});			
+		});		
+	}
+
+	stopObserving() {
+
+		this.observer.disconnect();
 	}
 
 	findMatchingRegistryItems(item) {
@@ -55,10 +103,10 @@ class ApplicationFacade extends Module {
 
 		return this._modules.filter((mod) => {
 			if (mod === item || 
-			mod.uid === item || 
-			mod.module === item || 
-			(typeof item === 'string' && mod.module.name === item) || 
-			mod.module.group === item) {
+				mod.module === item ||
+				(typeof item === 'string' && mod.module.type === item) ||
+				(typeof item === 'string' && mod.module.name === item) ||
+				(typeof item === 'object' && item.uid && mod.instances.indexOf(item) > -1)) {
 				return mod;
 			}
 		});
@@ -88,15 +136,7 @@ class ApplicationFacade extends Module {
 			item = item.module;
 		}
 
-		let registryItem = this.findMatchingRegistryItems(item);
-
-		if (registryItem.length) {
-			// case if it is a registered module which get's restarted
-			// @todo needs test
-			return this.startRegisteredModule(registryItem[0]);
-		} else {
-			return this.startUnregisteredModules(item, options);
-		}
+		return this.startModules(item, options);
 	}
 
 	stop(...args) {
@@ -111,82 +151,26 @@ class ApplicationFacade extends Module {
 		this.findMatchingRegistryItems(item).forEach((registryItem) => {
 			let module = registryItem.module;
 
-			if (module.type === COMPONENT_TYPE) {
-				// undelegate events if component
-				module.undelegateEvents();
-			} else if (module.type === SERVICE_TYPE) {
-				// disconnect if service
-				module.disconnect();
-			}
+			registryItem.instances.forEach((inst) => {
+				
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.undelegateEvents();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.disconnect();
+				}
 
-			// undelegate vents for all
-			module.undelegateVents();
+				// undelegate vents for all
+				inst.undelegateVents();
+			});
+			
 			// running false
 			registryItem.running = false;
 		});
 	}
 
-	destroy(...args) {
-
-		if (args.length > 1) {
-			args.forEach((arg) => { this.destroy(arg) });
-			return;
-		}
-
-		let item = args[0];
-
-		this.findMatchingRegistryItems(item).forEach((registryItem) => {
-
-			let module = registryItem.module;
-
-			// stop	
-			this.stop(registryItem);
-
-			if (module.type === COMPONENT_TYPE) {
-				// remove if component
-				module.remove();
-			} else if (module.type === SERVICE_TYPE) {
-				// destroy if service
-				module.destroy();
-			} else {
-				// undelegateVents if module
-				module.undelegateVents();
-			}
-		});
-
-		this.unregister(item);
-	}
-
-	startRegisteredModule(registryItem) {
-
-		if (registryItem.running) {
-			console.warn(`Module with uid ${registryItem.uid} 
-				is already running.`);
-			return;
-		}
-
-		if (registryItem.type === SERVICE_TYPE) {
-
-			this.initService(registryItem.module);
-		} else if (registryItem.type === COMPONENT_TYPE) {
-			
-			this.initComponent(registryItem.module);
-		} else if (registryItem.type === MODULE_TYPE) {
-
-			this.initModule(registryItem.module);
-		} else {
-
-			throw new Error('Registered item error.');
-		}
-
-		registryItem.running = true;
-
-		this._modules[index] = registryItem;
-
-		return registryItem.module;
-	}
-
-	startUnregisteredModules(item, options) {
+	startModules(item, options) {
 
 		options.app = options.app || this;
 
@@ -210,18 +194,21 @@ class ApplicationFacade extends Module {
 
 	startModule(item, options) {
 
-		item = new item(options);
+		let itemInstance = new item(options);
 
-		this.initModule(item);
-		this.register(item);
+		this.initModule(itemInstance);
+		this.register(item, itemInstance);
 	}
 
-	startComponents(item, options) {
+	startComponents(item, options, observerStart) {
 		
 		let elementArray = [];
 		let context = document;
 		let contexts = [];
-		let isJsModule = false;
+
+		if (this.options.context && !options.context) {
+			options.context = this.options.context;
+		}
 
 		// checks for type of given context
 		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
@@ -232,13 +219,17 @@ class ApplicationFacade extends Module {
 			domNodeArray(options.context).forEach((context) => {
 				// pass current node element to options.context
 				options.context = context;
-				this.startComponents(item, options);
+				this.startComponents(item, options, observerStart);
 			});
 
 			return;
 		}
 
 		elementArray = domNodeArray(options.el);
+
+		if (observerStart) {
+			console.log('Here', elementArray, item, options);
+		}
 
 		if (elementArray.length === 0) {
 			// context or parent context already queried for data-js-module and saved?
@@ -249,6 +240,7 @@ class ApplicationFacade extends Module {
 			});
 
 			let modNode = modNodes[0];
+
 			// use saved elements for context!
 			if (modNode && modNode.elements) {
 				elementArray = modNode.elements;
@@ -258,7 +250,7 @@ class ApplicationFacade extends Module {
 				elementArray = Array.from(context.querySelectorAll(`[data-js-module]`));
 
 				elementArray = elementArray.filter((domNode) => {
-					return domNode.dataset.jsModule === dasherize(item.name);
+					return domNode.dataset.jsModule.indexOf(dasherize(item.name)) !== -1;
 				});
 				
 				if (elementArray.length) {
@@ -272,15 +264,14 @@ class ApplicationFacade extends Module {
 			}
 		}
 
-		// still empty? create a div for ensuring that the component 
-		// gets initialized and registered
-		if (elementArray.length === 0 && !options.omitOnMissingNode) {
-			elementArray = [document.createElement('div')];
-		}
-
 		elementArray.forEach((domNode) => {
 			this.startComponent(item, options, domNode);
 		});
+
+		// register module anyways for later use
+		if (elementArray.length === 0) {
+			this.register(item);	
+		}		
 	}
 
 	startComponent(item, options, domNode) {
@@ -288,18 +279,18 @@ class ApplicationFacade extends Module {
 		options.el = domNode;
 		options = Object.assign(this.parseOptions(options.el), options);
 
-		item = new item(options);
+		let itemInstance = new item(options);
 
-		this.initComponent(item);
-		this.register(item);
+		this.initComponent(itemInstance);
+		this.register(item, itemInstance);
 	}
 
 	startService(item, options) {
 
-		item = new item(options);
+		let itemInstance = new item(options);
 
-		this.initService(item);
-		this.register(item);
+		this.initService(itemInstance);
+		this.register(item, itemInstance);
 	}
 
 	parseOptions(el) {
@@ -361,31 +352,85 @@ class ApplicationFacade extends Module {
 		}
 	}
 
-	register(module) {
+	register(module, inst) {
 
 		if (arguments.length === 0) {
 			throw new Error('Module or module identifier expected');
 		}
 
-		let registryItem = {
-			type: UNKNOW_TYPE,
-			module,
-			autostart: false,
-			running: false,
-			uid: module.uid
-		};
+		let existingRegistryModuleItem = this.findMatchingRegistryItems(module)[0];
 
-		if (module.type === SERVICE_TYPE || module.type === COMPONENT_TYPE || module.type === MODULE_TYPE) {
-			registryItem.type = module.type;
+		if (existingRegistryModuleItem) {
+
+			let index = this._modules.indexOf(existingRegistryModuleItem);
+			
+			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
+				this._modules[index].instances.push(inst);	
+			}			
+		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
+
+			this._modules.push({
+				type: module.type,
+				module,
+				instances: (inst ? [inst] : []),
+				autostart: !!(module.autostart),
+				running: false,
+				uid: module.uid
+			});
 		} else {
-			throw new Error(`Expected Module of type 
+			console.error(`Expected Module of type 
 				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
 				Module of type ${module.type} cannot be registered.`);
 		}
+	}
 
-		registryItem.autostart = !!(module.autostart),
+	destroy(...args) {
 
-		this._modules.push(registryItem);
+		if (args.length > 1) {
+			args.forEach((arg) => { this.destroy(arg) });
+			return;
+		}
+
+		let item = args[0];
+		let isInstance = !!(typeof item === 'object' && item.uid);
+		let registryItems = this.findMatchingRegistryItems(item);
+
+		this.findMatchingRegistryItems(item).forEach((registryItem) => {
+
+			let module = registryItem.module;
+			let iterateObj = isInstance ? [item] : registryItem.instances;
+
+			iterateObj.forEach((inst) => {
+				
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.undelegateEvents();
+					inst.remove();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.disconnect();
+					inst.destroy();
+				}
+
+				// undelegate vents for all
+				inst.undelegateVents();	
+
+				let moduleInstances = this._modules[this._modules.indexOf(registryItem)]
+					.instances;
+
+				if (moduleInstances.length > 1) {
+					this._modules[this._modules.indexOf(registryItem)]
+						.instances.splice(moduleInstances.indexOf(inst), 1);			
+				} else {
+					this._modules[this._modules.indexOf(registryItem)]
+						.instances = [];
+				}				
+			});
+		});
+
+		if (!isInstance) {
+			this.unregister(item);	
+		}		
 	}
 
 	unregister(item) {

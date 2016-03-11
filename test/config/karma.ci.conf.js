@@ -34,15 +34,12 @@ module.exports = function(config) {
 		port: 8080,
 
 		browserify: {
-			browserifyOptions: {
-						debug: true
-			},
+			debug: false,
 			transform: [
 					[
 							'babelify',
 							{
 									'loose': 'all',
-									'sourceMaps': true,
 									'modules': 'common',
 									'optional': []
 							}

@@ -46,7 +46,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			expect(application.modules.length).to.equal(2);
 		});
 
-		it('should unregister a module, when module registry is passed to unregister', () => {
+		it('should unregister a module, when module registry is passed to destroy', () => {
 
 			class SomeModule extends Module {}
 			class OtherModule extends Module {}
@@ -54,46 +54,50 @@ describe('Conduitjs JS Application Facade', ()=>{
 			application.start(SomeModule);
 			application.start(OtherModule);
 
-			let uid = application.modules[1].uid;
+			let uid = application.modules[1].instances[0].uid;
 			application.destroy(application.modules[1]);
 
-
 			expect(application.modules.length).to.equal(1);
-			expect(application.modules[0].uid).to.not.equal(uid);
+			expect(application.modules[0].instances[0].uid).to.not.equal(uid);
 		});
 
 
-		it('should unregister a module, when module is passed to unregister', () => {
+		it('should unregister a module, when module is passed to destroy', () => {
 
 			class SomeModule extends Module {}
 			
 			application.start(SomeModule);
 
-			application.destroy(application.modules[0].module);
+			application.destroy(application.modules[0]);
 
 			expect(application.modules.length).to.equal(0);
 		});
 
-		it('should unregister a module, when module uid is passed to unregister', () => {
+		it('should unregister an instance within a module, when instance is passed to destroy', () => {
 			class SomeModule extends Module {}
 
 			application.start(SomeModule);
 
-			let uid = application.modules[0].uid;
+			let inst = application.modules[0].instances[0];
 
+			expect(application.modules[0].instances.length).to.equal(1);
 			expect(application.modules.length).to.equal(1);
 
-			application.destroy(uid);
-			expect(application.modules.length).to.equal(0);
+			application.destroy(inst);
+			expect(application.modules[0].instances.length).to.equal(0);
+			expect(application.modules.length).to.equal(1);
 		});
 
-		it('should unregister all modules with the same name, when name is passed to unregister', () => {
-			class SomeModule extends Module {}
+		it('should unregister all modules with the same name, when name is passed to destroy', () => {
+			class AnotherModule extends Module {}
 
-			let app = new Application(SomeModule, SomeModule);
-			expect(app.modules.length).to.equal(2);
+			let app = new Application({
+				modules: [AnotherModule, AnotherModule]
+			});
 
-			app.destroy('SomeModule');
+			expect(app.modules.length).to.equal(1);
+
+			app.destroy('AnotherModule');
 			expect(app.modules.length).to.equal(0);
 		});
 		
@@ -169,6 +173,58 @@ describe('Conduitjs JS Application Facade', ()=>{
 			application.start({module: SomeService, options: {autostart: true, data: ['val-1', 'val-2', 'val-3']}});
 
 			expect(application.modules[0].module.length).to.equal(3);
-		})
+		});
+	});
+
+	describe('View Registration', () => {
+
+		let appContainer;
+		let html;
+
+		class ComponentFirst extends Component {}
+		class ComponentSecond extends Component {}
+
+		it('should initialize multiple component modules for one container', () => {
+
+			html = `
+				<div data-js-module="component-first, component-second">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				context: appContainer,
+				observe: true
+			});
+			
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+			let componentSecond = application.start({module: ComponentSecond, options: {autostart: true}});
+
+			expect(application.modules.length).to.equal(2);
+		});
+
+		it('should start component modules automatically, when observe option is set to true and new nodes are added', (done) => {
+			
+			application = new Application({
+				observe: true
+			});
+
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+
+			expect(application.modules.length).to.equal(1);
+			expect(application.modules[0].instances.length).to.equal(0);
+
+			let newNode = document.createElement('div');
+			newNode.setAttribute('data-js-module', 'component-first');
+			document.body.appendChild(newNode);
+
+			// wait until mutation observer is aware of the change
+			setTimeout(() => {
+				expect(application.modules[0].instances.length).to.equal(1);	
+				done();
+			}, 0);			
+		});
 	});
 });

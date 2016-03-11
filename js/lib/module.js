@@ -38,14 +38,6 @@ class Module {
 		return this._vents;
 	}
 
-	get group() {
-		return this._group;
-	}
-
-	set group(group) {
-		this._group = group;
-	}
-
 	set name(name) {
 		this._name = name;
 	}
@@ -89,8 +81,6 @@ class Module {
 		}
 		
 		this.uid = this.generateUid(this);
-
-		this.group = options.group;
 
 		this.autostart = !!(options.autostart);
 	}
