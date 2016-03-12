@@ -8,6 +8,8 @@ import Plite from 'plite';
 let root = getGlobalObject();
 
 const MODULE_TYPE = 'module';
+const SERVICE_TYPE = 'service';
+const COMPONENT_TYPE = 'component';
 
 // shim promises
 !root.Promise && (root.Promise = Plite);
@@ -83,6 +85,15 @@ class Module {
 		this.uid = this.generateUid(this);
 
 		this.autostart = !!(options.autostart);
+
+		// if not extended by component or service
+		if (this.type !== SERVICE_TYPE || this.type !== COMPONENT_TYPE) {
+			this.initialize(options);
+		}
+	}
+
+	initialize(options) {
+		// override
 	}
 
 	generateName(obj) {

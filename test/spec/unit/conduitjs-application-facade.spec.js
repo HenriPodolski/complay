@@ -226,5 +226,44 @@ describe('Conduitjs JS Application Facade', ()=>{
 				done();
 			}, 0);			
 		});
+
+		it('should use data-js-options, if available', () => {
+			html = `
+				<div data-js-module="component-first" data-js-options="{'test': true}">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				context: appContainer
+			});
+			
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+
+			expect(componentFirst.instances[componentFirst.instances.length - 1].options.test).to.be.ok;
+		});
+
+		it('should use component specific namespaced data-js-options, if available', () => {
+			html = `
+				<div data-js-module="component-first, component-second" 
+					 data-js-options="{'component-first': {'usesNamespace': true}, 'ComponentSecond': {'usesNamespace': true}}">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				context: appContainer
+			});
+			
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+			let componentSecond = application.start({module: ComponentSecond, options: {autostart: true}});
+
+			expect(componentFirst.instances[componentFirst.instances.length - 1].options.usesNamespace).to.be.ok;
+			expect(componentSecond.instances[componentSecond.instances.length - 1].options.usesNamespace).to.be.ok;
+		});
 	});
 });

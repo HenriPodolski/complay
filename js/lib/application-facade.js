@@ -1,6 +1,4 @@
 import Module from './module';
-import Service from './service';
-import Component from './component';
 
 import from from '../helpers/array/from';
 import assign from '../helpers/object/assign';
@@ -34,11 +32,6 @@ class ApplicationFacade extends Module {
 	constructor(options={}) {
 		super(options);
 		this._modules = [];
-
-		// expose framework classes
-		this.Module = Module;
-		this.Service = Service;
-		this.Component = Component;
 
 		this.moduleNodes = [];
 
@@ -79,7 +72,7 @@ class ApplicationFacade extends Module {
 		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach((item) => {
 			let mod = item.module;
 
-			console.log(domNodeArray(addedNodes), addedNodes);
+			console.info('New dom nodes added.', domNodeArray(addedNodes));
 			
 			domNodeArray(addedNodes).forEach((ctx) => {				
 				if (ctx) {
@@ -189,7 +182,7 @@ class ApplicationFacade extends Module {
 		let registryItem = this._modules[this._modules.length - 1];
 		registryItem.running = true;
 
-		return registryItem.module;
+		return registryItem;
 	}
 
 	startModule(item, options) {
@@ -226,10 +219,6 @@ class ApplicationFacade extends Module {
 		}
 
 		elementArray = domNodeArray(options.el);
-
-		if (observerStart) {
-			console.log('Here', elementArray, item, options);
-		}
 
 		if (elementArray.length === 0) {
 			// context or parent context already queried for data-js-module and saved?
@@ -277,7 +266,7 @@ class ApplicationFacade extends Module {
 	startComponent(item, options, domNode) {
 
 		options.el = domNode;
-		options = Object.assign(this.parseOptions(options.el), options);
+		options = Object.assign(this.parseOptions(options.el, item), options);
 
 		let itemInstance = new item(options);
 
@@ -293,7 +282,7 @@ class ApplicationFacade extends Module {
 		this.register(item, itemInstance);
 	}
 
-	parseOptions(el) {
+	parseOptions(el, item) {
 
 		let options = el.dataset.jsOptions;
 
@@ -306,6 +295,7 @@ class ApplicationFacade extends Module {
 				.replace(/'/g, '"');
 
 			options = JSON.parse(options);
+			options = options[dasherize(item.name)] || options[item.name] || options;
 		}
 
 		return options || {};
@@ -313,21 +303,19 @@ class ApplicationFacade extends Module {
 
 	initModule(module) {
 
-		if (!(module instanceof Module)) {
+		if (module.type !== MODULE_TYPE) {
 			throw new Error(`Expected Module instance.`);
 		}
 
-		module.undelegateVents();
 		module.delegateVents();
 	}
 
 	initService(module) {
 
-		if (!(module instanceof Service)) {
+		if (module.type !== SERVICE_TYPE) {
 			throw new Error(`Expected Service instance.`);
 		}
 
-		module.undelegateVents();
 		module.delegateVents();
 		module.connect();
 
@@ -338,12 +326,10 @@ class ApplicationFacade extends Module {
 
 	initComponent(module) {
 		
-		if (!(module instanceof Component)) {
+		if (module.type !== COMPONENT_TYPE) {
 			throw new Error(`Expected Component instance.`);
 		}
 
-		module.undelegateVents();
-		module.undelegateEvents();
 		module.delegateVents();
 		module.delegateEvents();
 

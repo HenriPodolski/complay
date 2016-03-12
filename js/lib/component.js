@@ -59,7 +59,9 @@ class Component extends Module {
 		this._domEvents = [];
 
 		this.ensureElement(options);
+		this.initialize(options);
 		this.delegateEvents();
+		this.delegateVents();
 	}
 
 	createDom(str) {

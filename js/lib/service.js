@@ -39,6 +39,8 @@ class Service extends Module {
 		this.length = 0;
 
 		this.resource = options.resource || this;
+
+		this.initialize(options);
 	}
 
 	each(obj, callback) {
