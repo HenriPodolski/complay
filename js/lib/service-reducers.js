@@ -14,26 +14,23 @@ export default class ServiceReducers {
 
 	static where(characteristics) {
 
-		let results = {};
-		results.length = 0;
+		let results = [];
 
 		this.each((i, item) => {
 			if (typeof characteristics === 'function' && characteristics(item)) {
-				results[i] = item;
-				results.length += 1;
+				results.push(item);
 			} else if (typeof characteristics === 'object') {
 
-				let hasCharacteristics = true;
+				let hasCharacteristics = false;
 
 				for (let key in characteristics) {
-					if (!item.hasOwnProperty(key) || item[key] !== characteristics[key]) {
-						hasCharacteristics = false;
+					if (item.hasOwnProperty(key) && item[key] === characteristics[key]) {
+						hasCharacteristics = true;
 					}
 				}
 
 				if (hasCharacteristics) {
-					results[i] = item;
-					results.length += 1;
+					results.push(item);
 				}
 			}
 		})

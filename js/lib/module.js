@@ -14,6 +14,32 @@ const COMPONENT_TYPE = 'component';
 // shim promises
 !root.Promise && (root.Promise = Plite);
 
+function generateName(obj) {
+		
+	if (obj.name) {
+		return obj.name;
+	}
+
+	return extractObjectName(obj);
+}
+
+function generateDashedName(obj) {
+	
+	if (obj.dashedName) {
+		return obj.dashedName;
+	}
+
+	return dasherize(generateName(obj));
+}
+
+function generateUid(obj) {
+	if (obj.uid) {
+		return obj.uid;
+	}
+
+	return namedUid(generateName(obj));
+}
+
 class Module {
 
 	static get type() {
@@ -68,8 +94,8 @@ class Module {
 
 		this.options = options;
 
-		this.name = this.generateName(this);
-		this.dashedName = this.generateDashedName(this);
+		this.name = generateName(this);
+		this.dashedName = generateDashedName(this);
 
 		if (options.app) {
 			this.app = options.app;
@@ -77,7 +103,7 @@ class Module {
 
 		this.vents = options.vents || {};		
 		
-		this.uid = this.generateUid(this);
+		this.uid = generateUid(this);
 
 		this.autostart = !!(options.autostart);
 
@@ -103,31 +129,6 @@ class Module {
 		// override
 	}
 
-	generateName(obj) {
-		
-		if (obj.name) {
-			return obj.name;
-		}
-
-		return extractObjectName(obj);
-	}
-
-	generateDashedName(obj) {
-		if (obj.dashedName) {
-			return obj.dashedName;
-		}
-
-		return dasherize(this.generateName(obj));
-	}
-
-	generateUid(obj) {
-		if (obj.uid) {
-			return obj.uid;
-		}
-
-		return namedUid(this.generateName(obj));
-	}
-
 	delegateVents() {
 
 		if (!this.vent) {
@@ -147,6 +148,8 @@ class Module {
 				this.vent.on(vent, callback, this);
 			}
 		}
+
+		return this;
 	}
 
 	undelegateVents() {
@@ -168,6 +171,8 @@ class Module {
 				this.vent.off(vent, callback, this);
 			}
 		}
+
+		return this;
 	}
 
 	toString() {

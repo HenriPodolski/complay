@@ -36,6 +36,19 @@ class Service extends Module {
 
 		this.resource = options.resource || this;
 
+		this.data = {};
+
+		// proxying ServiceReducers via this.data
+		for (var method in ServiceReducers) {	
+			if (ServiceReducers.hasOwnProperty(method)) {
+				this.data[method] = ServiceReducers[method].bind(this);
+			}
+		}		
+
+		this.lastCommitId = null;
+		this.commitIds = [];
+		this.repository = {};
+
 		if (options.vent) {
 			// could be used standalone
 			this.vent = options.vent(this);
@@ -46,11 +59,45 @@ class Service extends Module {
 			this.vent = defaultConfig.vent(this);
 		}
 
+		if (options.data) {
+			this.merge(options.data);
+		}
+
 		this.initialize(options);
 		this.delegateVents()
 	}
 
 	fallback() {
+		return this;
+	}
+
+	commit(id) {
+		
+		if (id) {
+			this.repository[id] = this.toArray();
+			this.lastCommitId = id;	
+			this.commitIds.push(id);
+		}
+
+		return this;
+	}
+
+	resetRepos() {
+		
+		this.lastCommitId = null;
+		this.commitIds = [];
+		this.repository = {};
+
+		return this;
+	}
+
+	rollback(id = this.lastCommitId) {
+
+		if (id && this.repository[id]) {
+			this.reset();
+			this.create(this.repository[id]);
+		}
+
 		return this;
 	}
 
@@ -132,6 +179,9 @@ class Service extends Module {
 		return this;
 	}
 
+	/**
+	 * @name merge
+	 */
 	merge(data) {
 
 		if (isArrayLike(data)) {
@@ -143,14 +193,54 @@ class Service extends Module {
 		return this;
 	}
 
+	replace(opts = { data: [] }) {
+
+		if (!(opts.data instanceof Array)) {
+			opts.data  = [opts.data];
+		}
+
+		opts.end = opts.end || this.length;
+
+		if (!isNaN(opts.start) && opts.start <= opts.end) {
+
+			let i = opts.start;
+			let j = 0;
+
+			while(i <= opts.end && opts.data[j]) {
+				this[i] = opts.data[j];
+				i++;
+				j++;
+			}
+
+		}
+
+		return this;
+	}
+
+	insert(opts = { data: [], replace: 0 }) {
+		
+		if (!(opts.data instanceof Array)) {
+			opts.data = [opts.data];
+		}
+
+		if (!isNaN(opts.start)) {
+			let dataArray = this.toArray();
+			Array.prototype.splice.apply(dataArray, [opts.start, opts.replace].concat(opts.data));
+			this.reset();
+			this.create(dataArray);
+		}
+
+		return this;
+	}
+
 	/**
 	 * creates a new item or a whole data set
+	 * @alias  merge
 	 * @param  {mixed} data to be created on this service and on remote when save is called or
 	 *                      param remote is true
 	 * @return {mixed} newly created item or collection
 	 */
 	create(data) {
-
 		this.merge(data);
 
 		return this;
@@ -190,6 +280,8 @@ class Service extends Module {
 		});
 
 		scope.length = 0;
+
+		return this;
 	}
 
 	toArray(scope = this) {
@@ -205,6 +297,11 @@ class Service extends Module {
 		});
 
 		return arr;
+	}
+
+	toDataString() {
+
+		return JSON.stringify(this.toArray());
 	}
 
 	/**
