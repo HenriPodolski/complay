@@ -2,7 +2,6 @@ import dasherize from '../helpers/string/dasherize';
 import extractObjectName from '../helpers/string/extract-object-name';
 import namedUid from '../helpers/string/named-uid';
 import getGlobalObject from '../helpers/environment/get-global-object';
-import Box from './box';
 import Plite from 'plite';
 
 let root = getGlobalObject();
@@ -75,12 +74,7 @@ class Module {
 			this.app = options.app;
 		}
 
-		let box = options.box || new Box();
-
-		if (box && box.vent) {
-			this.vent = box.vent(options.app || this);
-			this.vents = options.vents || {};
-		}
+		this.vents = options.vents || {};		
 		
 		this.uid = this.generateUid(this);
 
@@ -88,7 +82,17 @@ class Module {
 
 		// if not extended by component or service
 		if (this.type !== SERVICE_TYPE || this.type !== COMPONENT_TYPE) {
+
+			if (options.vent) {
+				// could be used standalone
+				this.vent = options.vent(this);
+			} else if (options.app && options.app.vent) {
+				// or within an application facade
+				this.vent = options.app.vent(options.app);			
+			}
+
 			this.initialize(options);
+			this.delegateVents();
 		}
 	}
 
@@ -122,6 +126,11 @@ class Module {
 	}
 
 	delegateVents() {
+
+		if (!this.vent) {
+			return;
+		}
+
 		for (let vent in this.vents) {
 			if (this.vents.hasOwnProperty(vent)) {
 				let callback = this.vents[vent];
@@ -138,6 +147,10 @@ class Module {
 	}
 
 	undelegateVents() {
+
+		if (!this.vent) {
+			return;
+		}
 
 		for (let vent in this.vents) {
 			if (this.vents.hasOwnProperty(vent)) {

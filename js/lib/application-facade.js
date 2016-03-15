@@ -16,6 +16,18 @@ class ApplicationFacade extends Module {
 		return this._modules;
 	}
 
+	get vent() {
+		return this.options.vent;
+	}
+
+	get dom() {
+		return this.options.dom;	
+	}
+
+	get template() {
+		return this.options.template;
+	}
+
 	getModuleInstanceByName(moduleConstructorName, index) {
 
 		let foundModuleInstances = this.findMatchingRegistryItems(moduleConstructorName);

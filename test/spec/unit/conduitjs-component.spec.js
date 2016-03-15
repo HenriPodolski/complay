@@ -1,12 +1,8 @@
 import chai from 'chai';
 import Component from '../../../js/lib/component';
-import ComponentBox from '../../../js/lib/component-box';
-import defaultConfig from '../../../js/default-config';
-
-// set up default plugins for boxes
-ComponentBox.use(defaultConfig.vent);
-ComponentBox.use(defaultConfig.dom);
-ComponentBox.use(defaultConfig.template);
+import DomSelector from '../../../js/plugins/dom/dom-selector';
+import Vent from '../../../js/plugins/vent/vent';
+import Template from '../../../js/plugins/template/template';
 
 var expect = chai.expect;
 var asset = chai.assert;
@@ -20,7 +16,11 @@ describe('Conduitjs JS Component', ()=>{
 	describe('Component Base Class', ()=>{
 
 		beforeEach(() => {
-			component = new Component();
+			component = new Component({
+				dom: DomSelector,
+				vent: Vent,
+				template: Template
+			});
 		});
 
 		it('should have a static getter property type', () => {
@@ -51,7 +51,12 @@ describe('Conduitjs JS Component', ()=>{
 
 		beforeEach(() => {
 			component = new Component();
-			myComponent = new Component({el: document.createElement('article')});
+			myComponent = new Component({
+				el: document.createElement('article'),
+				dom: DomSelector,
+				vent: Vent,
+				template: Template
+			});
 		});
 
 		it('should ensure an element', ()=> {

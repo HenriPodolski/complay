@@ -1,11 +1,5 @@
 import chai from 'chai';
 import Service from '../../../js/lib/service';
-import ServiceBox from '../../../js/lib/service-box';
-import defaultConfig from '../../../js/default-config';
-
-// set up default plugins for boxes
-ServiceBox.use(defaultConfig.vent);
-ServiceBox.use(defaultConfig.data);
 
 var expect = chai.expect;
 var asset = chai.assert;

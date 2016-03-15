@@ -1,11 +1,9 @@
 /**
  * @module  lib/Service
- * used to create models
- * uses mixin properties from ServiceBox either as adapter or proxy,
- * according as the underlying API is normalized or full implemented
+ * used to create models, collections, proxies, adapters
  */
 import Module from './module';
-import ServiceBox from './service-box';
+import ServiceReducers from './service-reducers';
 import isArrayLike from '../helpers/array/is-array-like';
 import merge from '../helpers/array/merge';
 
@@ -31,16 +29,26 @@ class Service extends Module {
 
 	constructor(options={}) {
 
-		let box = options.box || new ServiceBox();
-		options.box = box;
-
 		super(options);
 
 		this.length = 0;
 
 		this.resource = options.resource || this;
 
+		if (options.vent) {
+			// could be used standalone
+			this.vent = options.vent(this);
+		} else if (options.app && options.app.vent) {
+			// or within an application facade
+			this.vent = options.app.vent(options.app);			
+		}
+
 		this.initialize(options);
+		this.delegateVents()
+	}
+
+	fallback() {
+		return this;
 	}
 
 	each(obj, callback) {
@@ -71,28 +79,36 @@ class Service extends Module {
 	}
 
 	/**
-	 * connect to a service box data
-	 * @return {mixed} data or promise
+	 * connect to a service
+	 * @return {mixed} this or promise
 	 */
 	connect() {
-		return this;
+		
+		let connectMethod = this.options.connectMethod || this.fallback;
+
+		return connectMethod.apply(this, arguments);
 	}
 
 	/**
-	 * disconnect from service box data
-	 * @return {boolean}
+	 * disconnect from service
+	 * @return {mixed} this or promise
 	 */
 	disconnect() {
-		return this;
+
+		let disconnectMethod = this.options.disconnectMethod || this.fallback;
+
+		return disconnectMethod.apply(this, arguments);
 	}
 
 	/**
 	 * fetches data from proxied resource
-	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {Promise} resolve or error
 	 */
-	fetch(reduce) {
-		return this;
+	fetch() {
+		
+		let fetchMethod = this.options.fetchMethod || this.fallback;
+
+		return fetchMethod.apply(this, arguments);
 	}
 
 	/**
@@ -100,7 +116,7 @@ class Service extends Module {
 	 * @return {[type]} [description]
 	 */
 	then(cb) {
-		cb(this.data);
+		cb(this.toArray());
 		return this;
 	}
 
@@ -113,13 +129,15 @@ class Service extends Module {
 		return this;
 	}
 
-	init(data) {
+	merge(data) {
 
 		if (isArrayLike(data)) {
 			merge(this, data);
 		} else if(data) {
 			this.add(data);
 		}
+
+		return this;
 	}
 
 	/**
@@ -130,52 +148,9 @@ class Service extends Module {
 	 */
 	create(data) {
 
-		this.init(data);
+		this.merge(data);
 
 		return this;
-	}
-
-	where(characteristics) {
-
-		if (!this.isSynced) {
-			console.warn(`${this} is out of sync!`);
-		}
-
-		let results = {};
-		results.length = 0;
-
-		this.each((i, item) => {
-			if (typeof characteristics === 'function' && characteristics(item)) {
-				results[i] = item;
-				results.length += 1;
-			} else if (typeof characteristics === 'object') {
-
-				let hasCharacteristics = true;
-
-				for (let key in characteristics) {
-					if (!item.hasOwnProperty(key) || item[key] !== characteristics[key]) {
-						hasCharacteristics = false;
-					}
-				}
-
-				if (hasCharacteristics) {
-					results[i] = item;
-					results.length += 1;
-				}
-			}
-		})
-
-		return results;
-	}
-
-
-	/**
-	 * reads a data set, reduced by reduced parameter
-	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
-	 * @return {mixed} 
-	 */
-	read(reduce) {
-		return this.findIndex(reduce);
 	}
 
 	/**
@@ -204,30 +179,29 @@ class Service extends Module {
 		return this;
 	}
 
-	reset() {
+	reset(scope = this) {
 		let i = 0;
 		
-		this.each((i) => {
-			delete this[i];
+		this.each(scope, (i) => {
+			delete scope[i];
 		});
 
-		this.length = 0;
+		scope.length = 0;
 	}
 
-	toArray() {
+	toArray(scope = this) {
 		let arr = [];
 		let i = 0;
 
-		this.each((i) => {
-			arr.push(this[i]);
+		if (scope instanceof Array) {
+			return scope;
+		}
+
+		this.each(scope, (i) => {
+			arr.push(scope[i]);
 		});
 
 		return arr;
-	}
-
-	findIndex(item) {
-
-		return this.toArray().indexOf(item);
 	}
 
 	/**
@@ -246,12 +220,15 @@ class Service extends Module {
 	}
 
 	/**
-	 * save the current state of the service to box's resource
+	 * save the current state to the service resource
 	 * Nothing is saved to the resource, until this is called
 	 * @return {Promise} resolve or error
 	 */
 	save() {
-		return this;
+		
+		let saveMethod = this.options.saveMethod || this.fallback;
+
+		return saveMethod.apply(this, arguments);
 	}
 }
 

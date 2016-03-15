@@ -1,6 +1,5 @@
-import DomSelector from '../../../../js/plugins/dom/dom-selector/dom-selector';
+import DomSelector from '../../../../js/plugins/dom/dom-selector';
 import chai from 'chai';
-
 
 var expect = chai.expect;
 var asset = chai.assert;

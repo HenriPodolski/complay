@@ -1,6 +1,6 @@
-import uniques from '../../../helpers/array/uniques';
-import from from '../../../helpers/array/from';
-import {BaseCollection} from '../../../lib/collection';
+import uniques from '../../helpers/array/uniques';
+import from from '../../helpers/array/from';
+import {BaseCollection} from '../../lib/collection';
 
 export default (function() {
 

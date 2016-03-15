@@ -2,15 +2,7 @@ import chai from 'chai';
 import ApplicationFacade from '../../../js/lib/application-facade';
 import Module from '../../../js/lib/module';
 import Component from '../../../js/lib/component';
-import ComponentBox from '../../../js/lib/component-box';
 import Service from '../../../js/lib/service';
-import ServiceBox from '../../../js/lib/service-box';
-import defaultConfig from '../../../js/default-config';
-
-// set up default plugins for boxes
-ServiceBox.use(defaultConfig.data);
-ComponentBox.use(defaultConfig.dom);
-ComponentBox.use(defaultConfig.template);
 
 var expect = chai.expect;
 var asset = chai.assert;

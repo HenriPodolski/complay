@@ -1,11 +1,8 @@
 /**
  * @module  lib/Component
  * used to create views and/or view mediators
- * uses mixin properties and methods from ComponentBox either as adapter or proxy,
- * according as the underlying API is normalized of full implemented
  */
 import Module from './module';
-import ComponentBox from './component-box';
 
 import assign from '../helpers/object/assign';
 
@@ -47,14 +44,20 @@ class Component extends Module {
 
 	constructor(options={}) {
 
-		let box = options.box || new ComponentBox();
-		options.box = box;
-
 		super(options);
 
 		this.events = {};
-		this.dom = box.dom;
-		this.template = box.template;
+		this.dom = options.dom || (options.app && options.app.dom);
+		this.template = options.template || (options.app && options.app.template);
+
+		if (options.vent) {
+			// could be used standalone
+			this.vent = options.vent(this);
+		} else if (options.app && options.app.vent) {
+			// or within an application facade
+			console.log(options.app.vent, 'vent');
+			this.vent = options.app.vent(options.app);			
+		}
 
 		this._domEvents = [];
 
@@ -95,7 +98,7 @@ class Component extends Module {
 			this.el.componentUid.push(this.uid);
 		}
 
-		this.$el = this.dom(this.el);
+		this.$el = this.dom && this.dom(this.el);
 	}
 
 	setElement(el) {

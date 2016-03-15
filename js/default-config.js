@@ -1,13 +1,11 @@
-import VentPlugin from './plugins/vent/default/plugin';
-import DomPlugin from './plugins/dom/default/plugin';
-import TemplatePlugin from './plugins/template/default/plugin';
-import DataPlugin from './plugins/data/default/plugin';
+import VentPlugin from './plugins/vent/vent';
+import DomPlugin from './plugins/dom/dom-selector';
+import TemplatePlugin from './plugins/template/template.js';
 
 const defaultConfig = {
 	vent: VentPlugin,
 	dom: DomPlugin,
-	template: TemplatePlugin,
-	data: DataPlugin
+	template: TemplatePlugin
 }
 
 export default defaultConfig;
