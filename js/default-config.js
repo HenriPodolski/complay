@@ -1,11 +1,10 @@
 import VentPlugin from './plugins/vent/vent';
-import DomPlugin from './plugins/dom/dom-selector';
-import TemplatePlugin from './plugins/template/template.js';
+import Fallback from './plugins/fallback/fallback.js';
 
 const defaultConfig = {
 	vent: VentPlugin,
-	dom: DomPlugin,
-	template: TemplatePlugin
+	dom: Fallback('dom'),
+	template: Fallback('template')
 }
 
 export default defaultConfig;

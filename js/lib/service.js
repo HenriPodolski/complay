@@ -4,6 +4,7 @@
  */
 import Module from './module';
 import ServiceReducers from './service-reducers';
+import defaultConfig from '../default-config';
 import isArrayLike from '../helpers/array/is-array-like';
 import merge from '../helpers/array/merge';
 
@@ -41,6 +42,8 @@ class Service extends Module {
 		} else if (options.app && options.app.vent) {
 			// or within an application facade
 			this.vent = options.app.vent(options.app);			
+		} else {
+			this.vent = defaultConfig.vent(this);
 		}
 
 		this.initialize(options);

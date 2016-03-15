@@ -3,7 +3,7 @@
  * used to create views and/or view mediators
  */
 import Module from './module';
-
+import defaultConfig from '../default-config';
 import assign from '../helpers/object/assign';
 
 const COMPONENT_TYPE = 'component';
@@ -47,16 +47,22 @@ class Component extends Module {
 		super(options);
 
 		this.events = {};
-		this.dom = options.dom || (options.app && options.app.dom);
-		this.template = options.template || (options.app && options.app.template);
+		this.dom = options.dom 
+			|| (options.app && options.app.dom)
+			|| defaultConfig.dom;
+
+		this.template = options.template 
+			|| (options.app && options.app.template)
+			|| defaultConfig.template;
 
 		if (options.vent) {
 			// could be used standalone
-			this.vent = options.vent(this);
+			this.vent = options.vent(options.app || this);
 		} else if (options.app && options.app.vent) {
 			// or within an application facade
-			console.log(options.app.vent, 'vent');
 			this.vent = options.app.vent(options.app);			
+		} else {
+			this.vent = defaultConfig.vent(options.app || this);
 		}
 
 		this._domEvents = [];

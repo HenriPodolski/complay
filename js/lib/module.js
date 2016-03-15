@@ -2,6 +2,7 @@ import dasherize from '../helpers/string/dasherize';
 import extractObjectName from '../helpers/string/extract-object-name';
 import namedUid from '../helpers/string/named-uid';
 import getGlobalObject from '../helpers/environment/get-global-object';
+import defaultConfig from '../default-config';
 import Plite from 'plite';
 
 let root = getGlobalObject();
@@ -89,6 +90,8 @@ class Module {
 			} else if (options.app && options.app.vent) {
 				// or within an application facade
 				this.vent = options.app.vent(options.app);			
+			} else {
+				this.vent = defaultConfig.vent(this);
 			}
 
 			this.initialize(options);

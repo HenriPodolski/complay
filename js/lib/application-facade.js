@@ -5,7 +5,6 @@ import assign from '../helpers/object/assign';
 import dasherize from '../helpers/string/dasherize';
 import domNodeArray from '../helpers/dom/dom-node-array';
 
-const UNKNOW_TYPE = 'unknown';
 const MODULE_TYPE = 'module';
 const SERVICE_TYPE = 'service';
 const COMPONENT_TYPE = 'component';
@@ -14,18 +13,6 @@ class ApplicationFacade extends Module {
 
 	get modules() {
 		return this._modules;
-	}
-
-	get vent() {
-		return this.options.vent;
-	}
-
-	get dom() {
-		return this.options.dom;	
-	}
-
-	get template() {
-		return this.options.template;
 	}
 
 	getModuleInstanceByName(moduleConstructorName, index) {
@@ -43,9 +30,14 @@ class ApplicationFacade extends Module {
 
 	constructor(options={}) {
 		super(options);
+		
 		this._modules = [];
 
 		this.moduleNodes = [];
+
+		this.vent = options.vent;
+		this.dom = options.dom;
+		this.template = options.template;
 
 		if (options.modules) {
 			this.start.apply(this, options.modules);

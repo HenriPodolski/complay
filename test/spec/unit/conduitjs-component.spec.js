@@ -50,7 +50,11 @@ describe('Conduitjs JS Component', ()=>{
 	describe('Component Class DOM capabilities', ()=>{
 
 		beforeEach(() => {
-			component = new Component();
+			component = new Component({
+				dom: DomSelector,
+				vent: Vent,
+				template: Template
+			});
 			myComponent = new Component({
 				el: document.createElement('article'),
 				dom: DomSelector,
