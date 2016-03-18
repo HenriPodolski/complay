@@ -2,22 +2,26 @@ export default class ServiceReducers {
 
 	static reduce(cb, start = 0) {
 
-		return this.toArray()
-			  	.reduce(cb, start);
+		let arr = this.toArray();
+
+		return arr.reduce(cb, start);
 	}
 
 	static filter(cb) {
 
-		return this.toArray()
-				.filter(cb);
+		let arr = this.toArray();
+
+		return arr.filter(cb);
 	}
 
-	static where(characteristics) {
+	static where(characteristics, returnIndexes = false) {
 
 		let results = [];
+		let originalIndexes = [];
 
 		this.each((i, item) => {
 			if (typeof characteristics === 'function' && characteristics(item)) {
+				originalIndexes.push(i);
 				results.push(item);
 			} else if (typeof characteristics === 'object') {
 
@@ -30,12 +34,18 @@ export default class ServiceReducers {
 				}
 
 				if (hasCharacteristics) {
+					originalIndexes.push(i);
 					results.push(item);
 				}
 			}
 		})
 
-		return results;
+		if (returnIndexes) {
+			return [results, originalIndexes];	
+		} else {
+			return results;
+		}
+		
 	}
 
 	static findByIndexes(item) {
@@ -46,7 +56,7 @@ export default class ServiceReducers {
 		}
 
 		return ServiceReducers.filter((val, index) => {
-			return item.indexOf(index) !== -1;
+			return ~item.indexOf(index);
 		});
 	}
 }

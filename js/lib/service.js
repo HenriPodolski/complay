@@ -4,6 +4,7 @@
  */
 import Module from './module';
 import ServiceReducers from './service-reducers';
+import assign from '../helpers/object/assign';
 import defaultConfig from '../default-config';
 import isArrayLike from '../helpers/array/is-array-like';
 import merge from '../helpers/array/merge';
@@ -251,11 +252,42 @@ class Service extends Module {
 	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {mixed} updated data set
 	 */
-	update(reduce, data) {
-		// this.data = this.dataLib.update(reduce, data);
-		console.error('Not implemented yet');
+	update(updatesets = []) {
+
+		updatesets = (updatesets instanceof Array) ? updatesets : (updatesets ? [updatesets] : []);
+
+		updatesets.forEach((dataset) => {			
+			if (!isNaN(dataset.index) && this[dataset.index]) {
+				this[dataset.index] = dataset.to;
+			} else if (dataset.where) {
+				let [foundData, foundDataIndexes] = this.data.where(dataset.where, true);
+
+				foundDataIndexes.forEach((foundDataIndex) => {
+					let isObjectUpdate = dataset.to &&
+						!(dataset.to instanceof Array) && 
+						typeof dataset.to === 'object' &&
+						this[foundDataIndex] &&
+						!(this[foundDataIndex] instanceof Array) && 
+						typeof this[foundDataIndex] === 'object'; 
+					let isArrayUpdate = (dataset.to instanceof Array) && (this[foundDataIndex] instanceof Array);
+
+					if (isArrayUpdate) {
+						// base: [0,1,2,3], to: [-1,-2], result: [-1,-2,2,3]
+						Array.prototype.splice.apply(this[foundDataIndex], [0, dataset.to.length].concat(dataset.to));
+					} else if (isObjectUpdate) {
+						// base: {old: 1, test: true}, {old: 2, somthing: 'else'}, result: {old: 2, test: true, somthing: "else"}
+		 				this[foundDataIndex] = Object.assign(this[foundDataIndex], dataset.to);
+					} else {
+						this[foundDataIndex] = dataset.to;
+					}
+				});
+			}
+		});
+
 		return this;
 	}
+
+
 	
 	/**
 	 * adds an item
