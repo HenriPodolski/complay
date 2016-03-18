@@ -87,4 +87,26 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 
 		expect(parseInt(testElement[0].dataset.test)).to.equal(2);
 	});
+
+	it('should find class selectors using hasClass method', () => {
+		let testElement = DomSelector('#test span', domNode);
+
+		expect(testElement.hasClass('test-2')).to.be.ok;
+	});
+
+	it('should add classes using add class', () => {
+		let testElement = DomSelector('#test', domNode);
+
+		testElement.addClass('some-class');
+
+		expect(testElement[0].className.indexOf('some-class')).to.not.equal(-1);
+	});
+
+	it('should remove classes using remove class', () => {
+		let testElement = DomSelector('#test span', domNode);
+
+		testElement.removeClass('test-2');
+
+		expect(testElement[0].className.indexOf('test-2')).to.equal(-1);
+	});
 });

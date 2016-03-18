@@ -352,4 +352,13 @@ describe('Conduitjs JS Service', () => {
 			}]);
 		});
 	});
+
+	describe('Service fetch and save injection', () => {
+
+		class SomeService extends Service {}
+
+		it('should transform the dataset', () => {
+			
+		});
+	});
 });

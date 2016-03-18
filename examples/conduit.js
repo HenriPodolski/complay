@@ -23,22 +23,6 @@ var _libComponent = require('./lib/component');
 
 var _libComponent2 = _interopRequireDefault(_libComponent);
 
-var _libBox = require('./lib/box');
-
-var _libBox2 = _interopRequireDefault(_libBox);
-
-var _libServiceBox = require('./lib/service-box');
-
-var _libServiceBox2 = _interopRequireDefault(_libServiceBox);
-
-var _libComponentBox = require('./lib/component-box');
-
-var _libComponentBox2 = _interopRequireDefault(_libComponentBox);
-
-var _defaultConfig = require('./default-config');
-
-var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
-
 var _libApplicationFacade = require('./lib/application-facade');
 
 var _libApplicationFacade2 = _interopRequireDefault(_libApplicationFacade);
@@ -52,11 +36,6 @@ var Conduit = root.Conduit || {};
 
 // shim promises
 !root.Promise && (root.Promise = _plite2['default']);
-// set up default plugins for boxes
-_libBox2['default'].use(_defaultConfig2['default'].vent);
-_libServiceBox2['default'].use(_defaultConfig2['default'].data);
-_libComponentBox2['default'].use(_defaultConfig2['default'].dom);
-_libComponentBox2['default'].use(_defaultConfig2['default'].template);
 // export ApplicationFacade Class for creating multicore apps
 Conduit.ApplicationFacade = _libApplicationFacade2['default'];
 Conduit.ApplicationFacade.extend = _helpersObjectExtend2['default'];
@@ -72,39 +51,34 @@ Conduit.Component.extend = _helpersObjectExtend2['default'];
 
 // replace or create in global namespace
 root.Conduit = Conduit;
-},{"./default-config":2,"./helpers/environment/get-global-object":8,"./helpers/object/extend":10,"./lib/application-facade":14,"./lib/box":15,"./lib/component":18,"./lib/component-box":17,"./lib/module":19,"./lib/service":21,"./lib/service-box":20,"plite":29}],2:[function(require,module,exports){
+},{"./helpers/environment/get-global-object":8,"./helpers/object/extend":10,"./lib/application-facade":15,"./lib/component":17,"./lib/module":18,"./lib/service":19,"plite":23}],2:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _pluginsVentDefaultPlugin = require('./plugins/vent/default/plugin');
+var _pluginsVentVent = require('./plugins/vent/vent');
 
-var _pluginsVentDefaultPlugin2 = _interopRequireDefault(_pluginsVentDefaultPlugin);
+var _pluginsVentVent2 = _interopRequireDefault(_pluginsVentVent);
 
-var _pluginsDomDefaultPlugin = require('./plugins/dom/default/plugin');
+var _pluginsDomDomSelector = require('./plugins/dom/dom-selector');
 
-var _pluginsDomDefaultPlugin2 = _interopRequireDefault(_pluginsDomDefaultPlugin);
+var _pluginsDomDomSelector2 = _interopRequireDefault(_pluginsDomDomSelector);
 
-var _pluginsTemplateDefaultPlugin = require('./plugins/template/default/plugin');
+var _pluginsFallbackFallbackJs = require('./plugins/fallback/fallback.js');
 
-var _pluginsTemplateDefaultPlugin2 = _interopRequireDefault(_pluginsTemplateDefaultPlugin);
-
-var _pluginsDataDefaultPlugin = require('./plugins/data/default/plugin');
-
-var _pluginsDataDefaultPlugin2 = _interopRequireDefault(_pluginsDataDefaultPlugin);
+var _pluginsFallbackFallbackJs2 = _interopRequireDefault(_pluginsFallbackFallbackJs);
 
 var defaultConfig = {
-	vent: _pluginsVentDefaultPlugin2['default'],
-	dom: _pluginsDomDefaultPlugin2['default'],
-	template: _pluginsTemplateDefaultPlugin2['default'],
-	data: _pluginsDataDefaultPlugin2['default']
+	vent: _pluginsVentVent2['default'],
+	dom: _pluginsDomDomSelector2['default'],
+	template: _pluginsFallbackFallbackJs2['default']('template')
 };
 
 exports['default'] = defaultConfig;
 module.exports = exports['default'];
-},{"./plugins/data/default/plugin":22,"./plugins/dom/default/plugin":24,"./plugins/template/default/plugin":26,"./plugins/vent/default/plugin":27}],3:[function(require,module,exports){
+},{"./plugins/dom/dom-selector":20,"./plugins/fallback/fallback.js":21,"./plugins/vent/vent":22}],3:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -175,6 +149,12 @@ module.exports = exports['default'];
 exports.__esModule = true;
 exports['default'] = domNodeArray;
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _arrayFrom = require('../array/from');
+
+var _arrayFrom2 = _interopRequireDefault(_arrayFrom);
+
 function domNodeArray(item) {
 
 	var retArray = [];
@@ -186,7 +166,7 @@ function domNodeArray(item) {
 	} else if (typeof item === 'string') {
 		// selector case
 		retArray = Array.from(document.querySelectorAll(item));
-	} else if (item && item.length && Array.from(item).length > 1) {
+	} else if (item && item.length && Array.from(item).length > 0) {
 		// nodelist case
 		retArray = Array.from(item);
 	}
@@ -195,7 +175,7 @@ function domNodeArray(item) {
 }
 
 module.exports = exports['default'];
-},{}],8:[function(require,module,exports){
+},{"../array/from":3}],8:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -327,6 +307,84 @@ module.exports = exports['default'];
 'use strict';
 
 exports.__esModule = true;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var ServiceReducers = (function () {
+	function ServiceReducers() {
+		_classCallCheck(this, ServiceReducers);
+	}
+
+	ServiceReducers.reduce = function reduce(cb) {
+		var start = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+
+		var arr = this.toArray();
+
+		return arr.reduce(cb, start);
+	};
+
+	ServiceReducers.filter = function filter(cb) {
+
+		var arr = this.toArray();
+
+		return arr.filter(cb);
+	};
+
+	ServiceReducers.where = function where(characteristics) {
+		var returnIndexes = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+
+		var results = [];
+		var originalIndexes = [];
+
+		this.each(function (i, item) {
+			if (typeof characteristics === 'function' && characteristics(item)) {
+				originalIndexes.push(i);
+				results.push(item);
+			} else if (typeof characteristics === 'object') {
+
+				var hasCharacteristics = false;
+
+				for (var key in characteristics) {
+					if (item.hasOwnProperty(key) && item[key] === characteristics[key]) {
+						hasCharacteristics = true;
+					}
+				}
+
+				if (hasCharacteristics) {
+					originalIndexes.push(i);
+					results.push(item);
+				}
+			}
+		});
+
+		if (returnIndexes) {
+			return [results, originalIndexes];
+		} else {
+			return results;
+		}
+	};
+
+	ServiceReducers.findByIndexes = function findByIndexes(item) {
+
+		if (isNumber(item)) {
+
+			item = [item];
+		}
+
+		return ServiceReducers.filter(function (val, index) {
+			return ~item.indexOf(index);
+		});
+	};
+
+	return ServiceReducers;
+})();
+
+exports['default'] = ServiceReducers;
+module.exports = exports['default'];
+},{}],12:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
 exports['default'] = dasherize;
 
 function dasherize(str) {
@@ -337,7 +395,7 @@ function dasherize(str) {
 
 ;
 module.exports = exports['default'];
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -359,7 +417,7 @@ var extractObjectName = (function () {
 
 exports['default'] = extractObjectName;
 module.exports = exports['default'];
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -406,7 +464,7 @@ var namedUid = (function () {
 
 exports['default'] = namedUid;
 module.exports = exports['default'];
-},{"./extract-object-name":12}],14:[function(require,module,exports){
+},{"./extract-object-name":13}],15:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -422,14 +480,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== 'function' 
 var _module2 = require('./module');
 
 var _module3 = _interopRequireDefault(_module2);
-
-var _service = require('./service');
-
-var _service2 = _interopRequireDefault(_service);
-
-var _component = require('./component');
-
-var _component2 = _interopRequireDefault(_component);
 
 var _helpersArrayFrom = require('../helpers/array/from');
 
@@ -447,7 +497,6 @@ var _helpersDomDomNodeArray = require('../helpers/dom/dom-node-array');
 
 var _helpersDomDomNodeArray2 = _interopRequireDefault(_helpersDomDomNodeArray);
 
-var UNKNOW_TYPE = 'unknown';
 var MODULE_TYPE = 'module';
 var SERVICE_TYPE = 'service';
 var COMPONENT_TYPE = 'component';
@@ -481,19 +530,71 @@ var ApplicationFacade = (function (_Module) {
 		_classCallCheck(this, ApplicationFacade);
 
 		_Module.call(this, options);
+
 		this._modules = [];
 
-		// expose framework classes
-		this.Module = _module3['default'];
-		this.Service = _service2['default'];
-		this.Component = _component2['default'];
-
 		this.moduleNodes = [];
+
+		this.vent = options.vent;
+		this.dom = options.dom;
+		this.template = options.template;
 
 		if (options.modules) {
 			this.start.apply(this, options.modules);
 		}
+
+		if (options.observe) {
+			this.observe();
+		}
 	}
+
+	ApplicationFacade.prototype.observe = function observe() {
+		var _this = this;
+
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+		var config = {
+			attributes: true,
+			childList: true,
+			characterData: true
+		};
+
+		var observedNode = this.options.context || document.body;
+
+		config = Object.assign(options.config || {}, config);
+
+		this.observer = new MutationObserver(function (mutations) {
+			mutations.forEach(function (mutation) {
+				if (mutation.addedNodes) {
+					_this.onAddedNodes(mutation.addedNodes);
+				}
+			});
+		});
+
+		this.observer.observe(observedNode, config);
+	};
+
+	ApplicationFacade.prototype.onAddedNodes = function onAddedNodes(addedNodes) {
+		var _this2 = this;
+
+		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach(function (item) {
+			var mod = item.module;
+
+			console.info('New dom nodes added.', _helpersDomDomNodeArray2['default'](addedNodes));
+
+			_helpersDomDomNodeArray2['default'](addedNodes).forEach(function (ctx) {
+				if (ctx) {
+					_this2.startComponents(mod, { context: ctx }, true);
+					_this2.startComponents(mod, { el: ctx }, true);
+				}
+			});
+		});
+	};
+
+	ApplicationFacade.prototype.stopObserving = function stopObserving() {
+
+		this.observer.disconnect();
+	};
 
 	ApplicationFacade.prototype.findMatchingRegistryItems = function findMatchingRegistryItems(item) {
 
@@ -502,7 +603,7 @@ var ApplicationFacade = (function (_Module) {
 		}
 
 		return this._modules.filter(function (mod) {
-			if (mod === item || mod.uid === item || mod.module === item || typeof item === 'string' && mod.module.name === item || mod.module.group === item) {
+			if (mod === item || mod.module === item || typeof item === 'string' && mod.module.type === item || typeof item === 'string' && mod.module.name === item || typeof item === 'object' && item.uid && mod.instances.indexOf(item) > -1) {
 				return mod;
 			}
 		});
@@ -517,7 +618,7 @@ var ApplicationFacade = (function (_Module) {
   */
 
 	ApplicationFacade.prototype.start = function start() {
-		var _this = this;
+		var _this3 = this;
 
 		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 			args[_key] = arguments[_key];
@@ -525,7 +626,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this.start(arg);
+				_this3.start(arg);
 			});
 			return;
 		}
@@ -540,19 +641,11 @@ var ApplicationFacade = (function (_Module) {
 			item = item.module;
 		}
 
-		var registryItem = this.findMatchingRegistryItems(item);
-
-		if (registryItem.length) {
-			// case if it is a registered module which get's restarted
-			// @todo needs test
-			return this.startRegisteredModule(registryItem[0]);
-		} else {
-			return this.startUnregisteredModules(item, options);
-		}
+		return this.startModules(item, options);
 	};
 
 	ApplicationFacade.prototype.stop = function stop() {
-		var _this2 = this;
+		var _this4 = this;
 
 		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
 			args[_key2] = arguments[_key2];
@@ -560,7 +653,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this2.stop(arg);
+				_this4.stop(arg);
 			});
 			return;
 		}
@@ -570,88 +663,26 @@ var ApplicationFacade = (function (_Module) {
 		this.findMatchingRegistryItems(item).forEach(function (registryItem) {
 			var module = registryItem.module;
 
-			if (module.type === COMPONENT_TYPE) {
-				// undelegate events if component
-				module.undelegateEvents();
-			} else if (module.type === SERVICE_TYPE) {
-				// disconnect if service
-				module.disconnect();
-			}
+			registryItem.instances.forEach(function (inst) {
 
-			// undelegate vents for all
-			module.undelegateVents();
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.undelegateEvents();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.disconnect();
+				}
+
+				// undelegate vents for all
+				inst.undelegateVents();
+			});
+
 			// running false
 			registryItem.running = false;
 		});
 	};
 
-	ApplicationFacade.prototype.destroy = function destroy() {
-		var _this3 = this;
-
-		for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-			args[_key3] = arguments[_key3];
-		}
-
-		if (args.length > 1) {
-			args.forEach(function (arg) {
-				_this3.destroy(arg);
-			});
-			return;
-		}
-
-		var item = args[0];
-
-		this.findMatchingRegistryItems(item).forEach(function (registryItem) {
-
-			var module = registryItem.module;
-
-			// stop	
-			_this3.stop(registryItem);
-
-			if (module.type === COMPONENT_TYPE) {
-				// remove if component
-				module.remove();
-			} else if (module.type === SERVICE_TYPE) {
-				// destroy if service
-				module.destroy();
-			} else {
-				// undelegateVents if module
-				module.undelegateVents();
-			}
-		});
-
-		this.unregister(item);
-	};
-
-	ApplicationFacade.prototype.startRegisteredModule = function startRegisteredModule(registryItem) {
-
-		if (registryItem.running) {
-			console.warn('Module with uid ' + registryItem.uid + ' \n\t\t\t\tis already running.');
-			return;
-		}
-
-		if (registryItem.type === SERVICE_TYPE) {
-
-			this.initService(registryItem.module);
-		} else if (registryItem.type === COMPONENT_TYPE) {
-
-			this.initComponent(registryItem.module);
-		} else if (registryItem.type === MODULE_TYPE) {
-
-			this.initModule(registryItem.module);
-		} else {
-
-			throw new Error('Registered item error.');
-		}
-
-		registryItem.running = true;
-
-		this._modules[index] = registryItem;
-
-		return registryItem.module;
-	};
-
-	ApplicationFacade.prototype.startUnregisteredModules = function startUnregisteredModules(item, options) {
+	ApplicationFacade.prototype.startModules = function startModules(item, options) {
 
 		options.app = options.app || this;
 
@@ -668,24 +699,27 @@ var ApplicationFacade = (function (_Module) {
 		var registryItem = this._modules[this._modules.length - 1];
 		registryItem.running = true;
 
-		return registryItem.module;
+		return registryItem;
 	};
 
 	ApplicationFacade.prototype.startModule = function startModule(item, options) {
 
-		item = new item(options);
+		var itemInstance = new item(options);
 
-		this.initModule(item);
-		this.register(item);
+		this.initModule(itemInstance);
+		this.register(item, itemInstance);
 	};
 
-	ApplicationFacade.prototype.startComponents = function startComponents(item, options) {
-		var _this4 = this;
+	ApplicationFacade.prototype.startComponents = function startComponents(item, options, observerStart) {
+		var _this5 = this;
 
 		var elementArray = [];
 		var context = document;
 		var contexts = [];
-		var isJsModule = false;
+
+		if (this.options.context && !options.context) {
+			options.context = this.options.context;
+		}
 
 		// checks for type of given context
 		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
@@ -696,7 +730,7 @@ var ApplicationFacade = (function (_Module) {
 			_helpersDomDomNodeArray2['default'](options.context).forEach(function (context) {
 				// pass current node element to options.context
 				options.context = context;
-				_this4.startComponents(item, options);
+				_this5.startComponents(item, options, observerStart);
 			});
 
 			return;
@@ -711,6 +745,7 @@ var ApplicationFacade = (function (_Module) {
 			});
 
 			var modNode = modNodes[0];
+
 			// use saved elements for context!
 			if (modNode && modNode.elements) {
 				elementArray = modNode.elements;
@@ -720,7 +755,7 @@ var ApplicationFacade = (function (_Module) {
 				elementArray = Array.from(context.querySelectorAll('[data-js-module]'));
 
 				elementArray = elementArray.filter(function (domNode) {
-					return domNode.dataset.jsModule === _helpersStringDasherize2['default'](item.name);
+					return domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](item.name)) !== -1;
 				});
 
 				if (elementArray.length) {
@@ -734,37 +769,36 @@ var ApplicationFacade = (function (_Module) {
 			}
 		}
 
-		// still empty? create a div for ensuring that the component
-		// gets initialized and registered
-		if (elementArray.length === 0 && !options.omitOnMissingNode) {
-			elementArray = [document.createElement('div')];
-		}
-
 		elementArray.forEach(function (domNode) {
-			_this4.startComponent(item, options, domNode);
+			_this5.startComponent(item, options, domNode);
 		});
+
+		// register module anyways for later use
+		if (elementArray.length === 0) {
+			this.register(item);
+		}
 	};
 
 	ApplicationFacade.prototype.startComponent = function startComponent(item, options, domNode) {
 
 		options.el = domNode;
-		options = Object.assign(this.parseOptions(options.el), options);
+		options = Object.assign(this.parseOptions(options.el, item), options);
 
-		item = new item(options);
+		var itemInstance = new item(options);
 
-		this.initComponent(item);
-		this.register(item);
+		this.initComponent(itemInstance);
+		this.register(item, itemInstance);
 	};
 
 	ApplicationFacade.prototype.startService = function startService(item, options) {
 
-		item = new item(options);
+		var itemInstance = new item(options);
 
-		this.initService(item);
-		this.register(item);
+		this.initService(itemInstance);
+		this.register(item, itemInstance);
 	};
 
-	ApplicationFacade.prototype.parseOptions = function parseOptions(el) {
+	ApplicationFacade.prototype.parseOptions = function parseOptions(el, item) {
 
 		var options = el.dataset.jsOptions;
 
@@ -775,6 +809,7 @@ var ApplicationFacade = (function (_Module) {
 			options = options.replace(/\\'/g, '\'').replace(/'/g, '"');
 
 			options = JSON.parse(options);
+			options = options[_helpersStringDasherize2['default'](item.name)] || options[item.name] || options;
 		}
 
 		return options || {};
@@ -782,21 +817,19 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initModule = function initModule(module) {
 
-		if (!(module instanceof _module3['default'])) {
+		if (module.type !== MODULE_TYPE) {
 			throw new Error('Expected Module instance.');
 		}
 
-		module.undelegateVents();
 		module.delegateVents();
 	};
 
 	ApplicationFacade.prototype.initService = function initService(module) {
 
-		if (!(module instanceof _service2['default'])) {
+		if (module.type !== SERVICE_TYPE) {
 			throw new Error('Expected Service instance.');
 		}
 
-		module.undelegateVents();
 		module.delegateVents();
 		module.connect();
 
@@ -807,12 +840,10 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initComponent = function initComponent(module) {
 
-		if (!(module instanceof _component2['default'])) {
+		if (module.type !== COMPONENT_TYPE) {
 			throw new Error('Expected Component instance.');
 		}
 
-		module.undelegateVents();
-		module.undelegateEvents();
 		module.delegateVents();
 		module.delegateEvents();
 
@@ -821,27 +852,87 @@ var ApplicationFacade = (function (_Module) {
 		}
 	};
 
-	ApplicationFacade.prototype.register = function register(module) {
+	ApplicationFacade.prototype.register = function register(module, inst) {
 
 		if (arguments.length === 0) {
 			throw new Error('Module or module identifier expected');
 		}
 
-		var registryItem = {
-			type: UNKNOW_TYPE,
-			module: module,
-			autostart: false,
-			running: false,
-			uid: module.uid
-		};
+		var existingRegistryModuleItem = this.findMatchingRegistryItems(module)[0];
 
-		if (module.type === SERVICE_TYPE || module.type === COMPONENT_TYPE || module.type === MODULE_TYPE) {
-			registryItem.type = module.type;
+		if (existingRegistryModuleItem) {
+
+			var index = this._modules.indexOf(existingRegistryModuleItem);
+
+			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
+				this._modules[index].instances.push(inst);
+			}
+		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
+
+			this._modules.push({
+				type: module.type,
+				module: module,
+				instances: inst ? [inst] : [],
+				autostart: !!module.autostart,
+				running: false,
+				uid: module.uid
+			});
 		} else {
-			throw new Error('Expected Module of type \n\t\t\t\t' + COMPONENT_TYPE + ', ' + SERVICE_TYPE + ' or ' + MODULE_TYPE + ', \n\t\t\t\tModule of type ' + module.type + ' cannot be registered.');
+			console.error('Expected Module of type \n\t\t\t\t' + COMPONENT_TYPE + ', ' + SERVICE_TYPE + ' or ' + MODULE_TYPE + ', \n\t\t\t\tModule of type ' + module.type + ' cannot be registered.');
+		}
+	};
+
+	ApplicationFacade.prototype.destroy = function destroy() {
+		var _this6 = this;
+
+		for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+			args[_key3] = arguments[_key3];
 		}
 
-		registryItem.autostart = !!module.autostart, this._modules.push(registryItem);
+		if (args.length > 1) {
+			args.forEach(function (arg) {
+				_this6.destroy(arg);
+			});
+			return;
+		}
+
+		var item = args[0];
+		var isInstance = !!(typeof item === 'object' && item.uid);
+		var registryItems = this.findMatchingRegistryItems(item);
+
+		this.findMatchingRegistryItems(item).forEach(function (registryItem) {
+
+			var module = registryItem.module;
+			var iterateObj = isInstance ? [item] : registryItem.instances;
+
+			iterateObj.forEach(function (inst) {
+
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.undelegateEvents();
+					inst.remove();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.disconnect();
+					inst.destroy();
+				}
+
+				// undelegate vents for all
+				inst.undelegateVents();
+
+				var moduleInstances = _this6._modules[_this6._modules.indexOf(registryItem)].instances;
+
+				if (moduleInstances.length > 1) {
+					_this6._modules[_this6._modules.indexOf(registryItem)].instances.splice(moduleInstances.indexOf(inst), 1);
+				} else {
+					_this6._modules[_this6._modules.indexOf(registryItem)].instances = [];
+				}
+			});
+		});
+
+		if (!isInstance) {
+			this.unregister(item);
+		}
 	};
 
 	ApplicationFacade.prototype.unregister = function unregister(item) {
@@ -865,67 +956,7 @@ var ApplicationFacade = (function (_Module) {
 
 exports['default'] = ApplicationFacade;
 module.exports = exports['default'];
-},{"../helpers/array/from":3,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":11,"./component":18,"./module":19,"./service":21}],15:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-var Box = (function () {
-	_createClass(Box, [{
-		key: 'vent',
-		set: function set(vent) {
-			this._vent = vent;
-		},
-		get: function get() {
-			return this._vent || null;
-		}
-	}]);
-
-	function Box() {
-		_classCallCheck(this, Box);
-	}
-
-	/**
-  * export Box
-  */
-
-	Box.use = function use(plugin) {
-
-		if (Box.prototype.checkPlugin(plugin, Box.prototype)) {
-			Box.prototype[plugin.type] = plugin.api;
-		}
-	};
-
-	Box.prototype.use = function use(plugin) {
-
-		if (this.checkPlugin(plugin, this)) {
-			this[plugin.type] = plugin.api;
-		}
-	};
-
-	Box.prototype.checkPlugin = function checkPlugin(plugin, pluginApplier) {
-
-		if (!plugin) {
-			throw new Error('Plugin parameter expected.');
-		} else if (typeof pluginApplier[plugin.type] === 'undefined') {
-			throw new Error('Plugin type ' + plugin.type + ' not supported.');
-		} else if (!plugin.api) {
-			throw new Error('Missing plugin api.');
-		}
-
-		return true;
-	};
-
-	return Box;
-})();
-
-exports['default'] = Box;
-module.exports = exports['default'];
-},{}],16:[function(require,module,exports){
+},{"../helpers/array/from":3,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":12,"./module":18}],16:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1049,73 +1080,8 @@ exports['default'] = Collection;
 exports.BaseCollection = BaseCollection;
 },{"../helpers/array/is-array-like":4,"../helpers/array/merge":5}],17:[function(require,module,exports){
 /**
- * @module lib/ComponentBox
- */
-'use strict';
-
-exports.__esModule = true;
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _box = require('./box');
-
-var _box2 = _interopRequireDefault(_box);
-
-var ComponentBox = (function (_Box) {
-	_inherits(ComponentBox, _Box);
-
-	_createClass(ComponentBox, [{
-		key: 'dom',
-		set: function set(dom) {
-			this._dom = dom;
-		},
-		get: function get() {
-			return this._dom || null;
-		}
-	}, {
-		key: 'template',
-		set: function set(template) {
-			this._template = template;
-		},
-		get: function get() {
-			return this._template || null;
-		}
-	}]);
-
-	function ComponentBox() {
-		_classCallCheck(this, ComponentBox);
-
-		_Box.call(this);
-	}
-
-	/**
-  * export ComponentBox
-  */
-
-	ComponentBox.use = function use(plugin) {
-
-		if (ComponentBox.prototype.checkPlugin(plugin, ComponentBox.prototype)) {
-			ComponentBox.prototype[plugin.type] = plugin.api;
-		}
-	};
-
-	return ComponentBox;
-})(_box2['default']);
-
-exports['default'] = ComponentBox;
-module.exports = exports['default'];
-},{"./box":15}],18:[function(require,module,exports){
-/**
  * @module  lib/Component
  * used to create views and/or view mediators
- * uses mixin properties and methods from ComponentBox either as adapter or proxy,
- * according as the underlying API is normalized of full implemented
  */
 'use strict';
 
@@ -1133,9 +1099,9 @@ var _module2 = require('./module');
 
 var _module3 = _interopRequireDefault(_module2);
 
-var _componentBox = require('./component-box');
+var _defaultConfig = require('../default-config');
 
-var _componentBox2 = _interopRequireDefault(_componentBox);
+var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
 
 var _helpersObjectAssign = require('../helpers/object/assign');
 
@@ -1183,19 +1149,29 @@ var Component = (function (_Module) {
 
 		_classCallCheck(this, Component);
 
-		var box = options.box || new _componentBox2['default']();
-		options.box = box;
-
 		_Module.call(this, options);
 
 		this.events = {};
-		this.dom = box.dom;
-		this.template = box.template;
+		this.dom = options.dom || options.app && options.app.dom || _defaultConfig2['default'].dom;
+
+		this.template = options.template || options.app && options.app.template || _defaultConfig2['default'].template;
+
+		if (options.vent) {
+			// could be used standalone
+			this.vent = options.vent(options.app || this);
+		} else if (options.app && options.app.vent) {
+			// or within an application facade
+			this.vent = options.app.vent(options.app);
+		} else {
+			this.vent = _defaultConfig2['default'].vent(options.app || this);
+		}
 
 		this._domEvents = [];
 
 		this.ensureElement(options);
+		this.initialize(options);
 		this.delegateEvents();
+		this.delegateVents();
 	}
 
 	Component.prototype.createDom = function createDom(str) {
@@ -1229,7 +1205,7 @@ var Component = (function (_Module) {
 			this.el.componentUid.push(this.uid);
 		}
 
-		this.$el = this.dom(this.el);
+		this.$el = this.dom && this.dom(this.el);
 	};
 
 	Component.prototype.setElement = function setElement(el) {
@@ -1239,36 +1215,6 @@ var Component = (function (_Module) {
 		this.delegateEvents();
 
 		return this;
-	};
-
-	Component.prototype.observe = function observe() {
-		var _this = this;
-
-		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-		var config = {
-			attributes: true,
-			childList: true,
-			characterData: true
-		};
-
-		config = Object.assign(options.config || {}, config);
-
-		this.observer = new MutationObserver(function (mutations) {
-			mutations.forEach(function (mutation) {
-				if (mutation.addedNodes) {
-					console.log(_this.app);
-					_this.app.onAddedNodes(mutation.addedNodes);
-				}
-			});
-		});
-
-		this.observer.observe(this.el, config);
-	};
-
-	Component.prototype.stopObserving = function stopObserving() {
-
-		this.observer.disconnect();
 	};
 
 	Component.prototype.delegateEvents = function delegateEvents(events) {
@@ -1370,7 +1316,7 @@ var Component = (function (_Module) {
 
 exports['default'] = Component;
 module.exports = exports['default'];
-},{"../helpers/object/assign":9,"./component-box":17,"./module":19}],19:[function(require,module,exports){
+},{"../default-config":2,"../helpers/object/assign":9,"./module":18}],18:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1397,9 +1343,9 @@ var _helpersEnvironmentGetGlobalObject = require('../helpers/environment/get-glo
 
 var _helpersEnvironmentGetGlobalObject2 = _interopRequireDefault(_helpersEnvironmentGetGlobalObject);
 
-var _box = require('./box');
+var _defaultConfig = require('../default-config');
 
-var _box2 = _interopRequireDefault(_box);
+var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
 
 var _plite = require('plite');
 
@@ -1408,9 +1354,37 @@ var _plite2 = _interopRequireDefault(_plite);
 var root = _helpersEnvironmentGetGlobalObject2['default']();
 
 var MODULE_TYPE = 'module';
+var SERVICE_TYPE = 'service';
+var COMPONENT_TYPE = 'component';
 
 // shim promises
 !root.Promise && (root.Promise = _plite2['default']);
+
+function generateName(obj) {
+
+	if (obj.name) {
+		return obj.name;
+	}
+
+	return _helpersStringExtractObjectName2['default'](obj);
+}
+
+function generateDashedName(obj) {
+
+	if (obj.dashedName) {
+		return obj.dashedName;
+	}
+
+	return _helpersStringDasherize2['default'](generateName(obj));
+}
+
+function generateUid(obj) {
+	if (obj.uid) {
+		return obj.uid;
+	}
+
+	return _helpersStringNamedUid2['default'](generateName(obj));
+}
 
 var Module = (function () {
 	_createClass(Module, [{
@@ -1433,14 +1407,6 @@ var Module = (function () {
 		},
 		get: function get() {
 			return this._vents;
-		}
-	}, {
-		key: 'group',
-		get: function get() {
-			return this._group;
-		},
-		set: function set(group) {
-			this._group = group;
 		}
 	}, {
 		key: 'name',
@@ -1480,53 +1446,47 @@ var Module = (function () {
 
 		this.options = options;
 
-		this.name = this.generateName(this);
-		this.dashedName = this.generateDashedName(this);
+		this.name = generateName(this);
+		this.dashedName = generateDashedName(this);
 
 		if (options.app) {
 			this.app = options.app;
 		}
 
-		var box = options.box || new _box2['default']();
+		this.vents = options.vents || {};
 
-		if (box && box.vent) {
-			this.vent = box.vent(options.app || this);
-			this.vents = options.vents || {};
-		}
-
-		this.uid = this.generateUid(this);
-
-		this.group = options.group;
+		this.uid = generateUid(this);
 
 		this.autostart = !!options.autostart;
+
+		// if not extended by component or service
+		if (this.type !== SERVICE_TYPE || this.type !== COMPONENT_TYPE) {
+
+			if (options.vent) {
+				// could be used standalone
+				this.vent = options.vent(this);
+			} else if (options.app && options.app.vent) {
+				// or within an application facade
+				this.vent = options.app.vent(options.app);
+			} else {
+				this.vent = _defaultConfig2['default'].vent(this);
+			}
+
+			this.initialize(options);
+			this.delegateVents();
+		}
 	}
 
-	Module.prototype.generateName = function generateName(obj) {
-
-		if (obj.name) {
-			return obj.name;
-		}
-
-		return _helpersStringExtractObjectName2['default'](obj);
-	};
-
-	Module.prototype.generateDashedName = function generateDashedName(obj) {
-		if (obj.dashedName) {
-			return obj.dashedName;
-		}
-
-		return _helpersStringDasherize2['default'](this.generateName(obj));
-	};
-
-	Module.prototype.generateUid = function generateUid(obj) {
-		if (obj.uid) {
-			return obj.uid;
-		}
-
-		return _helpersStringNamedUid2['default'](this.generateName(obj));
+	Module.prototype.initialize = function initialize(options) {
+		// override
 	};
 
 	Module.prototype.delegateVents = function delegateVents() {
+
+		if (!this.vent) {
+			return;
+		}
+
 		for (var vent in this.vents) {
 			if (this.vents.hasOwnProperty(vent)) {
 				var callback = this.vents[vent];
@@ -1540,9 +1500,15 @@ var Module = (function () {
 				this.vent.on(vent, callback, this);
 			}
 		}
+
+		return this;
 	};
 
 	Module.prototype.undelegateVents = function undelegateVents() {
+
+		if (!this.vent) {
+			return;
+		}
 
 		for (var vent in this.vents) {
 			if (this.vents.hasOwnProperty(vent)) {
@@ -1557,6 +1523,8 @@ var Module = (function () {
 				this.vent.off(vent, callback, this);
 			}
 		}
+
+		return this;
 	};
 
 	Module.prototype.toString = function toString() {
@@ -1568,69 +1536,10 @@ var Module = (function () {
 
 exports['default'] = Module;
 module.exports = exports['default'];
-},{"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":11,"../helpers/string/extract-object-name":12,"../helpers/string/named-uid":13,"./box":15,"plite":29}],20:[function(require,module,exports){
-/**
- * @module lib/ServiceBox
- */
-'use strict';
-
-exports.__esModule = true;
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _box = require('./box');
-
-var _box2 = _interopRequireDefault(_box);
-
-var ServiceBox = (function (_Box) {
-	_inherits(ServiceBox, _Box);
-
-	_createClass(ServiceBox, [{
-		key: 'data',
-		set: function set(data) {
-
-			this._data = data;
-		},
-		get: function get() {
-
-			return this._data || null;
-		}
-	}]);
-
-	function ServiceBox() {
-		_classCallCheck(this, ServiceBox);
-
-		_Box.call(this);
-	}
-
-	/**
-  * export ServiceBox
-  */
-
-	ServiceBox.use = function use(plugin) {
-
-		if (ServiceBox.prototype.checkPlugin(plugin, ServiceBox.prototype)) {
-			ServiceBox.prototype[plugin.type] = plugin.api;
-		}
-	};
-
-	return ServiceBox;
-})(_box2['default']);
-
-exports['default'] = ServiceBox;
-module.exports = exports['default'];
-},{"./box":15}],21:[function(require,module,exports){
+},{"../default-config":2,"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":12,"../helpers/string/extract-object-name":13,"../helpers/string/named-uid":14,"plite":23}],19:[function(require,module,exports){
 /**
  * @module  lib/Service
- * used to create models
- * uses mixin properties from ServiceBox either as adapter or proxy,
- * according as the underlying API is normalized or full implemented
+ * used to create models, collections, proxies, adapters
  */
 'use strict';
 
@@ -1648,9 +1557,17 @@ var _module2 = require('./module');
 
 var _module3 = _interopRequireDefault(_module2);
 
-var _serviceBox = require('./service-box');
+var _helpersServiceReducers = require('../helpers/service/reducers');
 
-var _serviceBox2 = _interopRequireDefault(_serviceBox);
+var _helpersServiceReducers2 = _interopRequireDefault(_helpersServiceReducers);
+
+var _helpersObjectAssign = require('../helpers/object/assign');
+
+var _helpersObjectAssign2 = _interopRequireDefault(_helpersObjectAssign);
+
+var _defaultConfig = require('../default-config');
+
+var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
 
 var _helpersArrayIsArrayLike = require('../helpers/array/is-array-like');
 
@@ -1690,15 +1607,77 @@ var Service = (function (_Module) {
 
 		_classCallCheck(this, Service);
 
-		var box = options.box || new _serviceBox2['default']();
-		options.box = box;
-
 		_Module.call(this, options);
 
 		this.length = 0;
 
 		this.resource = options.resource || this;
+
+		this.data = {};
+
+		// proxying ServiceReducers via this.data
+		for (var method in _helpersServiceReducers2['default']) {
+			if (_helpersServiceReducers2['default'].hasOwnProperty(method)) {
+				this.data[method] = _helpersServiceReducers2['default'][method].bind(this);
+			}
+		}
+
+		this.lastCommitId = null;
+		this.commitIds = [];
+		this.repository = {};
+
+		if (options.vent) {
+			// could be used standalone
+			this.vent = options.vent(this);
+		} else if (options.app && options.app.vent) {
+			// or within an application facade
+			this.vent = options.app.vent(options.app);
+		} else {
+			this.vent = _defaultConfig2['default'].vent(this);
+		}
+
+		if (options.data) {
+			this.merge(options.data);
+		}
+
+		this.initialize(options);
+		this.delegateVents();
 	}
+
+	Service.prototype.fallback = function fallback() {
+		return this;
+	};
+
+	Service.prototype.commit = function commit(id) {
+
+		if (id) {
+			this.repository[id] = this.toArray();
+			this.lastCommitId = id;
+			this.commitIds.push(id);
+		}
+
+		return this;
+	};
+
+	Service.prototype.resetRepos = function resetRepos() {
+
+		this.lastCommitId = null;
+		this.commitIds = [];
+		this.repository = {};
+
+		return this;
+	};
+
+	Service.prototype.rollback = function rollback() {
+		var id = arguments.length <= 0 || arguments[0] === undefined ? this.lastCommitId : arguments[0];
+
+		if (id && this.repository[id]) {
+			this.reset();
+			this.create(this.repository[id]);
+		}
+
+		return this;
+	};
 
 	Service.prototype.each = function each(obj, callback) {
 
@@ -1728,31 +1707,39 @@ var Service = (function (_Module) {
 	};
 
 	/**
-  * connect to a service box data
-  * @return {mixed} data or promise
+  * connect to a service
+  * @return {mixed} this or promise
   */
 
 	Service.prototype.connect = function connect() {
-		return this;
+
+		var connectMethod = this.options.connectMethod || this.fallback;
+
+		return connectMethod.apply(this, arguments);
 	};
 
 	/**
-  * disconnect from service box data
-  * @return {boolean}
+  * disconnect from service
+  * @return {mixed} this or promise
   */
 
 	Service.prototype.disconnect = function disconnect() {
-		return this;
+
+		var disconnectMethod = this.options.disconnectMethod || this.fallback;
+
+		return disconnectMethod.apply(this, arguments);
 	};
 
 	/**
   * fetches data from proxied resource
-  * @param {mixed} reduce a function or a value or a key for reducing the data set 
   * @return {Promise} resolve or error
   */
 
-	Service.prototype.fetch = function fetch(reduce) {
-		return this;
+	Service.prototype.fetch = function fetch() {
+
+		var fetchMethod = this.options.fetchMethod || this.fallback;
+
+		return fetchMethod.apply(this, arguments);
 	};
 
 	/**
@@ -1761,7 +1748,7 @@ var Service = (function (_Module) {
   */
 
 	Service.prototype.then = function then(cb) {
-		cb(this.data);
+		cb(this.toArray());
 		return this;
 	};
 
@@ -1775,70 +1762,74 @@ var Service = (function (_Module) {
 		return this;
 	};
 
-	Service.prototype.init = function init(data) {
+	/**
+  * @name merge
+  */
+
+	Service.prototype.merge = function merge(data) {
 
 		if (_helpersArrayIsArrayLike2['default'](data)) {
 			_helpersArrayMerge2['default'](this, data);
 		} else if (data) {
 			this.add(data);
 		}
+
+		return this;
+	};
+
+	Service.prototype.replace = function replace() {
+		var opts = arguments.length <= 0 || arguments[0] === undefined ? { data: [] } : arguments[0];
+
+		if (!(opts.data instanceof Array)) {
+			opts.data = [opts.data];
+		}
+
+		opts.end = opts.end || this.length;
+
+		if (!isNaN(opts.start) && opts.start <= opts.end) {
+
+			var i = opts.start;
+			var j = 0;
+
+			while (i <= opts.end && opts.data[j]) {
+				this[i] = opts.data[j];
+				i++;
+				j++;
+			}
+		}
+
+		return this;
+	};
+
+	Service.prototype.insert = function insert() {
+		var opts = arguments.length <= 0 || arguments[0] === undefined ? { data: [], replace: 0 } : arguments[0];
+
+		if (!(opts.data instanceof Array)) {
+			opts.data = [opts.data];
+		}
+
+		if (!isNaN(opts.start)) {
+			var dataArray = this.toArray();
+			Array.prototype.splice.apply(dataArray, [opts.start, opts.replace].concat(opts.data));
+			this.reset();
+			this.create(dataArray);
+		}
+
+		return this;
 	};
 
 	/**
   * creates a new item or a whole data set
+  * @alias  merge
   * @param  {mixed} data to be created on this service and on remote when save is called or
   *                      param remote is true
   * @return {mixed} newly created item or collection
   */
 
 	Service.prototype.create = function create(data) {
-
-		this.init(data);
+		this.merge(data);
 
 		return this;
-	};
-
-	Service.prototype.where = function where(characteristics) {
-
-		if (!this.isSynced) {
-			console.warn(this + ' is out of sync!');
-		}
-
-		var results = {};
-		results.length = 0;
-
-		this.each(function (i, item) {
-			if (typeof characteristics === 'function' && characteristics(item)) {
-				results[i] = item;
-				results.length += 1;
-			} else if (typeof characteristics === 'object') {
-
-				var hasCharacteristics = true;
-
-				for (var key in characteristics) {
-					if (!item.hasOwnProperty(key) || item[key] !== characteristics[key]) {
-						hasCharacteristics = false;
-					}
-				}
-
-				if (hasCharacteristics) {
-					results[i] = item;
-					results.length += 1;
-				}
-			}
-		});
-
-		return results;
-	};
-
-	/**
-  * reads a data set, reduced by reduced parameter
-  * @param {mixed} reduce a function or a value or a key for reducing the data set 
-  * @return {mixed} 
-  */
-
-	Service.prototype.read = function read(reduce) {
-		return this.findIndex(reduce);
 	};
 
 	/**
@@ -1847,9 +1838,39 @@ var Service = (function (_Module) {
   * @return {mixed} updated data set
   */
 
-	Service.prototype.update = function update(reduce, data) {
-		// this.data = this.dataLib.update(reduce, data);
-		console.error('Not implemented yet');
+	Service.prototype.update = function update() {
+		var _this = this;
+
+		var updatesets = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+
+		updatesets = updatesets instanceof Array ? updatesets : updatesets ? [updatesets] : [];
+
+		updatesets.forEach(function (dataset) {
+			if (!isNaN(dataset.index) && _this[dataset.index]) {
+				_this[dataset.index] = dataset.to;
+			} else if (dataset.where) {
+				var _data$where = _this.data.where(dataset.where, true);
+
+				var foundData = _data$where[0];
+				var foundDataIndexes = _data$where[1];
+
+				foundDataIndexes.forEach(function (foundDataIndex) {
+					var isObjectUpdate = dataset.to && !(dataset.to instanceof Array) && typeof dataset.to === 'object' && _this[foundDataIndex] && !(_this[foundDataIndex] instanceof Array) && typeof _this[foundDataIndex] === 'object';
+					var isArrayUpdate = dataset.to instanceof Array && _this[foundDataIndex] instanceof Array;
+
+					if (isArrayUpdate) {
+						// base: [0,1,2,3], to: [-1,-2], result: [-1,-2,2,3]
+						Array.prototype.splice.apply(_this[foundDataIndex], [0, dataset.to.length].concat(dataset.to));
+					} else if (isObjectUpdate) {
+						// base: {old: 1, test: true}, {old: 2, somthing: 'else'}, result: {old: 2, test: true, somthing: "else"}
+						_this[foundDataIndex] = Object.assign(_this[foundDataIndex], dataset.to);
+					} else {
+						_this[foundDataIndex] = dataset.to;
+					}
+				});
+			}
+		});
+
 		return this;
 	};
 
@@ -1870,33 +1891,39 @@ var Service = (function (_Module) {
 	};
 
 	Service.prototype.reset = function reset() {
-		var _this = this;
+		var scope = arguments.length <= 0 || arguments[0] === undefined ? this : arguments[0];
 
 		var i = 0;
 
-		this.each(function (i) {
-			delete _this[i];
+		this.each(scope, function (i) {
+			delete scope[i];
 		});
 
-		this.length = 0;
+		scope.length = 0;
+
+		return this;
 	};
 
 	Service.prototype.toArray = function toArray() {
-		var _this2 = this;
+		var scope = arguments.length <= 0 || arguments[0] === undefined ? this : arguments[0];
 
 		var arr = [];
 		var i = 0;
 
-		this.each(function (i) {
-			arr.push(_this2[i]);
+		if (scope instanceof Array) {
+			return scope;
+		}
+
+		this.each(scope, function (i) {
+			arr.push(scope[i]);
 		});
 
 		return arr;
 	};
 
-	Service.prototype.findIndex = function findIndex(item) {
+	Service.prototype.toDataString = function toDataString() {
 
-		return this.toArray().indexOf(item);
+		return JSON.stringify(this.toArray());
 	};
 
 	/**
@@ -1917,13 +1944,16 @@ var Service = (function (_Module) {
 	};
 
 	/**
-  * save the current state of the service to box's resource
+  * save the current state to the service resource
   * Nothing is saved to the resource, until this is called
   * @return {Promise} resolve or error
   */
 
 	Service.prototype.save = function save() {
-		return this;
+
+		var saveMethod = this.options.saveMethod || this.fallback;
+
+		return saveMethod.apply(this, arguments);
 	};
 
 	return Service;
@@ -1931,23 +1961,7 @@ var Service = (function (_Module) {
 
 exports['default'] = Service;
 module.exports = exports['default'];
-},{"../helpers/array/is-array-like":4,"../helpers/array/merge":5,"./module":19,"./service-box":20}],22:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _dqueryDqueryJs = require('../dquery/dquery.js');
-
-var _dqueryDqueryJs2 = _interopRequireDefault(_dqueryDqueryJs);
-
-exports['default'] = {
-	type: 'data',
-	api: _dqueryDqueryJs2['default']
-};
-module.exports = exports['default'];
-},{"../dquery/dquery.js":23}],23:[function(require,module,exports){
+},{"../default-config":2,"../helpers/array/is-array-like":4,"../helpers/array/merge":5,"../helpers/object/assign":9,"../helpers/service/reducers":11,"./module":18}],20:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1958,108 +1972,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _helpersArrayUniques = require('../../../helpers/array/uniques');
+var _helpersArrayUniques = require('../../helpers/array/uniques');
 
 var _helpersArrayUniques2 = _interopRequireDefault(_helpersArrayUniques);
 
-var _libCollection = require('../../../lib/collection');
-
-exports['default'] = (function () {
-
-	/**
-  * [dQuery description]
-  * @example
-  * Create data
-  * dQuery([1,2,3]); // [1,2,3]
-  * dQuery('test'); // ['test']
-  * dQuery('http://example.com/test.json').fetch({success: func, error: func});
-  * Update Data
-  * dQuery([1,2,3]).update([0,1,2,3]); // [0,1,2,3,4]
-  * dQuery([1,2,3]).update(0,-1); // [0,1,2,3,4]
-  * #menu/1
-  * dQuery({context: window.location.hash, splitter: '/'}).update(2, 1); // ['menu','2']
-  * dQuery({context: window.location.hash, splitter: '/'}).update(2, 1).save(); // window.location.hash -> 'menu/2'
-  * Delete 
-  * #menu/1
-  * dQuery(window.location.hash).delete().save(); // window.location.hash -> ''
-  * 
-  * @param  {[type]} selector [description]
-  * @param  {[type]} context  [description]
-  * @return {[type]}          [description]
-  */
-	function dQuery(selector, context) {
-		return new DQuery(selector, context);
-	}
-
-	function QueryStrategy(func) {
-		this.query = func;
-		this.conditionals = [];
-	}
-
-	QueryStrategy.prototype.execute = function () {
-		this.query();
-	};
-
-	var DQuery = (function (_BaseCollection) {
-		_inherits(DQuery, _BaseCollection);
-
-		function DQuery(selector) {
-			var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-			_classCallCheck(this, DQuery);
-
-			var context = options.context || (typeof options !== 'object' ? options : null);
-
-			_BaseCollection.call(this, selector, context);
-		}
-
-		DQuery.prototype.fetch = function fetch(reduce, resource) {
-			var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-		};
-
-		return DQuery;
-	})(_libCollection.BaseCollection);
-
-	return dQuery;
-}).call(undefined);
-
-module.exports = exports['default'];
-},{"../../../helpers/array/uniques":6,"../../../lib/collection":16}],24:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _domSelectorDomSelectorJs = require('../dom-selector/dom-selector.js');
-
-var _domSelectorDomSelectorJs2 = _interopRequireDefault(_domSelectorDomSelectorJs);
-
-exports['default'] = {
-	type: 'dom',
-	api: _domSelectorDomSelectorJs2['default']
-};
-module.exports = exports['default'];
-},{"../dom-selector/dom-selector.js":25}],25:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _helpersArrayUniques = require('../../../helpers/array/uniques');
-
-var _helpersArrayUniques2 = _interopRequireDefault(_helpersArrayUniques);
-
-var _helpersArrayFrom = require('../../../helpers/array/from');
+var _helpersArrayFrom = require('../../helpers/array/from');
 
 var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
 
-var _libCollection = require('../../../lib/collection');
+var _libCollection = require('../../lib/collection');
 
 exports['default'] = (function () {
 
@@ -2126,35 +2047,20 @@ exports['default'] = (function () {
 }).call(undefined);
 
 module.exports = exports['default'];
-},{"../../../helpers/array/from":3,"../../../helpers/array/uniques":6,"../../../lib/collection":16}],26:[function(require,module,exports){
-'use strict';
+},{"../../helpers/array/from":3,"../../helpers/array/uniques":6,"../../lib/collection":16}],21:[function(require,module,exports){
+"use strict";
 
 exports.__esModule = true;
-exports['default'] = {
-	type: 'template',
-	api: function api() {
-		console.warn('No template engine implemented.');
+
+exports["default"] = function (type) {
+	return function () {
+		console.warn("Plugin engine for type \"" + type + "\" not implemented yet.");
 		return arguments[0];
-	}
+	};
 };
-module.exports = exports['default'];
-},{}],27:[function(require,module,exports){
-'use strict';
 
-exports.__esModule = true;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _vent = require('./vent');
-
-var _vent2 = _interopRequireDefault(_vent);
-
-exports['default'] = {
-	type: 'vent',
-	api: _vent2['default']
-};
-module.exports = exports['default'];
-},{"./vent":28}],28:[function(require,module,exports){
+module.exports = exports["default"];
+},{}],22:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2204,7 +2110,7 @@ function Vent(newTarget) {
 }
 
 module.exports = exports['default'];
-},{}],29:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 function Plite(resolver) {
   var emptyFn = function () {},
       chain = emptyFn,

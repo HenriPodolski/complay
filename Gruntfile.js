@@ -47,16 +47,35 @@ module.exports = function (grunt) {
 			continuous: {
 				configFile: './test/config/karma.ci.conf.js'
 			}
+		},
+		uglify: {
+			options: {
+				compress: {
+					global_defs: {
+						"DEBUG": false
+					},
+					dead_code: true
+				},
+				report: 'gzip',
+				sourceMap: false,
+				preserveComments: false
+			},
+			dist: {
+				files: {
+					'dist/conduit.min.js': ['./dist/conduit.js']
+				}
+			}
 		}
 	});
 
 	grunt.loadNpmTasks('grunt-browserify');
 	grunt.loadNpmTasks('grunt-karma');
+	grunt.loadNpmTasks('grunt-contrib-uglify');
 
 	grunt.registerTask('default', [
 		'browserify:dist',
 		'karma:continuous'
 	]);
-	grunt.registerTask('build', ['browserify']);
+	grunt.registerTask('build', ['browserify', 'uglify:dist']);
 	grunt.registerTask('unit-test', ['karma:unit']);
 };
