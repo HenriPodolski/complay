@@ -109,4 +109,35 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 
 		expect(testElement[0].className.indexOf('test-2')).to.equal(-1);
 	});
+
+	it('should trigger and subscribe to custom events', (done) => {
+		let testElement = DomSelector('#test span', domNode);
+		testElement.on('trigger', () => done());
+		testElement.trigger('trigger');
+	});
+
+	it('should pass data with custom event trigger', (done) => {
+		let testElement = DomSelector('#test span', domNode);
+		
+		testElement.on('trigger', (evt) => {
+			if (evt.detail.dataPassed) {
+				done();	
+			} else {
+				throw new Error('evt.detail.dataPassed expected.');
+			}			
+		});
+
+		testElement.trigger('trigger', {dataPassed: true});
+	});
+
+	it('should trigger native events', () => {
+
+		let testElement = DomSelector('#test', domNode);
+		let clickCounter = 0;
+		testElement.on('click', () => clickCounter++);
+		testElement.on('focus', () => clickCounter++);
+		testElement.trigger('click').trigger('focus');
+
+		expect(clickCounter).to.equal(2);
+	});
 });

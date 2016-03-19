@@ -95,10 +95,22 @@ export default (function() {
 		on(evtName, fn) {
 
 			this.each(function (i, elem) {
+				
 				this.eventStore[elem] = this.eventStore[elem] || {};
 				this.eventStore[elem].eventName = evtName;
-				this.eventStore[elem].handler = fn;
-				elem.addEventListener(evtName, fn);
+				
+				if (this.eventStore[elem].handler) {
+				
+					this.eventStore[elem].handler.push(fn);
+				} else {
+				
+					this.eventStore[elem].handler = [fn];
+				} 
+				
+				elem.addEventListener(
+					evtName, 
+					this.eventStore[elem].handler[this.eventStore[elem].handler.length - 1]
+				);
 			}.bind(this));
 
 			return this;
@@ -110,11 +122,23 @@ export default (function() {
 				
 				if (this.eventStore[elem] && 
 					this.eventStore[elem].eventName === evtName &&
-					(this.eventStore[elem].handler === fn || !fn)) {
-					elem.removeEventListener(
-						this.eventStore[elem].eventName, 
-						this.eventStore[elem].handler
-					);
+					((~this.eventStore[elem].handler.indexOf(fn)) || !fn)) {
+
+					let index = fn && this.eventStore[elem].handler.indexOf(fn);
+					let items = !fn ? [this.eventStore[elem].handler[index]] : this.eventStore[elem].handler;
+
+					items.forEach((item) => {
+						elem.removeEventListener(
+							this.eventStore[elem].eventName, 
+							item
+						);	
+					});					
+
+					if (!fn) {
+						this.eventStore[elem].handler = [];
+					} else if (this.eventStore[elem].handler.length) {
+						this.eventStore[elem].handler.splice(index, 1);
+					}
 				}
 				
 			}.bind(this));
@@ -122,8 +146,33 @@ export default (function() {
 			return this;
 		}
 
-		trigger() {
+		trigger(eventName, data, el) {
+			
+			let event;	
+			let detail = {'detail': data};
 
+			let triggerEvent = function(i, elem) {
+				
+				if (`on${eventName}` in elem) {
+					event = document.createEvent('HTMLEvents');
+					event.initEvent(eventName, true, false);
+				} else if (window.CustomEvent) {
+					event = new CustomEvent(eventName, detail);
+				} else {
+					event = document.createEvent('CustomEvent');
+					event.initCustomEvent(eventName, true, true, detail);
+				}
+
+				elem.dispatchEvent(event);
+			}
+
+			if (el) {
+				triggerEvent(0, el);
+			} else {
+				this.each(triggerEvent);
+			}
+
+			return this;
 		}
 
 		hasClass(selector) {
@@ -147,7 +196,7 @@ export default (function() {
 			this.each(function (i, elem) {
 				
 				if (elem.classList) {
-  					elem.classList.add(selector);
+						elem.classList.add(selector);
 				} else {
 					let className = `${elem.className}  ${selector}`;
 					elem.className = className.trim();	
