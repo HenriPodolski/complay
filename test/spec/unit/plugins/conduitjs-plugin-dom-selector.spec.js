@@ -88,6 +88,33 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 		expect(parseInt(testElement[0].dataset.test)).to.equal(2);
 	});
 
+	it('should remove all listeners when no reference is passed', () => {
+		
+		let counter = 0;
+
+		function listener() {
+			counter++;
+		}
+
+		let testElement = DomSelector('#test', domNode)
+								.on('click', listener)
+								.on('focus', listener);
+
+		testElement[0].click();
+		testElement[0].click();
+		testElement.trigger('focus');
+
+		console.log(counter);
+
+		testElement.off('click');
+		testElement.off('focus');
+
+		testElement[0].click();
+		testElement.trigger('focus');
+
+		expect(counter).to.equal(3);
+	});
+
 	it('should find class selectors using hasClass method', () => {
 		let testElement = DomSelector('#test span', domNode);
 

@@ -30,7 +30,7 @@ export default (function() {
 				}
 			}
 
-			this.eventStore = {};
+			this.eventStore = [];
 			this.context = context || this;
 			this.length = 0;
 
@@ -94,54 +94,87 @@ export default (function() {
 
 		on(evtName, fn) {
 
+			// example for scheme of this.eventStore
+			// [{elem: DOMNode, events: {change: []}}]
+
+			let _this = this;
+
 			this.each(function (i, elem) {
+
+				let index;
+				let eventStore;
+
+				_this.eventStore.forEach((store, storeIndex) => {
+					if (store.elem === elem) {
+						index = storeIndex;
+						eventStore = store;
+					}
+				});
+
+				if (isNaN(index)) {
+					index = _this.eventStore.length;
+				}
 				
-				this.eventStore[elem] = this.eventStore[elem] || {};
-				this.eventStore[elem].eventName = evtName;
-				
-				if (this.eventStore[elem].handler) {
-				
-					this.eventStore[elem].handler.push(fn);
-				} else {
-				
-					this.eventStore[elem].handler = [fn];
-				} 
+				_this.eventStore[index] = eventStore || {};
+				_this.eventStore[index].events = _this.eventStore[index].events || {};
+				_this.eventStore[index].events[evtName] = _this.eventStore[index].events[evtName] || [];
+				_this.eventStore[index].elem = elem;
+
+				_this.eventStore[index].events[evtName].push(fn);
 				
 				elem.addEventListener(
 					evtName, 
-					this.eventStore[elem].handler[this.eventStore[elem].handler.length - 1]
+					_this.eventStore[index].events[evtName][_this.eventStore[index].events[evtName].length - 1]
 				);
-			}.bind(this));
+
+			});
 
 			return this;
 		}
 
 		off(evtName, fn) {
 
+			let _this = this;
+
 			this.each(function (i, elem) {
-				
-				if (this.eventStore[elem] && 
-					this.eventStore[elem].eventName === evtName &&
-					((~this.eventStore[elem].handler.indexOf(fn)) || !fn)) {
 
-					let index = fn && this.eventStore[elem].handler.indexOf(fn);
-					let items = !fn ? [this.eventStore[elem].handler[index]] : this.eventStore[elem].handler;
+				let eventStore;
+				let eventStoreIndex;
+				let eventsCallbacksSaved = [];
+				let eventsCallbacksIndexes = [];
 
-					items.forEach((item) => {
-						elem.removeEventListener(
-							this.eventStore[elem].eventName, 
-							item
-						);	
-					});					
-
-					if (!fn) {
-						this.eventStore[elem].handler = [];
-					} else if (this.eventStore[elem].handler.length) {
-						this.eventStore[elem].handler.splice(index, 1);
+				_this.eventStore.forEach((store, storeIndex) => {
+					if (store.elem === elem && store.events[evtName]) {
+						eventStoreIndex = storeIndex;
+						eventStore = store;
 					}
-				}
+				});
 				
-			}.bind(this));
+				if (eventStore && eventStore.events[evtName]) {
+
+					eventStore.events[evtName].forEach((cb, i) => {
+						if (cb == fn) {
+							_this.eventStore[eventStoreIndex].events[evtName].splice(i, 1);
+							elem.removeEventListener(
+								evtName, 
+								cb
+							);	
+						} else if (!fn) { // remove all
+							_this.eventStore[eventStoreIndex].events[evtName] = [];
+
+							elem.removeEventListener(
+								evtName, 
+								cb
+							);
+						}
+					});
+				} else {
+					elem.removeEventListener(
+						evtName, 
+						fn
+					);	
+				}				
+			});
 
 			return this;
 		}
