@@ -60,18 +60,29 @@ class ApplicationFacade extends Module {
 
 		config = Object.assign(options.config || {}, config);
 
-		this.observer = new MutationObserver((mutations) => {
-			mutations.forEach((mutation) => {
+		if (window.MutationObserver) {
+			this.observer = new MutationObserver((mutations) => {
+				mutations.forEach((mutation) => {
 
-				if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-					this.onAddedNodes(mutation.addedNodes);
-				} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-					this.onRemovedNodes(mutation.removedNodes);
-				}
+					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+						this.onAddedNodes(mutation.addedNodes);
+					} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+						this.onRemovedNodes(mutation.removedNodes);
+					}
+				});
 			});
-		});
-		
-		this.observer.observe(observedNode, config);
+			
+			this.observer.observe(observedNode, config);	
+		} else {
+			/**
+			 * needs test in IE9 & IE10
+			 */
+			this.onAddedNodesCallback = this.onAddedNodes.bind(this);
+			this.onRemovedNodesCallback = this.onRemovedNodes.bind(this);
+
+			observedNode.addEventListener("DOMNodeInserted", this.onAddedNodesCallback, false);
+			observedNode.addEventListener("DOMNodeRemoved", this.onRemovedNodesCallback, false);
+		}		
 	}
 
 	onAddedNodes(addedNodes) {
@@ -117,14 +128,17 @@ class ApplicationFacade extends Module {
 					this.destroy(inst);
 				}
 			});
-		});
-
-		
+		});		
 	}
 
 	stopObserving() {
-
-		this.observer.disconnect();
+		if (window.MutationObserver) {
+			this.observer.disconnect();
+		} else {
+			let observedNode = this.options.context || document.body;
+			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodesCallback);
+			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
+		}
 	}
 
 	findMatchingRegistryItems(item) {
