@@ -219,6 +219,36 @@ describe('Conduitjs JS Application Facade', ()=>{
 			}, 0);			
 		});
 
+		it('should stop component modules automatically, when observe option is set to true and nodes are removed', (done) => {
+			
+			html = `
+				<div data-js-module="component-first" data-js-options="{'test': true}">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				observe: true,
+				context: appContainer
+			});
+
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+
+			expect(application.modules.length).to.equal(1);
+
+			let nodeToRemove = appContainer.querySelector('[data-js-module="component-first"]');
+
+			appContainer.removeChild(nodeToRemove);
+
+			// wait until mutation observer is aware of the change
+			setTimeout(() => {
+				expect(application.modules[0].instances.length).to.equal(0);	
+				done();
+			}, 0);			
+		});
+
 		it('should use data-js-options, if available', () => {
 			html = `
 				<div data-js-module="component-first" data-js-options="{'test': true}">

@@ -62,8 +62,11 @@ class ApplicationFacade extends Module {
 
 		this.observer = new MutationObserver((mutations) => {
 			mutations.forEach((mutation) => {
-				if (mutation.addedNodes) {
+
+				if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
 					this.onAddedNodes(mutation.addedNodes);
+				} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+					this.onRemovedNodes(mutation.removedNodes);
 				}
 			});
 		});
@@ -75,8 +78,6 @@ class ApplicationFacade extends Module {
 
 		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach((item) => {
 			let mod = item.module;
-
-			console.info('New dom nodes added.', domNodeArray(addedNodes));
 			
 			domNodeArray(addedNodes).forEach((ctx) => {				
 				if (ctx) {
@@ -85,6 +86,40 @@ class ApplicationFacade extends Module {
 				}				
 			});			
 		});		
+	}
+
+	onRemovedNodes(removedNodes) {
+
+		let componentRegistryItems = this.findMatchingRegistryItems(COMPONENT_TYPE);
+		let componentNodes = [];
+
+		domNodeArray(removedNodes).forEach((node) => {	
+			// push outermost if module
+			if (node.dataset.jsModule) {
+				componentNodes.push(node);
+			}
+
+			// push children if module
+			domNodeArray(node.querySelectorAll('[data-js-module]')).forEach((moduleEl) => {
+				if (moduleEl.dataset.jsModule) {
+					componentNodes.push(moduleEl);
+				}
+			});
+		});
+
+		// iterate over component registry items
+		componentRegistryItems.forEach((registryItem) => {
+			// iterate over started instances
+			registryItem.instances.forEach((inst) => {
+				// if component el is within removeNodes 
+				// destroy instance
+				if (componentNodes.indexOf(inst.el) > -1) {
+					this.destroy(inst);
+				}
+			});
+		});
+
+		
 	}
 
 	stopObserving() {
