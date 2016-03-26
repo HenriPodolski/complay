@@ -232,11 +232,31 @@ export default (function() {
 						elem.classList.add(selector);
 				} else {
 					let className = `${elem.className}  ${selector}`;
-					elem.className = className.trim();	
+					elem.className += className.trim();	
 				}				
 			});
 
 			return this;
+		}
+
+		toggleClass(selector) {
+			
+			this.each(function (i, elem) {
+				
+				if (elem.classList) {
+					elem.classList.toggle(selector);
+				} else {
+					var classes = elem.className.split(' ');
+					var existingIndex = classes.indexOf(selector);
+
+					if (existingIndex >= 0)
+						classes.splice(existingIndex, 1);
+					else
+						classes.push(selector);
+
+					elem.className = classes.join(' ');
+				}
+			});
 		}
 
 		removeClass(selector) {

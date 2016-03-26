@@ -8,6 +8,8 @@ chai.should();
 describe('Conduitjs JS Plugin DOM Selector', ()=>{
 
 	let domNode = document.createElement('div');
+
+	beforeEach(() => {
 		domNode.innerHTML = `
 			<div id="test">
 				<span class="test-2">
@@ -17,6 +19,7 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 			<div class="test-2">
 				<span class="test-3"></span>
 			</div>`;
+	});
 
 	it('should return an array like object when created', () => {
 		expect(DomSelector()).to.have.property('length');
@@ -121,7 +124,7 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 		expect(testElement.hasClass('test-2')).to.be.ok;
 	});
 
-	it('should add classes using add class', () => {
+	it('should add classes using addClass', () => {
 		let testElement = DomSelector('#test', domNode);
 
 		testElement.addClass('some-class');
@@ -129,7 +132,19 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 		expect(testElement[0].className.indexOf('some-class')).to.not.equal(-1);
 	});
 
-	it('should remove classes using remove class', () => {
+	it('should toggle classes using toggleClass', () => {
+		let testElement = DomSelector('#test', domNode);
+
+		testElement.toggleClass('some-class');
+
+		expect(testElement[0].className.indexOf('some-class')).to.not.equal(-1);
+
+		testElement.toggleClass('some-class');
+
+		expect(testElement[0].className.indexOf('some-class')).to.equal(-1);
+	});
+
+	it('should remove classes using removeClass', () => {
 		let testElement = DomSelector('#test span', domNode);
 
 		testElement.removeClass('test-2');
