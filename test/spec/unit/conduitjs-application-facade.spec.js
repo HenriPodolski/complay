@@ -159,6 +159,26 @@ describe('Conduitjs JS Application Facade', ()=>{
 			expect(application.modules[0].running).to.equal(true);
 		});
 
+		it('should expose the first instance of a module on app namespace using options.appName', () => {
+			class SomeModule extends Module {}
+
+			application.start({module: SomeModule, options: {appName: 'SomeMod'}});
+
+			expect(application.SomeMod).to.be.ok;
+		});
+		
+		it('should remove the the appName applied using options.appName when unregistering', () => {
+			class SomeModule extends Module {}
+
+			application.start({module: SomeModule, options: {appName: 'SomeMod'}});
+
+			expect(application.SomeMod).to.be.ok;
+
+			application.destroy(SomeModule);
+
+			expect(application.SomeMod).to.be.not.ok;
+		});
+
 		// it('should fetch all resources when service module with option autostart is passed', () => {
 		// 	class SomeService extends Service {}
 

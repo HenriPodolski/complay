@@ -61,6 +61,7 @@ class ApplicationFacade extends Module {
 		config = Object.assign(options.config || {}, config);
 
 		if (window.MutationObserver) {
+			
 			this.observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
 
@@ -74,14 +75,18 @@ class ApplicationFacade extends Module {
 			
 			this.observer.observe(observedNode, config);	
 		} else {
-			/**
-			 * needs test in IE9 & IE10
-			 */
-			this.onAddedNodesCallback = this.onAddedNodes.bind(this);
-			this.onRemovedNodesCallback = this.onRemovedNodes.bind(this);
+			
+			// @todo: needs test in IE9 & IE10
+			
+			this.onAddedNodesCallback = (e) => { 
+				this.onAddedNodes(e.target);
+			};
+			this.onRemovedNodesCallback = (e) => {
+				this.onRemovedNodes(e.target);
+			};
 
-			observedNode.addEventListener("DOMNodeInserted", this.onAddedNodesCallback, false);
-			observedNode.addEventListener("DOMNodeRemoved", this.onRemovedNodesCallback, false);
+			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodesCallback, false);
+			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodesCallback, false);
 		}		
 	}
 
@@ -243,7 +248,7 @@ class ApplicationFacade extends Module {
 		let itemInstance = new item(options);
 
 		this.initModule(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	}
 
 	startComponents(item, options, observerStart) {
@@ -324,7 +329,7 @@ class ApplicationFacade extends Module {
 		let itemInstance = new item(options);
 
 		this.initComponent(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	}
 
 	startService(item, options) {
@@ -332,7 +337,7 @@ class ApplicationFacade extends Module {
 		let itemInstance = new item(options);
 
 		this.initService(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	}
 
 	parseOptions(el, item) {
@@ -391,7 +396,7 @@ class ApplicationFacade extends Module {
 		}
 	}
 
-	register(module, inst) {
+	register(module, inst, options = {}) {
 
 		if (arguments.length === 0) {
 			throw new Error('Module or module identifier expected');
@@ -402,20 +407,33 @@ class ApplicationFacade extends Module {
 		if (existingRegistryModuleItem) {
 
 			let index = this._modules.indexOf(existingRegistryModuleItem);
+
+			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
+				this[options.appName] = inst;
+			}
 			
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);	
 			}			
 		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
 
-			this._modules.push({
+			let registryObject = {
 				type: module.type,
 				module,
 				instances: (inst ? [inst] : []),
 				autostart: !!(module.autostart),
 				running: false,
 				uid: module.uid
-			});
+			};
+
+			if (options.appName && !this[options.appName] && registryObject.instances.length > 0) {
+				registryObject.appName = options.appName;
+				this[options.appName] = registryObject.instances[0];
+			} else {
+				console.error(`appName ${options.appName} is already defined.`);
+			}
+
+			this._modules.push(registryObject);
 		} else {
 			console.error(`Expected Module of type 
 				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
@@ -463,6 +481,12 @@ class ApplicationFacade extends Module {
 				} else {
 					this._modules[this._modules.indexOf(registryItem)]
 						.instances = [];
+
+					// delete exposed instances
+					if (registryItem.appName && this[registryItem.appName]) {
+						delete this[registryItem.appName];
+					}
+
 				}				
 			});
 		});
@@ -483,6 +507,7 @@ class ApplicationFacade extends Module {
 			if (this._modules.length > 1) {
 				this._modules.splice(this._modules.indexOf(mod), 1)
 			} else {
+
 				this._modules = [];
 			}
 		}
