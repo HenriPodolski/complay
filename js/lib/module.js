@@ -2,14 +2,43 @@ import dasherize from '../helpers/string/dasherize';
 import extractObjectName from '../helpers/string/extract-object-name';
 import namedUid from '../helpers/string/named-uid';
 import getGlobalObject from '../helpers/environment/get-global-object';
+import defaultConfig from '../default-config';
 import Plite from 'plite';
 
 let root = getGlobalObject();
 
 const MODULE_TYPE = 'module';
+const SERVICE_TYPE = 'service';
+const COMPONENT_TYPE = 'component';
 
 // shim promises
 !root.Promise && (root.Promise = Plite);
+
+function generateName(obj) {
+		
+	if (obj.name) {
+		return obj.name;
+	}
+
+	return extractObjectName(obj);
+}
+
+function generateDashedName(obj) {
+	
+	if (obj.dashedName) {
+		return obj.dashedName;
+	}
+
+	return dasherize(generateName(obj));
+}
+
+function generateUid(obj) {
+	if (obj.uid) {
+		return obj.uid;
+	}
+
+	return namedUid(generateName(obj));
+}
 
 class Module {
 
@@ -35,18 +64,6 @@ class Module {
 
 	get vents() {
 		return this._vents;
-	}
-
-	set group(group) {
-		this._group = group;
-	}
-
-	get group() {
-		return this._group;
-	}
-
-	set group(group) {
-		this._group = group;
 	}
 
 	set name(name) {
@@ -77,62 +94,85 @@ class Module {
 
 		this.options = options;
 
-		this.name = this.generateName(this);
-		this.dashedName = this.generateDashedName(this);
+		this.name = generateName(this);
+		this.dashedName = generateDashedName(this);
 
-		// for getting a proper name from instance in ApplicationFacade,
-		// namingInstance option is used for creating a temporary instance,
-		// so we don't need to init everything
-		if (!options.namingInstance) {
-
-			let box = options.box;
-
-			if (box && box.vent) {
-				this.vent = box.vent(options.app);
-			}
-			
-			this.uid = this.generateUid(this);
-
-			this.group = options.group;
-
-			this.autostart = !!(options.autostart) 
-				|| !!(options.options && options.options.autostart)
-				|| !!(options.options && options.options.autorender)
-				|| !!(options.options && options.options.autofetch);
+		if (options.app) {
+			this.app = options.app;
 		}
-	}
 
-	generateName(obj) {
+		this.vents = options.vents || {};		
 		
-		if (obj.name) {
-			return obj.name;
-		}
+		this.uid = generateUid(this);
 
-		return extractObjectName(obj);
+		this.autostart = !!(options.autostart);
+
+		// if not extended by component or service
+		if (this.type !== SERVICE_TYPE || this.type !== COMPONENT_TYPE) {
+
+			if (options.vent) {
+				// could be used standalone
+				this.vent = options.vent(this);
+			} else if (options.app && options.app.vent) {
+				// or within an application facade
+				this.vent = options.app.vent(options.app);			
+			} else {
+				this.vent = defaultConfig.vent(this);
+			}
+
+			this.initialize(options);
+			this.delegateVents();
+		}
 	}
 
-	generateDashedName(obj) {
-		if (obj.dashedName) {
-			return obj.dashedName;
-		}
-
-		return dasherize(this.generateName(obj));
-	}
-
-	generateUid(obj) {
-		if (obj.uid) {
-			return obj.uid;
-		}
-
-		return namedUid(this.generateName(obj));
+	initialize(options) {
+		// override
 	}
 
 	delegateVents() {
 
+		if (!this.vent) {
+			return;
+		}
+
+		for (let vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				let callback = this.vents[vent];
+				
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback]
+				} else if(typeof callback !== 'function') {
+					throw new Error('Expected callback method');
+				}
+				
+				this.vent.on(vent, callback, this);
+			}
+		}
+
+		return this;
 	}
 
 	undelegateVents() {
 
+		if (!this.vent) {
+			return;
+		}
+
+		for (let vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				let callback = this.vents[vent];
+				
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback]
+				} else if(typeof callback !== 'function') {
+					throw new Error('Expected callback method');
+				}
+				
+				this.vent.off(vent, callback, this);
+			}
+		}
+
+		return this;
 	}
 
 	toString() {

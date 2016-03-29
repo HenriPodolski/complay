@@ -2,15 +2,7 @@ import chai from 'chai';
 import ApplicationFacade from '../../../js/lib/application-facade';
 import Module from '../../../js/lib/module';
 import Component from '../../../js/lib/component';
-import ComponentBox from '../../../js/lib/component-box';
 import Service from '../../../js/lib/service';
-import ServiceBox from '../../../js/lib/service-box';
-import defaultConfig from '../../../js/default-config';
-
-// set up default plugins for boxes
-ServiceBox.use(defaultConfig.data);
-ComponentBox.use(defaultConfig.dom);
-ComponentBox.use(defaultConfig.template);
 
 var expect = chai.expect;
 var asset = chai.assert;
@@ -46,7 +38,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			expect(application.modules.length).to.equal(2);
 		});
 
-		it('should unregister a module, when module registry is passed to unregister', () => {
+		it('should unregister a module, when module registry is passed to destroy', () => {
 
 			class SomeModule extends Module {}
 			class OtherModule extends Module {}
@@ -54,49 +46,50 @@ describe('Conduitjs JS Application Facade', ()=>{
 			application.start(SomeModule);
 			application.start(OtherModule);
 
-			let uid = application.modules[1].uid;
+			let uid = application.modules[1].instances[0].uid;
 			application.destroy(application.modules[1]);
 
-
 			expect(application.modules.length).to.equal(1);
-			expect(application.modules[0].uid).to.not.equal(uid);
+			expect(application.modules[0].instances[0].uid).to.not.equal(uid);
 		});
 
 
-		it('should unregister a module, when module is passed to unregister', () => {
+		it('should unregister a module, when module is passed to destroy', () => {
 
 			class SomeModule extends Module {}
 			
 			application.start(SomeModule);
 
-			application.destroy(application.modules[0].module);
+			application.destroy(application.modules[0]);
 
 			expect(application.modules.length).to.equal(0);
 		});
 
-		it('should unregister a module, when module uid is passed to unregister', () => {
+		it('should unregister an instance within a module, when instance is passed to destroy', () => {
 			class SomeModule extends Module {}
 
 			application.start(SomeModule);
 
-			let uid = application.modules[0].uid;
+			let inst = application.modules[0].instances[0];
 
+			expect(application.modules[0].instances.length).to.equal(1);
 			expect(application.modules.length).to.equal(1);
 
-			application.destroy(uid);
-			expect(application.modules.length).to.equal(0);
+			application.destroy(inst);
+			expect(application.modules[0].instances.length).to.equal(0);
+			expect(application.modules.length).to.equal(1);
 		});
 
-		it('should unregister all modules with the same name, when name is passed to unregister', () => {
-			class SomeModule extends Module {}
+		it('should unregister all modules with the same name, when name is passed to destroy', () => {
+			class AnotherModule extends Module {}
 
-			let someModule1 = new SomeModule();
-			let someModule2 = new SomeModule();
+			let app = new Application({
+				modules: [AnotherModule, AnotherModule]
+			});
 
-			let app = new Application(someModule1, someModule2);
-			expect(app.modules.length).to.equal(2);
+			expect(app.modules.length).to.equal(1);
 
-			app.destroy('SomeModule');
+			app.destroy('AnotherModule');
 			expect(app.modules.length).to.equal(0);
 		});
 		
@@ -118,7 +111,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			class SecondModule extends Module {}
 			class ThirdModule extends Module {}
 
-			let app = new Application(FirstModule, SecondModule, ThirdModule);
+			let app = new Application({modules: [FirstModule, SecondModule, ThirdModule]});
 
 			expect(app.modules.length).to.equal(3);
 		});
@@ -161,19 +154,158 @@ describe('Conduitjs JS Application Facade', ()=>{
 		it('should run a module, when told to do so', () => {
 			class SomeModule extends Module {}
 
-			let someModule = new SomeModule();
-
-			application.start(someModule);
+			application.start(SomeModule);
 
 			expect(application.modules[0].running).to.equal(true);
 		});
 
-		it('should fetch all resources when service module with option autostart is passed', () => {
-			class SomeService extends Service {}
+		it('should expose the first instance of a module on app namespace using options.appName', () => {
+			class SomeModule extends Module {}
 
-			application.start({module: SomeService, options: {autostart: true}});
+			application.start({module: SomeModule, options: {appName: 'SomeMod'}});
 
-			expect(false).to.equal(true);
-		})
+			expect(application.SomeMod).to.be.ok;
+		});
+		
+		it('should remove the the appName applied using options.appName when unregistering', () => {
+			class SomeModule extends Module {}
+
+			application.start({module: SomeModule, options: {appName: 'SomeMod'}});
+
+			expect(application.SomeMod).to.be.ok;
+
+			application.destroy(SomeModule);
+
+			expect(application.SomeMod).to.be.not.ok;
+		});
+
+		// it('should fetch all resources when service module with option autostart is passed', () => {
+		// 	class SomeService extends Service {}
+
+		// 	application.start({module: SomeService, options: {autostart: true, data: ['val-1', 'val-2', 'val-3']}});
+
+		// 	expect(application.modules[0].module.length).to.equal(3);
+		// });
+	});
+
+	describe('View Registration', () => {
+
+		let appContainer;
+		let html;
+
+		class ComponentFirst extends Component {}
+		class ComponentSecond extends Component {}
+
+		it('should initialize multiple component modules for one container', () => {
+
+			html = `
+				<div data-js-module="component-first, component-second">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				context: appContainer,
+				observe: true
+			});
+			
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+			let componentSecond = application.start({module: ComponentSecond, options: {autostart: true}});
+
+			expect(application.modules.length).to.equal(2);
+		});
+
+		it('should start component modules automatically, when observe option is set to true and new nodes are added', (done) => {
+			
+			application = new Application({
+				observe: true
+			});
+
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+
+			expect(application.modules.length).to.equal(1);
+			expect(application.modules[0].instances.length).to.equal(0);
+
+			let newNode = document.createElement('div');
+			newNode.setAttribute('data-js-module', 'component-first');
+			document.body.appendChild(newNode);
+
+			// wait until mutation observer is aware of the change
+			setTimeout(() => {
+				expect(application.modules[0].instances.length).to.equal(1);	
+				done();
+			}, 0);			
+		});
+
+		it('should stop component modules automatically, when observe option is set to true and nodes are removed', (done) => {
+			
+			html = `
+				<div data-js-module="component-first" data-js-options="{'test': true}">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				observe: true,
+				context: appContainer
+			});
+
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+
+			expect(application.modules.length).to.equal(1);
+
+			let nodeToRemove = appContainer.querySelector('[data-js-module="component-first"]');
+
+			appContainer.removeChild(nodeToRemove);
+
+			// wait until mutation observer is aware of the change
+			setTimeout(() => {
+				expect(application.modules[0].instances.length).to.equal(0);	
+				done();
+			}, 0);			
+		});
+
+		it('should use data-js-options, if available', () => {
+			html = `
+				<div data-js-module="component-first" data-js-options="{'test': true}">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				context: appContainer
+			});
+			
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+
+			expect(componentFirst.instances[componentFirst.instances.length - 1].options.test).to.be.ok;
+		});
+
+		it('should use component specific namespaced data-js-options, if available', () => {
+			html = `
+				<div data-js-module="component-first, component-second" 
+					 data-js-options="{'component-first': {'usesNamespace': true}, 'ComponentSecond': {'usesNamespace': true}}">
+				</div>
+			`;
+
+			appContainer = document.createElement('div');
+			appContainer.innerHTML = html;
+
+			application = new Application({
+				context: appContainer
+			});
+			
+			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
+			let componentSecond = application.start({module: ComponentSecond, options: {autostart: true}});
+
+			expect(componentFirst.instances[componentFirst.instances.length - 1].options.usesNamespace).to.be.ok;
+			expect(componentSecond.instances[componentSecond.instances.length - 1].options.usesNamespace).to.be.ok;
+		});
 	});
 });

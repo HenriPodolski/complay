@@ -39,27 +39,27 @@ module.exports = function(config) {
 	// cli runner port
 	runnerPort: 9100,
 
+	watchify: {
+		poll: true
+	},
+
 	browserify: {
 		debug: true,
-		watchify: {
-			poll: true
-		},
 		transform: [
 			[
 				'babelify',
 				{
-					'loose': 'all',
-					'sourceMaps': true,
-					'modules': 'common',
-					'optional': []
+					loose: 'all',
+					modules: 'common',
+					optional: []
 				}
 			]
 		]
 	},
 
 	preprocessors: {
-		'../../js/**/*.js': 'browserify',
-		'../spec/unit/**/*.js': 'browserify'
+		'../../js/**/*.js': ['browserify'],
+		'../spec/unit/**/*.js': ['browserify']
 	},
 
 	reporters: ['mocha'],
@@ -107,3 +107,4 @@ module.exports = function(config) {
 	// urlRoot: '_karma_'
 	});
 };
+

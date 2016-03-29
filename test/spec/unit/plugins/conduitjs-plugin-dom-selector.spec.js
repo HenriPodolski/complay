@@ -1,6 +1,5 @@
-import DomSelector from '../../../../js/plugins/dom/dom-selector/dom-selector';
+import DomSelector from '../../../../js/plugins/dom/dom-selector';
 import chai from 'chai';
-
 
 var expect = chai.expect;
 var asset = chai.assert;
@@ -9,6 +8,8 @@ chai.should();
 describe('Conduitjs JS Plugin DOM Selector', ()=>{
 
 	let domNode = document.createElement('div');
+
+	beforeEach(() => {
 		domNode.innerHTML = `
 			<div id="test">
 				<span class="test-2">
@@ -18,6 +19,7 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 			<div class="test-2">
 				<span class="test-3"></span>
 			</div>`;
+	});
 
 	it('should return an array like object when created', () => {
 		expect(DomSelector()).to.have.property('length');
@@ -87,5 +89,97 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 		testElement[0].click();
 
 		expect(parseInt(testElement[0].dataset.test)).to.equal(2);
+	});
+
+	it('should remove all listeners when no reference is passed', () => {
+		
+		let counter = 0;
+
+		function listener() {
+			counter++;
+		}
+
+		let testElement = DomSelector('#test', domNode)
+								.on('click', listener)
+								.on('focus', listener);
+
+		testElement[0].click();
+		testElement[0].click();
+		testElement.trigger('focus');
+
+		console.log(counter);
+
+		testElement.off('click');
+		testElement.off('focus');
+
+		testElement[0].click();
+		testElement.trigger('focus');
+
+		expect(counter).to.equal(3);
+	});
+
+	it('should find class selectors using hasClass method', () => {
+		let testElement = DomSelector('#test span', domNode);
+
+		expect(testElement.hasClass('test-2')).to.be.ok;
+	});
+
+	it('should add classes using addClass', () => {
+		let testElement = DomSelector('#test', domNode);
+
+		testElement.addClass('some-class');
+
+		expect(testElement[0].className.indexOf('some-class')).to.not.equal(-1);
+	});
+
+	it('should toggle classes using toggleClass', () => {
+		let testElement = DomSelector('#test', domNode);
+
+		testElement.toggleClass('some-class');
+
+		expect(testElement[0].className.indexOf('some-class')).to.not.equal(-1);
+
+		testElement.toggleClass('some-class');
+
+		expect(testElement[0].className.indexOf('some-class')).to.equal(-1);
+	});
+
+	it('should remove classes using removeClass', () => {
+		let testElement = DomSelector('#test span', domNode);
+
+		testElement.removeClass('test-2');
+
+		expect(testElement[0].className.indexOf('test-2')).to.equal(-1);
+	});
+
+	it('should trigger and subscribe to custom events', (done) => {
+		let testElement = DomSelector('#test span', domNode);
+		testElement.on('trigger', () => done());
+		testElement.trigger('trigger');
+	});
+
+	it('should pass data with custom event trigger', (done) => {
+		let testElement = DomSelector('#test span', domNode);
+		
+		testElement.on('trigger', (evt) => {
+			if (evt.detail.dataPassed) {
+				done();	
+			} else {
+				throw new Error('evt.detail.dataPassed expected.');
+			}			
+		});
+
+		testElement.trigger('trigger', {dataPassed: true});
+	});
+
+	it('should trigger native events', () => {
+
+		let testElement = DomSelector('#test', domNode);
+		let clickCounter = 0;
+		testElement.on('click', () => clickCounter++);
+		testElement.on('focus', () => clickCounter++);
+		testElement.trigger('click').trigger('focus');
+
+		expect(clickCounter).to.equal(2);
 	});
 });

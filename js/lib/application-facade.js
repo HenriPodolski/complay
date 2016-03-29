@@ -1,11 +1,10 @@
 import Module from './module';
-import Service from './service';
-import Component from './component';
 
 import from from '../helpers/array/from';
 import assign from '../helpers/object/assign';
+import dasherize from '../helpers/string/dasherize';
+import domNodeArray from '../helpers/dom/dom-node-array';
 
-const UNKNOW_TYPE = 'unknown';
 const MODULE_TYPE = 'module';
 const SERVICE_TYPE = 'service';
 const COMPONENT_TYPE = 'component';
@@ -16,17 +15,134 @@ class ApplicationFacade extends Module {
 		return this._modules;
 	}
 
-	constructor(...args) {
-		super();
+	getModuleInstanceByName(moduleConstructorName, index) {
+
+		let foundModuleInstances = this.findMatchingRegistryItems(moduleConstructorName);
+
+		if (isNaN(index)) {
+			return foundModuleInstances.map((inst) => {
+				return inst.module;
+			});
+		} else if (foundModuleInstances[index] && foundModuleInstances[index].module) {
+			return foundModuleInstances[index].module;
+		}
+	}
+
+	constructor(options={}) {
+		super(options);
+		
 		this._modules = [];
 
-		// expose framework classes
-		this.Module = Module;
-		this.Service = Service;
-		this.Component = Component;
+		this.moduleNodes = [];
 
-		if (args.length) {
-			this.start.apply(this, args);
+		this.vent = options.vent;
+		this.dom = options.dom;
+		this.template = options.template;
+
+		if (options.modules) {
+			this.start.apply(this, options.modules);
+		}
+
+		if (options.observe) {
+			this.observe();
+		}
+	}
+
+	observe(options={}) {
+
+		let config = {
+			attributes: true,
+			childList: true,
+			characterData: true
+		};
+
+		let observedNode = this.options.context || document.body;
+
+		config = Object.assign(options.config || {}, config);
+
+		if (window.MutationObserver) {
+			
+			this.observer = new MutationObserver((mutations) => {
+				mutations.forEach((mutation) => {
+
+					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+						this.onAddedNodes(mutation.addedNodes);
+					} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+						this.onRemovedNodes(mutation.removedNodes);
+					}
+				});
+			});
+			
+			this.observer.observe(observedNode, config);	
+		} else {
+			
+			// @todo: needs test in IE9 & IE10
+			
+			this.onAddedNodesCallback = (e) => { 
+				this.onAddedNodes(e.target);
+			};
+			this.onRemovedNodesCallback = (e) => {
+				this.onRemovedNodes(e.target);
+			};
+
+			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodesCallback, false);
+			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodesCallback, false);
+		}		
+	}
+
+	onAddedNodes(addedNodes) {
+
+		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach((item) => {
+			let mod = item.module;
+			
+			domNodeArray(addedNodes).forEach((ctx) => {				
+				if (ctx) {
+					this.startComponents(mod, {context: ctx}, true);
+					this.startComponents(mod, {el: ctx}, true);	
+				}				
+			});			
+		});		
+	}
+
+	onRemovedNodes(removedNodes) {
+
+		let componentRegistryItems = this.findMatchingRegistryItems(COMPONENT_TYPE);
+		let componentNodes = [];
+
+		domNodeArray(removedNodes).forEach((node) => {	
+			// push outermost if module
+			if (node.dataset.jsModule) {
+				componentNodes.push(node);
+			}
+
+			// push children if module
+			domNodeArray(node.querySelectorAll('[data-js-module]')).forEach((moduleEl) => {
+				if (moduleEl.dataset.jsModule) {
+					componentNodes.push(moduleEl);
+				}
+			});
+		});
+
+		// iterate over component registry items
+		componentRegistryItems.forEach((registryItem) => {
+			// iterate over started instances
+			registryItem.instances.forEach((inst) => {
+				// if component el is within removeNodes 
+				// destroy instance
+				if (componentNodes.indexOf(inst.el) > -1) {
+					this.destroy(inst);
+				}
+			});
+		});		
+	}
+
+	stopObserving() {
+		if (window.MutationObserver) {
+			this.observer.disconnect();
+		} else {
+			let observedNode = this.options.context || document.body;
+			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodesCallback);
+			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
 		}
 	}
 
@@ -38,10 +154,10 @@ class ApplicationFacade extends Module {
 
 		return this._modules.filter((mod) => {
 			if (mod === item || 
-			mod.uid === item || 
-			mod.module === item || 
-			(typeof mod.module !== 'function' && mod.module.name === item) || 
-			mod.module.group === item) {
+				mod.module === item ||
+				(typeof item === 'string' && mod.module.type === item) ||
+				(typeof item === 'string' && mod.module.name === item) ||
+				(typeof item === 'object' && item.uid && mod.instances.indexOf(item) > -1)) {
 				return mod;
 			}
 		});
@@ -50,7 +166,6 @@ class ApplicationFacade extends Module {
 	/**
 	 * 
 	 * @param  {Mixed} args Single or Array of 
-	 *                      Module  instance, Service  instance, Component instance or
 	 *                      Module.prototype, Service.prototype, Component.prototype or
 	 *                      Object {module: ..., options: {}}, value for module could be one of above
 	 * @return {Void}
@@ -72,15 +187,7 @@ class ApplicationFacade extends Module {
 			item = item.module;
 		}
 
-		let registryItem = this.findMatchingRegistryItems(item);
-
-		if (registryItem.length) {
-			// case if it is a registered module which get's restarted
-			// @todo needs test
-			this.startRegisteredModule(registryItem[0]);
-		} else {
-			this.startUnregisteredModules(item, options);
-		}
+		return this.startModules(item, options);
 	}
 
 	stop(...args) {
@@ -95,77 +202,26 @@ class ApplicationFacade extends Module {
 		this.findMatchingRegistryItems(item).forEach((registryItem) => {
 			let module = registryItem.module;
 
-			if (module.type === COMPONENT_TYPE) {
-				// undelegate events if component
-				module.undelegateEvents();
-			} else if (module.type === SERVICE_TYPE) {
-				// disconnect if service
-				module.disconnect();
-			}
+			registryItem.instances.forEach((inst) => {
+				
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.undelegateEvents();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.disconnect();
+				}
 
-			// undelegate vents for all
-			module.undelegateVents();
+				// undelegate vents for all
+				inst.undelegateVents();
+			});
+			
 			// running false
 			registryItem.running = false;
 		});
 	}
 
-	destroy(...args) {
-
-		if (args.length > 1) {
-			args.forEach((arg) => { this.destroy(arg) });
-			return;
-		}
-
-		let item = args[0];
-
-		this.findMatchingRegistryItems(item).forEach((registryItem) => {
-
-			let module = registryItem.module;
-
-			// stop	
-			this.stop(registryItem);
-			// remove if component
-			if (module.type === COMPONENT_TYPE) {
-				// remove if component
-				module.remove();
-			}
-			else if (module.type === SERVICE_TYPE) {
-				// destroy if service
-				module.destroy();
-			}
-		});
-
-		this.unregister(item);
-	}
-
-	startRegisteredModule(registryItem) {
-
-		if (registryItem.running) {
-			console.warn(`Module with uid ${registryItem.uid} is already running.`);
-			return;
-		}
-
-		if (registryItem.type === SERVICE_TYPE) {
-
-			this.initService(registryItem.module);
-		} else if (registryItem.type === COMPONENT_TYPE) {
-			
-			this.initComponent(registryItem.module);
-		} else if (registryItem.type === MODULE_TYPE) {
-
-			this.initModule(registryItem.module);
-		} else {
-
-			throw new Error('Registered item error.');
-		}
-
-		registryItem.running = true;
-
-		this._modules[index] = registryItem;
-	}
-
-	startUnregisteredModules(item, options) {
+	startModules(item, options) {
 
 		options.app = options.app || this;
 
@@ -176,107 +232,128 @@ class ApplicationFacade extends Module {
 		} else if(item.type === MODULE_TYPE) {
 			this.startModule(item, options);
 		} else {
-			throw new Error(`Expected Module of type ${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, Module of type ${item.type} is not allowed.`);
+			throw new Error(`Expected Module of type 
+				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
+				Module of type ${item.type} is not allowed.`);
 		}
 
 		let registryItem = this._modules[this._modules.length - 1];
 		registryItem.running = true;
+
+		return registryItem;
 	}
 
 	startModule(item, options) {
 
-		if (typeof item === 'function') {
-			item = new item(options);
-		} else {
-			item.options = options;
-		}
+		let itemInstance = new item(options);
 
-		this.initModule(item);
-		this.register(item);
+		this.initModule(itemInstance);
+		this.register(item, itemInstance, options);
 	}
 
-	startComponents(item, options) {
+	startComponents(item, options, observerStart) {
 		
 		let elementArray = [];
 		let context = document;
+		let contexts = [];
 
-		if (typeof options.context === 'string') {
-			options.context = document.querySelector(options.context);
+		if (this.options.context && !options.context) {
+			options.context = this.options.context;
 		}
 
+		// checks for type of given context
 		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
+			// dom node case
 			context = options.context;
+		} else if(options.context) {
+			// selector or nodelist case
+			domNodeArray(options.context).forEach((context) => {
+				// pass current node element to options.context
+				options.context = context;
+				this.startComponents(item, options, observerStart);
+			});
+
+			return;
 		}
 
-		 if(item.el && item.el.nodeType === Node.ELEMENT_NODE) {
-			elementArray = [item.el];
-		} else if (options.el && options.el.nodeType === Node.ELEMENT_NODE) {
-			elementArray = [options.el];
-		} else if(typeof options.el === 'string') {
-			elementArray = Array.from(context.querySelectorAll(options.el));
-		} else {
-
-			let tmpItem = item;
-
-			if (typeof tmpItem === 'function') {
-				tmpItem = new item({namingInstance: true});
-			}
-
-			elementArray = Array.from(context.querySelectorAll(`[data-js-module="${tmpItem.dashedName}"]`));
-		}
+		elementArray = domNodeArray(options.el);
 
 		if (elementArray.length === 0) {
-			elementArray = [document.createElement('div')]
+			// context or parent context already queried for data-js-module and saved?
+			let modNodes = this.moduleNodes.filter((node) => {
+				return (node.context === context || 
+						node.context.contains(context)) && 
+						node.componentClass === item;
+			});
+
+			let modNode = modNodes[0];
+
+			// use saved elements for context!
+			if (modNode && modNode.elements) {
+				elementArray = modNode.elements;
+			} else {
+				
+				// query elements for context!
+				elementArray = Array.from(context.querySelectorAll(`[data-js-module]`));
+
+				elementArray = elementArray.filter((domNode) => {
+					return domNode.dataset.jsModule.indexOf(dasherize(item.name)) !== -1;
+				});
+				
+				if (elementArray.length) {
+					// save all data-js-module for later use!
+					this.moduleNodes.push({
+						context,
+						componentClass: item,
+						elements: elementArray
+					});
+				}
+			}
 		}
 
 		elementArray.forEach((domNode) => {
-			options.el = domNode;
-			this.startComponent(item, options);
+			this.startComponent(item, options, domNode);
 		});
+
+		// register module anyways for later use
+		if (elementArray.length === 0) {
+			this.register(item);	
+		}		
 	}
 
-	startComponent(item, options) {
-		
-		options = Object.assign(this.parseOptions(options.el), options);
+	startComponent(item, options, domNode) {
 
-		if (typeof item === 'function') {
-			item = new item(options);
-		} else {
-			item.options = options;
-			item.setElement(options.el);
-		}
+		options.el = domNode;
+		options = Object.assign(this.parseOptions(options.el, item), options);
 
-		this.initComponent(item);
-		this.register(item);
+		let itemInstance = new item(options);
+
+		this.initComponent(itemInstance);
+		this.register(item, itemInstance, options);
 	}
 
 	startService(item, options) {
 
-		if (typeof item === 'function') {
-			item = new item(options);
-		} else {
-			item.options = options;
-		}
+		let itemInstance = new item(options);
 
-		this.initService(item);
-		this.register(item);
+		this.initService(itemInstance);
+		this.register(item, itemInstance, options);
 	}
 
-	/**
-	 * @private 
-	 */
-	parseOptions(el) {
+	parseOptions(el, item) {
 
 		let options = el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
-			// if <div data-setup="{'show': true}"> is used, instead of <div data-setup='{"show": true}'>
+			// if <div data-js-options="{'show': true}"> is used, 
+			// instead of <div data-js-options='{"show": true}'>
 			// convert to valid json string and parse to JSON
 			options = options
 				.replace(/\\'/g, '\'')
 				.replace(/'/g, '"');
 
 			options = JSON.parse(options);
+			options = options[dasherize(item.name)] || options[item.name] || options;
 		}
 
 		return options || {};
@@ -284,21 +361,19 @@ class ApplicationFacade extends Module {
 
 	initModule(module) {
 
-		if (!(module instanceof Module)) {
+		if (module.type !== MODULE_TYPE) {
 			throw new Error(`Expected Module instance.`);
 		}
 
-		module.undelegateVents();
 		module.delegateVents();
 	}
 
 	initService(module) {
 
-		if (!(module instanceof Service)) {
+		if (module.type !== SERVICE_TYPE) {
 			throw new Error(`Expected Service instance.`);
 		}
 
-		module.undelegateVents();
 		module.delegateVents();
 		module.connect();
 
@@ -309,12 +384,10 @@ class ApplicationFacade extends Module {
 
 	initComponent(module) {
 		
-		if (!(module instanceof Component)) {
+		if (module.type !== COMPONENT_TYPE) {
 			throw new Error(`Expected Component instance.`);
 		}
 
-		module.undelegateVents();
-		module.undelegateEvents();
 		module.delegateVents();
 		module.delegateEvents();
 
@@ -323,31 +396,104 @@ class ApplicationFacade extends Module {
 		}
 	}
 
-	register(module) {
+	register(module, inst, options = {}) {
 
 		if (arguments.length === 0) {
 			throw new Error('Module or module identifier expected');
 		}
 
-		let registryItem = {
-			type: UNKNOW_TYPE,
-			module,
-			autostart: false,
-			running: false,
-			uid: module.uid
-		};
+		let existingRegistryModuleItem = this.findMatchingRegistryItems(module)[0];
 
-		if (module.type === SERVICE_TYPE || module.type === COMPONENT_TYPE || module.type === MODULE_TYPE) {
-			registryItem.type = module.type;
+		if (existingRegistryModuleItem) {
+
+			let index = this._modules.indexOf(existingRegistryModuleItem);
+
+			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
+				this[options.appName] = inst;
+			}
+			
+			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
+				this._modules[index].instances.push(inst);	
+			}			
+		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
+
+			let registryObject = {
+				type: module.type,
+				module,
+				instances: (inst ? [inst] : []),
+				autostart: !!(module.autostart),
+				running: false,
+				uid: module.uid
+			};
+
+			if (options.appName && !this[options.appName] && registryObject.instances.length > 0) {
+				registryObject.appName = options.appName;
+				this[options.appName] = registryObject.instances[0];
+			} else {
+				console.error(`appName ${options.appName} is already defined.`);
+			}
+
+			this._modules.push(registryObject);
 		} else {
-			throw new Error(`Expected Module of type ${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, Module of type ${module.type} cannot be registered.`);
+			console.error(`Expected Module of type 
+				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
+				Module of type ${module.type} cannot be registered.`);
+		}
+	}
+
+	destroy(...args) {
+
+		if (args.length > 1) {
+			args.forEach((arg) => { this.destroy(arg) });
+			return;
 		}
 
-		console.log(module);
+		let item = args[0];
+		let isInstance = !!(typeof item === 'object' && item.uid);
+		let registryItems = this.findMatchingRegistryItems(item);
 
-		registryItem.autostart = !!(module.autostart),
+		this.findMatchingRegistryItems(item).forEach((registryItem) => {
 
-		this._modules.push(registryItem);
+			let module = registryItem.module;
+			let iterateObj = isInstance ? [item] : registryItem.instances;
+
+			iterateObj.forEach((inst) => {
+				
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.undelegateEvents();
+					inst.remove();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.disconnect();
+					inst.destroy();
+				}
+
+				// undelegate vents for all
+				inst.undelegateVents();	
+
+				let moduleInstances = this._modules[this._modules.indexOf(registryItem)]
+					.instances;
+
+				if (moduleInstances.length > 1) {
+					this._modules[this._modules.indexOf(registryItem)]
+						.instances.splice(moduleInstances.indexOf(inst), 1);			
+				} else {
+					this._modules[this._modules.indexOf(registryItem)]
+						.instances = [];
+
+					// delete exposed instances
+					if (registryItem.appName && this[registryItem.appName]) {
+						delete this[registryItem.appName];
+					}
+
+				}				
+			});
+		});
+
+		if (!isInstance) {
+			this.unregister(item);	
+		}		
 	}
 
 	unregister(item) {
@@ -361,6 +507,7 @@ class ApplicationFacade extends Module {
 			if (this._modules.length > 1) {
 				this._modules.splice(this._modules.indexOf(mod), 1)
 			} else {
+
 				this._modules = [];
 			}
 		}

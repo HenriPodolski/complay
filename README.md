@@ -5,7 +5,7 @@ It is possible to use this in an ES5 environment via dist/conduit.js.
 An ES6 setup which imports the files might work better.
 
 Version: 0.0.1
-This library is under active development. It is not recommended to use this in production.
+Experimental library under active development. Do not use this in production!
 
 ### Setup
 ```
@@ -66,6 +66,7 @@ This lib make heavy use of great open source libraries and tools, including:
 * karma
 * mocha
 * chai
+* sinon
 * jquery
 * plite
 * and more

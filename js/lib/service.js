@@ -1,11 +1,13 @@
 /**
  * @module  lib/Service
- * used to create models
- * uses mixin properties from ServiceBox either as adapter or proxy,
- * according as the underlying API is normalized of full implemented
+ * used to create models, collections, proxies, adapters
  */
 import Module from './module';
-import ServiceBox from './service-box';
+import ServiceReducers from '../helpers/service/reducers';
+import assign from '../helpers/object/assign';
+import defaultConfig from '../default-config';
+import isArrayLike from '../helpers/array/is-array-like';
+import merge from '../helpers/array/merge';
 
 const SERVICE_TYPE = 'service';
 
@@ -19,14 +21,6 @@ class Service extends Module {
 		return SERVICE_TYPE;
 	}
 
-	set data(data) {
-		this._data = data;
-	}
-
-	get data() {
-		return this._data;
-	}
-
 	set resource(resource) {
 		this._resource = resource;
 	}
@@ -37,71 +31,220 @@ class Service extends Module {
 
 	constructor(options={}) {
 
-		let box = options.box || new ServiceBox();
-		options.box = box;
-
 		super(options);
 
-		// for getting a proper name from instance in ApplicationFacade,
-		// namingInstance option is used for creating a temporary instance,
-		// so we don't need to init everything
-		if (!options.namingInstance) {
+		this.length = 0;
 
-			if (!options.resource && box.resource) {
-				options.resource = box.resource;
+		this.resource = options.resource || this;
+
+		this.data = {};
+
+		// proxying ServiceReducers via this.data
+		for (var method in ServiceReducers) {	
+			if (ServiceReducers.hasOwnProperty(method)) {
+				this.data[method] = ServiceReducers[method].bind(this);
 			}
+		}		
 
-			this.data = box.data();
-			this.resource = options.resource;
+		this.lastCommitId = null;
+		this.commitIds = [];
+		this.repository = {};
 
-			if (options.data) {
-				this.create(options.data);
+		if (options.vent) {
+			// could be used standalone
+			this.vent = options.vent(this);
+		} else if (options.app && options.app.vent) {
+			// or within an application facade
+			this.vent = options.app.vent(options.app);			
+		} else {
+			this.vent = defaultConfig.vent(this);
+		}
+
+		if (options.data) {
+			this.merge(options.data);
+		}
+
+		this.initialize(options);
+		this.delegateVents()
+	}
+
+	fallback() {
+		return this;
+	}
+
+	commit(id) {
+		
+		if (id) {
+			this.repository[id] = this.toArray();
+			this.lastCommitId = id;	
+			this.commitIds.push(id);
+		}
+
+		return this;
+	}
+
+	resetRepos() {
+		
+		this.lastCommitId = null;
+		this.commitIds = [];
+		this.repository = {};
+
+		return this;
+	}
+
+	rollback(id = this.lastCommitId) {
+
+		if (id && this.repository[id]) {
+			this.reset();
+			this.create(this.repository[id]);
+		}
+
+		return this;
+	}
+
+	each(obj, callback) {
+		
+		if (typeof obj === 'function') {
+			callback = obj;
+			obj = this;
+		}
+		
+		let isLikeArray = isArrayLike(obj);
+		let value;
+		let i = 0;
+
+		if (isLikeArray) {
+
+			let length = obj.length;
+
+			for (; i < length; i++) {
+				value = callback.call(obj[i], i, obj[i]);
+
+				if (value === false) {
+					break;
+				}
 			}
 		}
+
+		return this;
 	}
 
 	/**
-	 * connect to a service box data
-	 * @return {mixed} data or promise
+	 * connect to a service
+	 * @return {mixed} this or promise
 	 */
 	connect() {
-		return this.data.connect && this.data.connect();
+		
+		let connectMethod = this.options.connectMethod || this.fallback;
+
+		return connectMethod.apply(this, arguments);
 	}
 
 	/**
-	 * disconnect from service box data
-	 * @return {void}
+	 * disconnect from service
+	 * @return {mixed} this or promise
 	 */
 	disconnect() {
-		this.data.disconnect && this.data.disconnect();
+
+		let disconnectMethod = this.options.disconnectMethod || this.fallback;
+
+		return disconnectMethod.apply(this, arguments);
 	}
 
 	/**
 	 * fetches data from proxied resource
-	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {Promise} resolve or error
 	 */
-	fetch(reduce) {
-		return this.data.fetch(reduce);
+	fetch() {
+		
+		let fetchMethod = this.options.fetchMethod || this.fallback;
+
+		return fetchMethod.apply(this, arguments);
+	}
+
+	/**
+	 * drop in replacement when working with this object instead of promises
+	 * @return {[type]} [description]
+	 */
+	then(cb) {
+		cb(this.toArray());
+		return this;
+	}
+
+	/**
+	 * drop in replacement when working with this object instead of promises
+	 * @return {[type]} [description]
+	 */
+	catch() {
+		// never an error, while working with vanilla js
+		return this;
+	}
+
+	/**
+	 * @name merge
+	 */
+	merge(data) {
+
+		if (isArrayLike(data)) {
+			merge(this, data);
+		} else if(data) {
+			this.add(data);
+		}
+
+		return this;
+	}
+
+	replace(opts = { data: [] }) {
+
+		if (!(opts.data instanceof Array)) {
+			opts.data  = [opts.data];
+		}
+
+		opts.end = opts.end || this.length;
+
+		if (!isNaN(opts.start) && opts.start <= opts.end) {
+
+			let i = opts.start;
+			let j = 0;
+
+			while(i <= opts.end && opts.data[j]) {
+				this[i] = opts.data[j];
+				i++;
+				j++;
+			}
+
+		}
+
+		return this;
+	}
+
+	insert(opts = { data: [], replace: 0 }) {
+		
+		if (!(opts.data instanceof Array)) {
+			opts.data = [opts.data];
+		}
+
+		if (!isNaN(opts.start)) {
+			let dataArray = this.toArray();
+			Array.prototype.splice.apply(dataArray, [opts.start, opts.replace].concat(opts.data));
+			this.reset();
+			this.create(dataArray);
+		}
+
+		return this;
 	}
 
 	/**
 	 * creates a new item or a whole data set
+	 * @alias  merge
 	 * @param  {mixed} data to be created on this service and on remote when save is called or
 	 *                      param remote is true
 	 * @return {mixed} newly created item or collection
 	 */
 	create(data) {
-		return this.data.create(data);
-	}
+		this.merge(data);
 
-	/**
-	 * reads a data set, reduced by reduced parameter
-	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
-	 * @return {mixed} 
-	 */
-	read(reduce) {
-		return this.data.read(data);
+		return this;
 	}
 
 	/**
@@ -109,8 +252,88 @@ class Service extends Module {
 	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {mixed} updated data set
 	 */
-	update(reduce) {
-		return this.data.update(data);
+	update(updatesets = []) {
+
+		updatesets = (updatesets instanceof Array) ? updatesets : (updatesets ? [updatesets] : []);
+
+		updatesets.forEach((dataset) => {			
+			if (!isNaN(dataset.index) && this[dataset.index]) {
+				this[dataset.index] = dataset.to;
+			} else if (dataset.where) {
+				let [foundData, foundDataIndexes] = this.data.where(dataset.where, true);
+
+				foundDataIndexes.forEach((foundDataIndex) => {
+					let isObjectUpdate = dataset.to &&
+						!(dataset.to instanceof Array) && 
+						typeof dataset.to === 'object' &&
+						this[foundDataIndex] &&
+						!(this[foundDataIndex] instanceof Array) && 
+						typeof this[foundDataIndex] === 'object'; 
+					let isArrayUpdate = (dataset.to instanceof Array) && (this[foundDataIndex] instanceof Array);
+
+					if (isArrayUpdate) {
+						// base: [0,1,2,3], to: [-1,-2], result: [-1,-2,2,3]
+						Array.prototype.splice.apply(this[foundDataIndex], [0, dataset.to.length].concat(dataset.to));
+					} else if (isObjectUpdate) {
+						// base: {old: 1, test: true}, {old: 2, somthing: 'else'}, result: {old: 2, test: true, somthing: "else"}
+		 				this[foundDataIndex] = Object.assign(this[foundDataIndex], dataset.to);
+					} else {
+						this[foundDataIndex] = dataset.to;
+					}
+				});
+			}
+		});
+
+		return this;
+	}
+
+
+	
+	/**
+	 * adds an item
+	 * @param  {mixed} data to be created on this service and on remote when save is called or
+	 *                      param remote is true
+	 * @return {mixed} newly created item or collection
+	 */
+	add(item) {
+		
+		if (item) {
+			this[this.length++] = item;
+		}
+
+		return this;
+	}
+
+	reset(scope = this) {
+		let i = 0;
+		
+		this.each(scope, (i) => {
+			delete scope[i];
+		});
+
+		scope.length = 0;
+
+		return this;
+	}
+
+	toArray(scope = this) {
+		let arr = [];
+		let i = 0;
+
+		if (scope instanceof Array) {
+			return scope;
+		}
+
+		this.each(scope, (i) => {
+			arr.push(scope[i]);
+		});
+
+		return arr;
+	}
+
+	toDataString() {
+
+		return JSON.stringify(this.toArray());
 	}
 
 	/**
@@ -118,17 +341,26 @@ class Service extends Module {
 	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
 	 * @return {[type]} [description]
 	 */
-	delete(reduce) {
-		return this.data.delete(reduce);
+	remove(index, howMuch = 1) {
+
+		let tmpArray = this.toArray()
+		tmpArray.splice(index, howMuch);
+		this.reset();
+		this.create(tmpArray);
+
+		return this;
 	}
 
 	/**
-	 * save the current state of the service to box's resource
+	 * save the current state to the service resource
 	 * Nothing is saved to the resource, until this is called
 	 * @return {Promise} resolve or error
 	 */
 	save() {
-		return this.data.save();
+		
+		let saveMethod = this.options.saveMethod || this.fallback;
+
+		return saveMethod.apply(this, arguments);
 	}
 }
 
