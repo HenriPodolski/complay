@@ -2,7 +2,7 @@ import chai from 'chai';
 import Component from '../../../js/lib/component';
 import DomSelector from '../../../js/plugins/dom/dom-selector';
 import Vent from '../../../js/plugins/vent/vent';
-import Template from '../../../js/plugins/template/template';
+import Template from '../../../js/plugins/template/handlebars';
 
 var expect = chai.expect;
 var asset = chai.assert;

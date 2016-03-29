@@ -35,6 +35,7 @@
     "sinon": "^1.17.3"
   },
   "dependencies": {
+    "handlebars": "^4.0.5",
     "plite": "0.0.3"
   }
 }
