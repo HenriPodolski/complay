@@ -429,7 +429,7 @@ class ApplicationFacade extends Module {
 			if (options.appName && !this[options.appName] && registryObject.instances.length > 0) {
 				registryObject.appName = options.appName;
 				this[options.appName] = registryObject.instances[0];
-			} else {
+			} else if (options.appName) {
 				console.error(`appName ${options.appName} is already defined.`);
 			}
 

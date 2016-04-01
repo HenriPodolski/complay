@@ -167,7 +167,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			expect(application.SomeMod).to.be.ok;
 		});
 		
-		it('should remove the the appName applied using options.appName when unregistering', () => {
+		it('should remove the appName applied using options.appName when unregistering', () => {
 			class SomeModule extends Module {}
 
 			application.start({module: SomeModule, options: {appName: 'SomeMod'}});

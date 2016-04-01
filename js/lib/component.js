@@ -46,7 +46,7 @@ class Component extends Module {
 
 		super(options);
 
-		this.events = {};
+		this.events = this.events || {};
 		this.dom = options.dom 
 			|| (options.app && options.app.dom)
 			|| defaultConfig.dom;
