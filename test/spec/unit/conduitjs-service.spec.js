@@ -1,6 +1,6 @@
 import chai from 'chai';
 import Service from '../../../js/lib/service';
-import Vent from '../../../js/plugins/vent/vent';
+import Vent from '../../../js/extensions/vent/vent';
 
 var expect = chai.expect;
 var asset = chai.assert;
