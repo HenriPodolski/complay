@@ -35,6 +35,8 @@ module.exports = function (grunt) {
 					]
 				]},
 				files: { 
+					'./dist/conduit.es5.js': ['./js/conduit.es5.js'],
+					'./examples/conduit.es5.js': ['./js/conduit.es5.js'],
 					'./dist/conduit.js': ['./js/conduit.js'],
 					'./examples/conduit.js': ['./js/conduit.js']
 				}
@@ -62,15 +64,50 @@ module.exports = function (grunt) {
 			},
 			dist: {
 				files: {
+					'dist/conduit.es5.min.js': ['./dist/conduit.es5.js'],
 					'dist/conduit.min.js': ['./dist/conduit.js']
 				}
 			}
+		},
+		browserSync: {
+			options: {
+				notify: true,
+				host: "localhost",
+				server: {
+					baseDir: './examples',
+					index: "index.html"
+				},
+				watchTask: true,
+				ghostMode: {
+					clicks: true,
+					scroll: true,
+					forms: true
+				}
+			},
+			bsFiles: {
+				src: [
+					'./examples/**/*.js',
+					'./examples/**/*.css',
+					'./examples/**/*.html'
+				]
+			}
+		},
+		watch: {
+			scripts: {
+				files: ['js/**/*.js'],
+				tasks: ['browserify:dist', 'karma:continuous'],
+				options: {
+					spawn: false,
+				},
+			},
 		}
 	});
 
 	grunt.loadNpmTasks('grunt-browserify');
 	grunt.loadNpmTasks('grunt-karma');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-browser-sync');
+	grunt.loadNpmTasks('grunt-contrib-watch');
 
 	grunt.registerTask('default', [
 		'browserify:dist',
@@ -78,4 +115,5 @@ module.exports = function (grunt) {
 	]);
 	grunt.registerTask('build', ['browserify', 'uglify:dist']);
 	grunt.registerTask('unit-test', ['karma:unit']);
+	grunt.registerTask('serve-examples', ['browserify:dist', 'karma:continuous', 'browserSync', 'watch']);
 };

@@ -1,13 +1,15 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
-exports.__esModule = true;
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var _helpersEnvironmentGetGlobalObject = require('./helpers/environment/get-global-object');
 
 var _helpersEnvironmentGetGlobalObject2 = _interopRequireDefault(_helpersEnvironmentGetGlobalObject);
+
+var _helpersObjectExtend = require('./helpers/object/extend');
+
+var _helpersObjectExtend2 = _interopRequireDefault(_helpersObjectExtend);
 
 var _libModule = require('./lib/module');
 
@@ -30,15 +32,26 @@ var _plite = require('plite');
 var _plite2 = _interopRequireDefault(_plite);
 
 var root = _helpersEnvironmentGetGlobalObject2['default']();
+var Conduit = root.Conduit || {};
 
 // shim promises
 !root.Promise && (root.Promise = _plite2['default']);
+// export ApplicationFacade Class for creating multicore apps
+Conduit.ApplicationFacade = _libApplicationFacade2['default'];
+Conduit.ApplicationFacade.extend = _helpersObjectExtend2['default'];
+// export Module Class
+Conduit.Module = _libModule2['default'];
+Conduit.Module.extend = _helpersObjectExtend2['default'];
+// export Service Class
+Conduit.Service = _libService2['default'];
+Conduit.Service.extend = _helpersObjectExtend2['default'];
+// export Component Class
+Conduit.Component = _libComponent2['default'];
+Conduit.Component.extend = _helpersObjectExtend2['default'];
 
-exports.Module = _libModule2['default'];
-exports.Service = _libService2['default'];
-exports.Component = _libComponent2['default'];
-exports.ApplicationFacade = _libApplicationFacade2['default'];
-},{"./helpers/environment/get-global-object":11,"./lib/application-facade":17,"./lib/component":18,"./lib/module":19,"./lib/service":20,"plite":21}],2:[function(require,module,exports){
+// replace or create in global namespace
+root.Conduit = Conduit;
+},{"./helpers/environment/get-global-object":11,"./helpers/object/extend":13,"./lib/application-facade":18,"./lib/component":19,"./lib/module":20,"./lib/service":21,"plite":22}],2:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -591,6 +604,61 @@ module.exports = exports['default'];
 'use strict';
 
 exports.__esModule = true;
+exports['default'] = extend;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _assign = require('./assign');
+
+var _assign2 = _interopRequireDefault(_assign);
+
+function extend(protoProps, staticProps) {
+	var parent = this;
+	var child;
+
+	// The constructor function for the new subclass is either defined by you
+	// (the "constructor" property in your `extend` definition), or defaulted
+	// by us to simply call the parent's constructor.
+	if (protoProps && Object.hasOwnProperty.call(protoProps, 'constructor')) {
+		child = protoProps.constructor;
+	} else {
+		child = function () {
+			return parent.apply(this, arguments);
+		};
+	}
+
+	if (parent.type) {
+		child.type = parent.type;
+	}
+
+	// Add static properties to the constructor function, if supplied.
+	Object.assign(child, parent, staticProps);
+
+	// Set the prototype chain to inherit from `parent`, without calling
+	// `parent`'s constructor function.
+	var Surrogate = function Surrogate() {
+		this.constructor = child;
+	};
+	Surrogate.prototype = parent.prototype;
+	child.prototype = new Surrogate();
+
+	// Add prototype properties (instance properties) to the subclass,
+	// if supplied.
+	if (protoProps) Object.assign(child.prototype, protoProps);
+
+	// Set a convenience property in case the parent's prototype is needed
+	// later.
+	child.__super__ = parent.prototype;
+
+	return child;
+}
+
+;
+module.exports = exports['default'];
+},{"./assign":12}],14:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -665,7 +733,7 @@ var ServiceReducers = (function () {
 
 exports['default'] = ServiceReducers;
 module.exports = exports['default'];
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -679,7 +747,7 @@ function dasherize(str) {
 
 ;
 module.exports = exports['default'];
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -701,7 +769,7 @@ var extractObjectName = (function () {
 
 exports['default'] = extractObjectName;
 module.exports = exports['default'];
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -748,7 +816,7 @@ var namedUid = (function () {
 
 exports['default'] = namedUid;
 module.exports = exports['default'];
-},{"./extract-object-name":15}],17:[function(require,module,exports){
+},{"./extract-object-name":16}],18:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1315,7 +1383,7 @@ var ApplicationFacade = (function (_Module) {
 
 exports['default'] = ApplicationFacade;
 module.exports = exports['default'];
-},{"../helpers/array/from":6,"../helpers/dom/dom-node-array":10,"../helpers/object/assign":12,"../helpers/string/dasherize":14,"./module":19}],18:[function(require,module,exports){
+},{"../helpers/array/from":6,"../helpers/dom/dom-node-array":10,"../helpers/object/assign":12,"../helpers/string/dasherize":15,"./module":20}],19:[function(require,module,exports){
 /**
  * @module  lib/Component
  * used to create views and/or view mediators
@@ -1553,7 +1621,7 @@ var Component = (function (_Module) {
 
 exports['default'] = Component;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/object/assign":12,"./module":19}],19:[function(require,module,exports){
+},{"../default-config":2,"../helpers/object/assign":12,"./module":20}],20:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1773,7 +1841,7 @@ var Module = (function () {
 
 exports['default'] = Module;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/environment/get-global-object":11,"../helpers/string/dasherize":14,"../helpers/string/extract-object-name":15,"../helpers/string/named-uid":16,"plite":21}],20:[function(require,module,exports){
+},{"../default-config":2,"../helpers/environment/get-global-object":11,"../helpers/string/dasherize":15,"../helpers/string/extract-object-name":16,"../helpers/string/named-uid":17,"plite":22}],21:[function(require,module,exports){
 /**
  * @module  lib/Service
  * used to create models, collections, proxies, adapters
@@ -2198,7 +2266,7 @@ var Service = (function (_Module) {
 
 exports['default'] = Service;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/array/is-array-like":7,"../helpers/array/merge":8,"../helpers/object/assign":12,"../helpers/service/reducers":13,"./module":19}],21:[function(require,module,exports){
+},{"../default-config":2,"../helpers/array/is-array-like":7,"../helpers/array/merge":8,"../helpers/object/assign":12,"../helpers/service/reducers":14,"./module":20}],22:[function(require,module,exports){
 function Plite(resolver) {
   var emptyFn = function () {},
       chain = emptyFn,

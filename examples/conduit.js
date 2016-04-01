@@ -1,15 +1,13 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
+exports.__esModule = true;
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var _helpersEnvironmentGetGlobalObject = require('./helpers/environment/get-global-object');
 
 var _helpersEnvironmentGetGlobalObject2 = _interopRequireDefault(_helpersEnvironmentGetGlobalObject);
-
-var _helpersObjectExtend = require('./helpers/object/extend');
-
-var _helpersObjectExtend2 = _interopRequireDefault(_helpersObjectExtend);
 
 var _libModule = require('./lib/module');
 
@@ -32,53 +30,394 @@ var _plite = require('plite');
 var _plite2 = _interopRequireDefault(_plite);
 
 var root = _helpersEnvironmentGetGlobalObject2['default']();
-var Conduit = root.Conduit || {};
 
 // shim promises
 !root.Promise && (root.Promise = _plite2['default']);
-// export ApplicationFacade Class for creating multicore apps
-Conduit.ApplicationFacade = _libApplicationFacade2['default'];
-Conduit.ApplicationFacade.extend = _helpersObjectExtend2['default'];
-// export Module Class
-Conduit.Module = _libModule2['default'];
-Conduit.Module.extend = _helpersObjectExtend2['default'];
-// export Service Class
-Conduit.Service = _libService2['default'];
-Conduit.Service.extend = _helpersObjectExtend2['default'];
-// export Component Class
-Conduit.Component = _libComponent2['default'];
-Conduit.Component.extend = _helpersObjectExtend2['default'];
 
-// replace or create in global namespace
-root.Conduit = Conduit;
-},{"./helpers/environment/get-global-object":8,"./helpers/object/extend":10,"./lib/application-facade":15,"./lib/component":17,"./lib/module":18,"./lib/service":19,"plite":23}],2:[function(require,module,exports){
+exports.Module = _libModule2['default'];
+exports.Service = _libService2['default'];
+exports.Component = _libComponent2['default'];
+exports.ApplicationFacade = _libApplicationFacade2['default'];
+},{"./helpers/environment/get-global-object":11,"./lib/application-facade":17,"./lib/component":18,"./lib/module":19,"./lib/service":20,"plite":21}],2:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _pluginsVentVent = require('./plugins/vent/vent');
+var _extensionsVentVent = require('./extensions/vent/vent');
 
-var _pluginsVentVent2 = _interopRequireDefault(_pluginsVentVent);
+var _extensionsVentVent2 = _interopRequireDefault(_extensionsVentVent);
 
-var _pluginsDomDomSelector = require('./plugins/dom/dom-selector');
+var _extensionsDomDomSelector = require('./extensions/dom/dom-selector');
 
-var _pluginsDomDomSelector2 = _interopRequireDefault(_pluginsDomDomSelector);
+var _extensionsDomDomSelector2 = _interopRequireDefault(_extensionsDomDomSelector);
 
-var _pluginsFallbackFallbackJs = require('./plugins/fallback/fallback.js');
+var _extensionsFallbackFallbackJs = require('./extensions/fallback/fallback.js');
 
-var _pluginsFallbackFallbackJs2 = _interopRequireDefault(_pluginsFallbackFallbackJs);
+var _extensionsFallbackFallbackJs2 = _interopRequireDefault(_extensionsFallbackFallbackJs);
 
 var defaultConfig = {
-	vent: _pluginsVentVent2['default'],
-	dom: _pluginsDomDomSelector2['default'],
-	template: _pluginsFallbackFallbackJs2['default']('template')
+	vent: _extensionsVentVent2['default'],
+	dom: _extensionsDomDomSelector2['default'],
+	template: _extensionsFallbackFallbackJs2['default']('template')
 };
 
 exports['default'] = defaultConfig;
 module.exports = exports['default'];
-},{"./plugins/dom/dom-selector":20,"./plugins/fallback/fallback.js":21,"./plugins/vent/vent":22}],3:[function(require,module,exports){
+},{"./extensions/dom/dom-selector":3,"./extensions/fallback/fallback.js":4,"./extensions/vent/vent":5}],3:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _helpersArrayUniques = require('../../helpers/array/uniques');
+
+var _helpersArrayUniques2 = _interopRequireDefault(_helpersArrayUniques);
+
+var _helpersArrayFrom = require('../../helpers/array/from');
+
+var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
+
+var _helpersArrayIsArrayLike = require('../../helpers/array/is-array-like');
+
+var _helpersArrayIsArrayLike2 = _interopRequireDefault(_helpersArrayIsArrayLike);
+
+var _helpersArrayMerge = require('../../helpers/array/merge');
+
+var _helpersArrayMerge2 = _interopRequireDefault(_helpersArrayMerge);
+
+exports['default'] = (function () {
+
+	function domSelector(selector) {
+		var context = arguments.length <= 1 || arguments[1] === undefined ? document : arguments[1];
+
+		return new DomSelector(selector, context);
+	}
+
+	var DomSelector = (function () {
+		function DomSelector(selector, context) {
+			_classCallCheck(this, DomSelector);
+
+			var isString = typeof selector === 'string';
+
+			if (isString) {
+				if (context.nodeType) {
+					selector = context.querySelectorAll(selector);
+				} else {
+					(function () {
+						var nodeArray = [];
+
+						domSelector(context).each(function (i, contextNode) {
+							var elArray = Array.from(contextNode.querySelectorAll(selector));
+							nodeArray = nodeArray.concat(elArray);
+						});
+
+						selector = _helpersArrayUniques2['default'](nodeArray);
+					})();
+				}
+			}
+
+			this.eventStore = [];
+			this.context = context || this;
+			this.length = 0;
+
+			if (_helpersArrayIsArrayLike2['default'](selector)) {
+				_helpersArrayMerge2['default'](this, selector);
+			} else {
+				this.add(selector);
+			}
+		}
+
+		DomSelector.prototype.add = function add(item) {
+
+			if (item) {
+				this[this.length++] = item;
+			}
+
+			return this;
+		};
+
+		DomSelector.prototype.each = function each(obj, callback) {
+
+			if (typeof obj === 'function') {
+				callback = obj;
+				obj = this;
+			}
+
+			var isLikeArray = _helpersArrayIsArrayLike2['default'](obj);
+			var value = undefined;
+			var i = 0;
+
+			if (isLikeArray) {
+
+				var _length = obj.length;
+
+				for (; i < _length; i++) {
+					value = callback.call(obj[i], i, obj[i]);
+
+					if (value === false) {
+						break;
+					}
+				}
+			}
+
+			return this;
+		};
+
+		DomSelector.prototype.find = function find(selector) {
+			return domSelector.call(this, selector, this);
+		};
+
+		DomSelector.prototype.remove = function remove() {
+			var _this2 = this;
+
+			var i = 0;
+
+			this.each(function (i, elem) {
+				elem.parentNode.removeChild(elem);
+				delete _this2[i];
+			});
+
+			this.length = 0;
+		};
+
+		DomSelector.prototype.on = function on(evtName, fn) {
+
+			// example for scheme of this.eventStore
+			// [{elem: DOMNode, events: {change: []}}]
+
+			var _this = this;
+
+			this.each(function (i, elem) {
+
+				var index = undefined;
+				var eventStore = undefined;
+
+				_this.eventStore.forEach(function (store, storeIndex) {
+					if (store.elem === elem) {
+						index = storeIndex;
+						eventStore = store;
+					}
+				});
+
+				if (isNaN(index)) {
+					index = _this.eventStore.length;
+				}
+
+				_this.eventStore[index] = eventStore || {};
+				_this.eventStore[index].events = _this.eventStore[index].events || {};
+				_this.eventStore[index].events[evtName] = _this.eventStore[index].events[evtName] || [];
+				_this.eventStore[index].elem = elem;
+
+				_this.eventStore[index].events[evtName].push(fn);
+
+				elem.addEventListener(evtName, _this.eventStore[index].events[evtName][_this.eventStore[index].events[evtName].length - 1]);
+			});
+
+			return this;
+		};
+
+		DomSelector.prototype.off = function off(evtName, fn) {
+
+			var _this = this;
+
+			this.each(function (i, elem) {
+
+				var eventStore = undefined;
+				var eventStoreIndex = undefined;
+				var eventsCallbacksSaved = [];
+				var eventsCallbacksIndexes = [];
+
+				_this.eventStore.forEach(function (store, storeIndex) {
+					if (store.elem === elem && store.events[evtName]) {
+						eventStoreIndex = storeIndex;
+						eventStore = store;
+					}
+				});
+
+				if (eventStore && eventStore.events[evtName]) {
+
+					eventStore.events[evtName].forEach(function (cb, i) {
+						if (cb == fn) {
+							_this.eventStore[eventStoreIndex].events[evtName].splice(i, 1);
+							elem.removeEventListener(evtName, cb);
+						} else if (!fn) {
+							// remove all
+							_this.eventStore[eventStoreIndex].events[evtName] = [];
+
+							elem.removeEventListener(evtName, cb);
+						}
+					});
+				} else {
+					elem.removeEventListener(evtName, fn);
+				}
+			});
+
+			return this;
+		};
+
+		DomSelector.prototype.trigger = function trigger(eventName, data, el) {
+
+			var event = undefined;
+			var detail = { 'detail': data };
+
+			var triggerEvent = function triggerEvent(i, elem) {
+
+				if ('on' + eventName in elem) {
+					event = document.createEvent('HTMLEvents');
+					event.initEvent(eventName, true, false);
+				} else if (window.CustomEvent) {
+					event = new CustomEvent(eventName, detail);
+				} else {
+					event = document.createEvent('CustomEvent');
+					event.initCustomEvent(eventName, true, true, detail);
+				}
+
+				elem.dispatchEvent(event);
+			};
+
+			if (el) {
+				triggerEvent(0, el);
+			} else {
+				this.each(triggerEvent);
+			}
+
+			return this;
+		};
+
+		DomSelector.prototype.hasClass = function hasClass(selector) {
+
+			var bool = false;
+
+			this.each(function (i, elem) {
+
+				if (elem.classList && !bool) {
+					bool = elem.classList.contains(selector);
+				} else if (!bool) {
+					bool = new RegExp('(^| )' + selector + '( |$)', 'gi').test(elem.className);
+				}
+			});
+
+			return bool;
+		};
+
+		DomSelector.prototype.addClass = function addClass(selector) {
+
+			this.each(function (i, elem) {
+
+				if (elem.classList) {
+					elem.classList.add(selector);
+				} else {
+					var className = elem.className + '  ' + selector;
+					elem.className += className.trim();
+				}
+			});
+
+			return this;
+		};
+
+		DomSelector.prototype.toggleClass = function toggleClass(selector) {
+
+			this.each(function (i, elem) {
+
+				if (elem.classList) {
+					elem.classList.toggle(selector);
+				} else {
+					var classes = elem.className.split(' ');
+					var existingIndex = classes.indexOf(selector);
+
+					if (existingIndex >= 0) classes.splice(existingIndex, 1);else classes.push(selector);
+
+					elem.className = classes.join(' ');
+				}
+			});
+		};
+
+		DomSelector.prototype.removeClass = function removeClass(selector) {
+			this.each(function (i, elem) {
+				if (elem.classList) {
+					elem.classList.remove(selector);
+				} else {
+					elem.className = elem.className.replace(new RegExp('(^|\\b)' + selector.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+				}
+			});
+		};
+
+		return DomSelector;
+	})();
+
+	return domSelector;
+}).call(undefined);
+
+module.exports = exports['default'];
+},{"../../helpers/array/from":6,"../../helpers/array/is-array-like":7,"../../helpers/array/merge":8,"../../helpers/array/uniques":9}],4:[function(require,module,exports){
+"use strict";
+
+exports.__esModule = true;
+
+exports["default"] = function (type) {
+	return function () {
+		console.warn("Plugin engine for type \"" + type + "\" not implemented yet.");
+		return arguments[0];
+	};
+};
+
+module.exports = exports["default"];
+},{}],5:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+exports['default'] = Vent;
+var target = undefined;
+var events = {};
+
+function Vent(newTarget) {
+	var empty = [];
+
+	if (typeof target === 'undefined' || newTarget !== target) {
+		target = newTarget || this;
+
+		if (!target.name) {
+			target.name = Math.random() + '';
+		}
+
+		events[target.name] = {};
+	}
+
+	/**
+  *  On: listen to events
+  */
+	target.on = function (type, func, ctx) {
+		(events[target.name][type] = events[target.name][type] || []).push([func, ctx]);
+	};
+	/**
+  *  Off: stop listening to event / specific callback
+  */
+	target.off = function (type, func) {
+		type || (events[target.name] = {});
+		var list = events[target.name][type] || empty,
+		    i = list.length = func ? list.length : 0;
+		while (i--) func == list[i][0] && list.splice(i, 1);
+	};
+	/** 
+  * Trigger: send event, callbacks will be triggered
+  */
+	target.trigger = function (type) {
+		var list = events[target.name][type] || empty,
+		    i = 0,
+		    j;
+		while (j = list[i++]) j[0].apply(j[1], empty.slice.call(arguments, 1));
+	};
+
+	return target;
+}
+
+module.exports = exports['default'];
+},{}],6:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -93,7 +432,7 @@ exports['default'] = (function () {
 }).call(undefined);
 
 module.exports = exports['default'];
-},{}],4:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -109,7 +448,7 @@ function isArrayLike(obj) {
 }
 
 module.exports = exports["default"];
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -130,7 +469,7 @@ function merge(first, second) {
 }
 
 module.exports = exports["default"];
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -143,7 +482,7 @@ function uniques(arr) {
 }
 
 module.exports = exports['default'];
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -175,7 +514,7 @@ function domNodeArray(item) {
 }
 
 module.exports = exports['default'];
-},{"../array/from":3}],8:[function(require,module,exports){
+},{"../array/from":6}],11:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -197,14 +536,14 @@ function getGlobalObject() {
 
 module.exports = exports['default'];
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 
 exports['default'] = (function () {
 
-	if (!Object.bla) {
+	if (!Object.assign) {
 		(function () {
 			var toObject = function toObject(val) {
 				if (val === null || val === undefined) {
@@ -217,7 +556,7 @@ exports['default'] = (function () {
 			var hasOwnProperty = Object.prototype.hasOwnProperty;
 			var propIsEnumerable = Object.prototype.propertyIsEnumerable;
 
-			Object.bla = function (target, source) {
+			Object.assign = function (target, source) {
 				var from;
 				var to = toObject(target);
 				var symbols;
@@ -248,62 +587,7 @@ exports['default'] = (function () {
 })();
 
 module.exports = exports['default'];
-},{}],10:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-exports['default'] = extend;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _assign = require('./assign');
-
-var _assign2 = _interopRequireDefault(_assign);
-
-function extend(protoProps, staticProps) {
-	var parent = this;
-	var child;
-
-	// The constructor function for the new subclass is either defined by you
-	// (the "constructor" property in your `extend` definition), or defaulted
-	// by us to simply call the parent's constructor.
-	if (protoProps && Object.hasOwnProperty.call(protoProps, 'constructor')) {
-		child = protoProps.constructor;
-	} else {
-		child = function () {
-			return parent.apply(this, arguments);
-		};
-	}
-
-	if (parent.type) {
-		child.type = parent.type;
-	}
-
-	// Add static properties to the constructor function, if supplied.
-	Object.assign(child, parent, staticProps);
-
-	// Set the prototype chain to inherit from `parent`, without calling
-	// `parent`'s constructor function.
-	var Surrogate = function Surrogate() {
-		this.constructor = child;
-	};
-	Surrogate.prototype = parent.prototype;
-	child.prototype = new Surrogate();
-
-	// Add prototype properties (instance properties) to the subclass,
-	// if supplied.
-	if (protoProps) Object.assign(child.prototype, protoProps);
-
-	// Set a convenience property in case the parent's prototype is needed
-	// later.
-	child.__super__ = parent.prototype;
-
-	return child;
-}
-
-;
-module.exports = exports['default'];
-},{"./assign":9}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -381,7 +665,7 @@ var ServiceReducers = (function () {
 
 exports['default'] = ServiceReducers;
 module.exports = exports['default'];
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -395,7 +679,7 @@ function dasherize(str) {
 
 ;
 module.exports = exports['default'];
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -417,7 +701,7 @@ var extractObjectName = (function () {
 
 exports['default'] = extractObjectName;
 module.exports = exports['default'];
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -464,7 +748,7 @@ var namedUid = (function () {
 
 exports['default'] = namedUid;
 module.exports = exports['default'];
-},{"./extract-object-name":13}],15:[function(require,module,exports){
+},{"./extract-object-name":15}],17:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -563,15 +847,34 @@ var ApplicationFacade = (function (_Module) {
 
 		config = Object.assign(options.config || {}, config);
 
-		this.observer = new MutationObserver(function (mutations) {
-			mutations.forEach(function (mutation) {
-				if (mutation.addedNodes) {
-					_this.onAddedNodes(mutation.addedNodes);
-				}
-			});
-		});
+		if (window.MutationObserver) {
 
-		this.observer.observe(observedNode, config);
+			this.observer = new MutationObserver(function (mutations) {
+				mutations.forEach(function (mutation) {
+
+					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+						_this.onAddedNodes(mutation.addedNodes);
+					} else if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+						_this.onRemovedNodes(mutation.removedNodes);
+					}
+				});
+			});
+
+			this.observer.observe(observedNode, config);
+		} else {
+
+			// @todo: needs test in IE9 & IE10
+
+			this.onAddedNodesCallback = function (e) {
+				_this.onAddedNodes(e.target);
+			};
+			this.onRemovedNodesCallback = function (e) {
+				_this.onRemovedNodes(e.target);
+			};
+
+			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodesCallback, false);
+			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodesCallback, false);
+		}
 	};
 
 	ApplicationFacade.prototype.onAddedNodes = function onAddedNodes(addedNodes) {
@@ -579,8 +882,6 @@ var ApplicationFacade = (function (_Module) {
 
 		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach(function (item) {
 			var mod = item.module;
-
-			console.info('New dom nodes added.', _helpersDomDomNodeArray2['default'](addedNodes));
 
 			_helpersDomDomNodeArray2['default'](addedNodes).forEach(function (ctx) {
 				if (ctx) {
@@ -591,9 +892,47 @@ var ApplicationFacade = (function (_Module) {
 		});
 	};
 
-	ApplicationFacade.prototype.stopObserving = function stopObserving() {
+	ApplicationFacade.prototype.onRemovedNodes = function onRemovedNodes(removedNodes) {
+		var _this3 = this;
 
-		this.observer.disconnect();
+		var componentRegistryItems = this.findMatchingRegistryItems(COMPONENT_TYPE);
+		var componentNodes = [];
+
+		_helpersDomDomNodeArray2['default'](removedNodes).forEach(function (node) {
+			// push outermost if module
+			if (node.dataset.jsModule) {
+				componentNodes.push(node);
+			}
+
+			// push children if module
+			_helpersDomDomNodeArray2['default'](node.querySelectorAll('[data-js-module]')).forEach(function (moduleEl) {
+				if (moduleEl.dataset.jsModule) {
+					componentNodes.push(moduleEl);
+				}
+			});
+		});
+
+		// iterate over component registry items
+		componentRegistryItems.forEach(function (registryItem) {
+			// iterate over started instances
+			registryItem.instances.forEach(function (inst) {
+				// if component el is within removeNodes
+				// destroy instance
+				if (componentNodes.indexOf(inst.el) > -1) {
+					_this3.destroy(inst);
+				}
+			});
+		});
+	};
+
+	ApplicationFacade.prototype.stopObserving = function stopObserving() {
+		if (window.MutationObserver) {
+			this.observer.disconnect();
+		} else {
+			var observedNode = this.options.context || document.body;
+			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodesCallback);
+			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
+		}
 	};
 
 	ApplicationFacade.prototype.findMatchingRegistryItems = function findMatchingRegistryItems(item) {
@@ -618,7 +957,7 @@ var ApplicationFacade = (function (_Module) {
   */
 
 	ApplicationFacade.prototype.start = function start() {
-		var _this3 = this;
+		var _this4 = this;
 
 		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 			args[_key] = arguments[_key];
@@ -626,7 +965,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this3.start(arg);
+				_this4.start(arg);
 			});
 			return;
 		}
@@ -645,7 +984,7 @@ var ApplicationFacade = (function (_Module) {
 	};
 
 	ApplicationFacade.prototype.stop = function stop() {
-		var _this4 = this;
+		var _this5 = this;
 
 		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
 			args[_key2] = arguments[_key2];
@@ -653,7 +992,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this4.stop(arg);
+				_this5.stop(arg);
 			});
 			return;
 		}
@@ -707,11 +1046,11 @@ var ApplicationFacade = (function (_Module) {
 		var itemInstance = new item(options);
 
 		this.initModule(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	};
 
 	ApplicationFacade.prototype.startComponents = function startComponents(item, options, observerStart) {
-		var _this5 = this;
+		var _this6 = this;
 
 		var elementArray = [];
 		var context = document;
@@ -730,7 +1069,7 @@ var ApplicationFacade = (function (_Module) {
 			_helpersDomDomNodeArray2['default'](options.context).forEach(function (context) {
 				// pass current node element to options.context
 				options.context = context;
-				_this5.startComponents(item, options, observerStart);
+				_this6.startComponents(item, options, observerStart);
 			});
 
 			return;
@@ -770,7 +1109,7 @@ var ApplicationFacade = (function (_Module) {
 		}
 
 		elementArray.forEach(function (domNode) {
-			_this5.startComponent(item, options, domNode);
+			_this6.startComponent(item, options, domNode);
 		});
 
 		// register module anyways for later use
@@ -787,7 +1126,7 @@ var ApplicationFacade = (function (_Module) {
 		var itemInstance = new item(options);
 
 		this.initComponent(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	};
 
 	ApplicationFacade.prototype.startService = function startService(item, options) {
@@ -795,7 +1134,7 @@ var ApplicationFacade = (function (_Module) {
 		var itemInstance = new item(options);
 
 		this.initService(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	};
 
 	ApplicationFacade.prototype.parseOptions = function parseOptions(el, item) {
@@ -853,6 +1192,7 @@ var ApplicationFacade = (function (_Module) {
 	};
 
 	ApplicationFacade.prototype.register = function register(module, inst) {
+		var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
 		if (arguments.length === 0) {
 			throw new Error('Module or module identifier expected');
@@ -864,26 +1204,39 @@ var ApplicationFacade = (function (_Module) {
 
 			var index = this._modules.indexOf(existingRegistryModuleItem);
 
+			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
+				this[options.appName] = inst;
+			}
+
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);
 			}
 		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
 
-			this._modules.push({
+			var registryObject = {
 				type: module.type,
 				module: module,
 				instances: inst ? [inst] : [],
 				autostart: !!module.autostart,
 				running: false,
 				uid: module.uid
-			});
+			};
+
+			if (options.appName && !this[options.appName] && registryObject.instances.length > 0) {
+				registryObject.appName = options.appName;
+				this[options.appName] = registryObject.instances[0];
+			} else if (options.appName) {
+				console.error('appName ' + options.appName + ' is already defined.');
+			}
+
+			this._modules.push(registryObject);
 		} else {
 			console.error('Expected Module of type \n\t\t\t\t' + COMPONENT_TYPE + ', ' + SERVICE_TYPE + ' or ' + MODULE_TYPE + ', \n\t\t\t\tModule of type ' + module.type + ' cannot be registered.');
 		}
 	};
 
 	ApplicationFacade.prototype.destroy = function destroy() {
-		var _this6 = this;
+		var _this7 = this;
 
 		for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
 			args[_key3] = arguments[_key3];
@@ -891,7 +1244,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this6.destroy(arg);
+				_this7.destroy(arg);
 			});
 			return;
 		}
@@ -920,12 +1273,17 @@ var ApplicationFacade = (function (_Module) {
 				// undelegate vents for all
 				inst.undelegateVents();
 
-				var moduleInstances = _this6._modules[_this6._modules.indexOf(registryItem)].instances;
+				var moduleInstances = _this7._modules[_this7._modules.indexOf(registryItem)].instances;
 
 				if (moduleInstances.length > 1) {
-					_this6._modules[_this6._modules.indexOf(registryItem)].instances.splice(moduleInstances.indexOf(inst), 1);
+					_this7._modules[_this7._modules.indexOf(registryItem)].instances.splice(moduleInstances.indexOf(inst), 1);
 				} else {
-					_this6._modules[_this6._modules.indexOf(registryItem)].instances = [];
+					_this7._modules[_this7._modules.indexOf(registryItem)].instances = [];
+
+					// delete exposed instances
+					if (registryItem.appName && _this7[registryItem.appName]) {
+						delete _this7[registryItem.appName];
+					}
 				}
 			});
 		});
@@ -946,6 +1304,7 @@ var ApplicationFacade = (function (_Module) {
 			if (this._modules.length > 1) {
 				this._modules.splice(this._modules.indexOf(mod), 1);
 			} else {
+
 				this._modules = [];
 			}
 		}
@@ -956,129 +1315,7 @@ var ApplicationFacade = (function (_Module) {
 
 exports['default'] = ApplicationFacade;
 module.exports = exports['default'];
-},{"../helpers/array/from":3,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":12,"./module":18}],16:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-var _helpersArrayIsArrayLike = require('../helpers/array/is-array-like');
-
-var _helpersArrayIsArrayLike2 = _interopRequireDefault(_helpersArrayIsArrayLike);
-
-var _helpersArrayMerge = require('../helpers/array/merge');
-
-var _helpersArrayMerge2 = _interopRequireDefault(_helpersArrayMerge);
-
-var BaseCollection = (function () {
-	function BaseCollection(obj, context) {
-		_classCallCheck(this, BaseCollection);
-
-		this.context = context || this;
-		this.length = 0;
-
-		this.create(obj);
-	}
-
-	BaseCollection.prototype.create = function create(data) {
-
-		if (_helpersArrayIsArrayLike2['default'](data)) {
-			_helpersArrayMerge2['default'](this, data);
-		} else if (data) {
-			this.add(data);
-		}
-	};
-
-	BaseCollection.prototype.each = function each(obj, callback) {
-
-		if (typeof obj === 'function') {
-			callback = obj;
-			obj = this;
-		}
-
-		var isLikeArray = _helpersArrayIsArrayLike2['default'](obj);
-		var value = undefined;
-		var i = 0;
-
-		if (isLikeArray) {
-
-			var _length = obj.length;
-
-			for (; i < _length; i++) {
-				value = callback.call(obj[i], i, obj[i]);
-
-				if (value === false) {
-					break;
-				}
-			}
-		}
-
-		return this;
-	};
-
-	BaseCollection.prototype.add = function add(item) {
-
-		if (item) {
-			this[this.length++] = item;
-		}
-
-		return this;
-	};
-
-	BaseCollection.prototype.reset = function reset() {
-		var _this = this;
-
-		var i = 0;
-
-		this.each(function (i) {
-			delete _this[i];
-		});
-
-		this.length = 0;
-	};
-
-	BaseCollection.prototype.toArray = function toArray() {
-		var _this2 = this;
-
-		var arr = [];
-		var i = 0;
-
-		this.each(function (i) {
-			arr.push(_this2[i]);
-		});
-
-		return arr;
-	};
-
-	BaseCollection.prototype.findIndex = function findIndex(item) {
-
-		return this.toArray().indexOf(item);
-	};
-
-	BaseCollection.prototype.remove = function remove(index) {
-		var howMuch = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
-
-		var tmpArray = this.toArray();
-		tmpArray.splice(index, howMuch);
-		this.reset();
-		this.create(tmpArray);
-
-		return this;
-	};
-
-	return BaseCollection;
-})();
-
-function Collection(data) {
-	return new BaseCollection(data);
-}
-
-exports['default'] = Collection;
-exports.BaseCollection = BaseCollection;
-},{"../helpers/array/is-array-like":4,"../helpers/array/merge":5}],17:[function(require,module,exports){
+},{"../helpers/array/from":6,"../helpers/dom/dom-node-array":10,"../helpers/object/assign":12,"../helpers/string/dasherize":14,"./module":19}],18:[function(require,module,exports){
 /**
  * @module  lib/Component
  * used to create views and/or view mediators
@@ -1151,7 +1388,7 @@ var Component = (function (_Module) {
 
 		_Module.call(this, options);
 
-		this.events = {};
+		this.events = this.events || {};
 		this.dom = options.dom || options.app && options.app.dom || _defaultConfig2['default'].dom;
 
 		this.template = options.template || options.app && options.app.template || _defaultConfig2['default'].template;
@@ -1316,7 +1553,7 @@ var Component = (function (_Module) {
 
 exports['default'] = Component;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/object/assign":9,"./module":18}],18:[function(require,module,exports){
+},{"../default-config":2,"../helpers/object/assign":12,"./module":19}],19:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1536,7 +1773,7 @@ var Module = (function () {
 
 exports['default'] = Module;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":12,"../helpers/string/extract-object-name":13,"../helpers/string/named-uid":14,"plite":23}],19:[function(require,module,exports){
+},{"../default-config":2,"../helpers/environment/get-global-object":11,"../helpers/string/dasherize":14,"../helpers/string/extract-object-name":15,"../helpers/string/named-uid":16,"plite":21}],20:[function(require,module,exports){
 /**
  * @module  lib/Service
  * used to create models, collections, proxies, adapters
@@ -1961,156 +2198,7 @@ var Service = (function (_Module) {
 
 exports['default'] = Service;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/array/is-array-like":4,"../helpers/array/merge":5,"../helpers/object/assign":9,"../helpers/service/reducers":11,"./module":18}],20:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _helpersArrayUniques = require('../../helpers/array/uniques');
-
-var _helpersArrayUniques2 = _interopRequireDefault(_helpersArrayUniques);
-
-var _helpersArrayFrom = require('../../helpers/array/from');
-
-var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
-
-var _libCollection = require('../../lib/collection');
-
-exports['default'] = (function () {
-
-	function domSelector(selector) {
-		var context = arguments.length <= 1 || arguments[1] === undefined ? document : arguments[1];
-
-		return new DomSelector(selector, context);
-	}
-
-	var DomSelector = (function (_BaseCollection) {
-		_inherits(DomSelector, _BaseCollection);
-
-		function DomSelector(selector, context) {
-			_classCallCheck(this, DomSelector);
-
-			var isString = typeof selector === 'string';
-
-			if (isString) {
-				if (context.nodeType) {
-					selector = context.querySelectorAll(selector);
-				} else {
-					(function () {
-						var nodeArray = [];
-
-						domSelector(context).each(function (i, contextNode) {
-							var elArray = Array.from(contextNode.querySelectorAll(selector));
-							nodeArray = nodeArray.concat(elArray);
-						});
-
-						selector = _helpersArrayUniques2['default'](nodeArray);
-					})();
-				}
-			}
-
-			_BaseCollection.call(this, selector, context);
-		}
-
-		DomSelector.prototype.find = function find(selector) {
-			return domSelector.call(this, selector, this);
-		};
-
-		DomSelector.prototype.on = function on(evtName, fn) {
-
-			this.each(function (i, elem) {
-				elem.addEventListener(evtName, fn);
-			});
-
-			return this;
-		};
-
-		DomSelector.prototype.off = function off(evtName, fn) {
-
-			this.each(function (i, elem) {
-				elem.removeEventListener(evtName, fn);
-			});
-
-			return this;
-		};
-
-		return DomSelector;
-	})(_libCollection.BaseCollection);
-
-	return domSelector;
-}).call(undefined);
-
-module.exports = exports['default'];
-},{"../../helpers/array/from":3,"../../helpers/array/uniques":6,"../../lib/collection":16}],21:[function(require,module,exports){
-"use strict";
-
-exports.__esModule = true;
-
-exports["default"] = function (type) {
-	return function () {
-		console.warn("Plugin engine for type \"" + type + "\" not implemented yet.");
-		return arguments[0];
-	};
-};
-
-module.exports = exports["default"];
-},{}],22:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-exports['default'] = Vent;
-var target = undefined;
-var events = {};
-
-function Vent(newTarget) {
-	var empty = [];
-
-	if (typeof target === 'undefined' || newTarget !== target) {
-		target = newTarget || this;
-
-		if (!target.name) {
-			target.name = Math.random() + '';
-		}
-
-		events[target.name] = {};
-	}
-
-	/**
-  *  On: listen to events
-  */
-	target.on = function (type, func, ctx) {
-		(events[target.name][type] = events[target.name][type] || []).push([func, ctx]);
-	};
-	/**
-  *  Off: stop listening to event / specific callback
-  */
-	target.off = function (type, func) {
-		type || (events[target.name] = {});
-		var list = events[target.name][type] || empty,
-		    i = list.length = func ? list.length : 0;
-		while (i--) func == list[i][0] && list.splice(i, 1);
-	};
-	/** 
-  * Trigger: send event, callbacks will be triggered
-  */
-	target.trigger = function (type) {
-		var list = events[target.name][type] || empty,
-		    i = 0,
-		    j;
-		while (j = list[i++]) j[0].apply(j[1], empty.slice.call(arguments, 1));
-	};
-
-	return target;
-}
-
-module.exports = exports['default'];
-},{}],23:[function(require,module,exports){
+},{"../default-config":2,"../helpers/array/is-array-like":7,"../helpers/array/merge":8,"../helpers/object/assign":12,"../helpers/service/reducers":13,"./module":19}],21:[function(require,module,exports){
 function Plite(resolver) {
   var emptyFn = function () {},
       chain = emptyFn,
