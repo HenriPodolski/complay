@@ -108,7 +108,7 @@ class Module {
 		this.autostart = !!(options.autostart);
 
 		// if not extended by component or service
-		if (this.type !== SERVICE_TYPE || this.type !== COMPONENT_TYPE) {
+		if (this.type !== SERVICE_TYPE && this.type !== COMPONENT_TYPE) {
 
 			if (options.vent) {
 				// could be used standalone

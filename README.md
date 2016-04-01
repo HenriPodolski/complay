@@ -6,8 +6,9 @@ you might use those. We use those too!
 But if you are curious about alternatives have a look at conduitjs.
 We enjoy coding and using it.
 
-It is possible that we will use this in an ES5 environment via dist/conduit.js. 
-But an ES6 setup which imports the files might work better.
+It is possible to use this in an ES5 environment via dist/conduit.js. 
+But functionalities are limited and some does not work.
+An ES6 setup which imports the files might work better.
 
 Version: 0.0.1
 Our library is under active development and things might change. As soon as we think

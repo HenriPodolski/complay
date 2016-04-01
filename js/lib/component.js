@@ -69,8 +69,17 @@ class Component extends Module {
 
 		this.ensureElement(options);
 		this.initialize(options);
+		this.didMount();
+	}
+
+	didMount() {
 		this.delegateEvents();
 		this.delegateVents();
+	}
+
+	willUnmount() {
+		this.undelegateEvents();
+		this.undelegateVents();
 	}
 
 	createDom(str) {

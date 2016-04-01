@@ -851,7 +851,6 @@ var ApplicationFacade = (function (_Module) {
 
 			this.observer = new MutationObserver(function (mutations) {
 				mutations.forEach(function (mutation) {
-
 					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
 						_this.onAddedNodes(mutation.addedNodes);
 					} else if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
@@ -884,9 +883,10 @@ var ApplicationFacade = (function (_Module) {
 			var mod = item.module;
 
 			_helpersDomDomNodeArray2['default'](addedNodes).forEach(function (ctx) {
-				if (ctx) {
+				if (ctx.nodeType === Node.ELEMENT_NODE && ctx.dataset.jsModule) {
+					_this2.startComponents(mod, { context: ctx.parentElement }, true);
+				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
 					_this2.startComponents(mod, { context: ctx }, true);
-					_this2.startComponents(mod, { el: ctx }, true);
 				}
 			});
 		});
@@ -1049,6 +1049,10 @@ var ApplicationFacade = (function (_Module) {
 		this.register(item, itemInstance, options);
 	};
 
+	/**
+  * @todo needs refactoring
+  */
+
 	ApplicationFacade.prototype.startComponents = function startComponents(item, options, observerStart) {
 		var _this6 = this;
 
@@ -1056,7 +1060,13 @@ var ApplicationFacade = (function (_Module) {
 		var context = document;
 		var contexts = [];
 
+		// handle es5 extends and name property
+		if (!item.name && item.prototype._name) {
+			item.es5name = item.prototype._name;
+		}
+
 		if (this.options.context && !options.context) {
+			// this application facade is limited to a specific dom element
 			options.context = this.options.context;
 		}
 
@@ -1064,15 +1074,23 @@ var ApplicationFacade = (function (_Module) {
 		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
 			// dom node case
 			context = options.context;
-		} else if (options.context) {
+		} else if (options.context && _helpersDomDomNodeArray2['default'](options.context).length > 1) {
+			var hasDomNode = false;
 			// selector or nodelist case
 			_helpersDomDomNodeArray2['default'](options.context).forEach(function (context) {
 				// pass current node element to options.context
-				options.context = context;
-				_this6.startComponents(item, options, observerStart);
+				if (context.nodeType === Node.ELEMENT_NODE) {
+					options.context = context;
+					_this6.startComponents(item, options, observerStart);
+					hasDomNode = true;
+				}
 			});
 
-			return;
+			if (hasDomNode) {
+				return;
+			}
+		} else if (options.context && options.context.length === 1) {
+			context = options.context[0];
 		}
 
 		elementArray = _helpersDomDomNodeArray2['default'](options.el);
@@ -1080,7 +1098,10 @@ var ApplicationFacade = (function (_Module) {
 		if (elementArray.length === 0) {
 			// context or parent context already queried for data-js-module and saved?
 			var modNodes = this.moduleNodes.filter(function (node) {
-				return (node.context === context || node.context.contains(context)) && node.componentClass === item;
+				return node.context && // has context
+				node.componentClass === item && //saved component is item
+				!observerStart && ( // not a dom mutation
+				node.context === context || node.context.contains(context));
 			});
 
 			var modNode = modNodes[0];
@@ -1094,7 +1115,8 @@ var ApplicationFacade = (function (_Module) {
 				elementArray = Array.from(context.querySelectorAll('[data-js-module]'));
 
 				elementArray = elementArray.filter(function (domNode) {
-					return domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](item.name)) !== -1;
+					var name = item.name || item.es5name;
+					return name && domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](name)) !== -1;
 				});
 
 				if (elementArray.length) {
@@ -1109,6 +1131,7 @@ var ApplicationFacade = (function (_Module) {
 		}
 
 		elementArray.forEach(function (domNode) {
+			options.app = options.app || _this6;
 			_this6.startComponent(item, options, domNode);
 		});
 
@@ -1139,7 +1162,7 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.parseOptions = function parseOptions(el, item) {
 
-		var options = el.dataset.jsOptions;
+		var options = el && el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
 			// if <div data-js-options="{'show': true}"> is used,
@@ -1204,10 +1227,12 @@ var ApplicationFacade = (function (_Module) {
 
 			var index = this._modules.indexOf(existingRegistryModuleItem);
 
+			// mixin named components using appName
 			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
 				this[options.appName] = inst;
 			}
 
+			// push if instance not exists
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);
 			}
@@ -1407,9 +1432,18 @@ var Component = (function (_Module) {
 
 		this.ensureElement(options);
 		this.initialize(options);
+		this.didMount();
+	}
+
+	Component.prototype.didMount = function didMount() {
 		this.delegateEvents();
 		this.delegateVents();
-	}
+	};
+
+	Component.prototype.willUnmount = function willUnmount() {
+		this.undelegateEvents();
+		this.undelegateVents();
+	};
 
 	Component.prototype.createDom = function createDom(str) {
 
@@ -1697,7 +1731,7 @@ var Module = (function () {
 		this.autostart = !!options.autostart;
 
 		// if not extended by component or service
-		if (this.type !== SERVICE_TYPE || this.type !== COMPONENT_TYPE) {
+		if (this.type !== SERVICE_TYPE && this.type !== COMPONENT_TYPE) {
 
 			if (options.vent) {
 				// could be used standalone

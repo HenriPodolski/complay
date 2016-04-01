@@ -64,7 +64,6 @@ class ApplicationFacade extends Module {
 			
 			this.observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
-
 					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
 						this.onAddedNodes(mutation.addedNodes);
 					} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
@@ -96,10 +95,11 @@ class ApplicationFacade extends Module {
 			let mod = item.module;
 			
 			domNodeArray(addedNodes).forEach((ctx) => {				
-				if (ctx) {
+				if (ctx.nodeType === Node.ELEMENT_NODE && ctx.dataset.jsModule) {
+					this.startComponents(mod, {context: ctx.parentElement}, true);	
+				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
 					this.startComponents(mod, {context: ctx}, true);
-					this.startComponents(mod, {el: ctx}, true);	
-				}				
+				}
 			});			
 		});		
 	}
@@ -251,13 +251,22 @@ class ApplicationFacade extends Module {
 		this.register(item, itemInstance, options);
 	}
 
+	/**
+	 * @todo needs refactoring
+	 */
 	startComponents(item, options, observerStart) {
 		
 		let elementArray = [];
 		let context = document;
 		let contexts = [];
 
+		// handle es5 extends and name property
+		if (!item.name && item.prototype._name) {
+			item.es5name = item.prototype._name;
+		}
+
 		if (this.options.context && !options.context) {
+			// this application facade is limited to a specific dom element
 			options.context = this.options.context;
 		}
 
@@ -265,15 +274,24 @@ class ApplicationFacade extends Module {
 		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
 			// dom node case
 			context = options.context;
-		} else if(options.context) {
+		} else if(options.context && domNodeArray(options.context).length > 1) {
+			let hasDomNode = false;
 			// selector or nodelist case
 			domNodeArray(options.context).forEach((context) => {
 				// pass current node element to options.context
-				options.context = context;
-				this.startComponents(item, options, observerStart);
+				if (context.nodeType === Node.ELEMENT_NODE) {
+					options.context = context;
+					this.startComponents(item, options, observerStart);	
+					hasDomNode = true;
+				}				
 			});
 
-			return;
+			if (hasDomNode) {
+				return;	
+			}
+			
+		} else if (options.context && options.context.length === 1) {
+			context = options.context[0];
 		}
 
 		elementArray = domNodeArray(options.el);
@@ -281,9 +299,11 @@ class ApplicationFacade extends Module {
 		if (elementArray.length === 0) {
 			// context or parent context already queried for data-js-module and saved?
 			let modNodes = this.moduleNodes.filter((node) => {
-				return (node.context === context || 
-						node.context.contains(context)) && 
-						node.componentClass === item;
+				return  node.context && // has context
+						node.componentClass === item && //saved component is item
+						!observerStart && // not a dom mutation
+						(node.context === context || 
+						node.context.contains(context));
 			});
 
 			let modNode = modNodes[0];
@@ -297,7 +317,8 @@ class ApplicationFacade extends Module {
 				elementArray = Array.from(context.querySelectorAll(`[data-js-module]`));
 
 				elementArray = elementArray.filter((domNode) => {
-					return domNode.dataset.jsModule.indexOf(dasherize(item.name)) !== -1;
+					let name = item.name || item.es5name;
+					return name && domNode.dataset.jsModule.indexOf(dasherize(name)) !== -1;
 				});
 				
 				if (elementArray.length) {
@@ -312,6 +333,7 @@ class ApplicationFacade extends Module {
 		}
 
 		elementArray.forEach((domNode) => {
+			options.app = options.app || this;
 			this.startComponent(item, options, domNode);
 		});
 
@@ -342,7 +364,7 @@ class ApplicationFacade extends Module {
 
 	parseOptions(el, item) {
 
-		let options = el.dataset.jsOptions;
+		let options = el && el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
 			// if <div data-js-options="{'show': true}"> is used, 
@@ -350,13 +372,10 @@ class ApplicationFacade extends Module {
 			// convert to valid json string and parse to JSON
 			options = options
 				.replace(/\\'/g, '\'')
-				.replace(/'/g, '"');
+				.replace(/'/g, '"');				
 
 			options = JSON.parse(options);
 			options = options[dasherize(item.name)] || options[item.name] || options;
-		}
-
-		return options || {};
 	}
 
 	initModule(module) {
@@ -408,10 +427,12 @@ class ApplicationFacade extends Module {
 
 			let index = this._modules.indexOf(existingRegistryModuleItem);
 
+			// mixin named components using appName
 			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
 				this[options.appName] = inst;
 			}
 			
+			// push if instance not exists
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);	
 			}			
