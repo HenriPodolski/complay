@@ -27,9 +27,7 @@ module.exports = function (grunt) {
 				},
 				files: { 
 					'./dist/conduit.es5.js': ['./js/conduit.es5.js'],
-					'./examples/conduit.es5.js': ['./js/conduit.es5.js'],
-					'./dist/conduit.js': ['./js/conduit.js'],
-					'./examples/conduit.js': ['./js/conduit.js']
+					'./dist/conduit.js': ['./js/conduit.js']
 				}
 			}
 		},
