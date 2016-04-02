@@ -367,15 +367,21 @@ class ApplicationFacade extends Module {
 		let options = el && el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
+
+			let name = item.name || item.es5name;
+
 			// if <div data-js-options="{'show': true}"> is used, 
 			// instead of <div data-js-options='{"show": true}'>
 			// convert to valid json string and parse to JSON
 			options = options
 				.replace(/\\'/g, '\'')
-				.replace(/'/g, '"');				
+				.replace(/'/g, '"');
 
 			options = JSON.parse(options);
-			options = options[dasherize(item.name)] || options[item.name] || options;
+			options = options[dasherize(name)] || options[name] || options;
+		}
+
+		return options || {};
 	}
 
 	initModule(module) {
