@@ -1165,13 +1165,16 @@ var ApplicationFacade = (function (_Module) {
 		var options = el && el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
+
+			var _name = item.name || item.es5name;
+
 			// if <div data-js-options="{'show': true}"> is used,
 			// instead of <div data-js-options='{"show": true}'>
 			// convert to valid json string and parse to JSON
 			options = options.replace(/\\'/g, '\'').replace(/'/g, '"');
 
 			options = JSON.parse(options);
-			options = options[_helpersStringDasherize2['default'](item.name)] || options[item.name] || options;
+			options = options[_helpersStringDasherize2['default'](_name)] || options[_name] || options;
 		}
 
 		return options || {};

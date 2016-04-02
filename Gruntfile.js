@@ -6,34 +6,25 @@ module.exports = function (grunt) {
 			options: {
 				browserifyOptions: {
 					debug: true
-				}
-			},
+				},
+				exclude: ['jquery'],
+				transform: [
+					[
+						'babelify',
+						{
+							'loose': 'all',
+							'sourceMaps': true,
+							'modules': 'common',
+							'optional': []
+						}
+					]
+			]},
 			dist: {
 				options: {
 					browserifyOptions: {
 						debug: false
-					},
-					exclude: ['jquery', 'underscore'],
-					transform: [
-						[
-							'babelify',
-							{
-								'loose': 'all',
-								'sourceMaps': true,
-								'modules': 'common',
-								'optional': []
-							}
-						],[
-							'aliasify', 
-							{
-								aliases: {
-									'backbone': 'exoskeleton'
-								},
-								global: true, // By default Aliasify only runs against your code (not node_modules). This flag tells it to remap third-party code too.
-								verbose: true
-							}
-					]
-				]},
+					}
+				},
 				files: { 
 					'./dist/conduit.es5.js': ['./js/conduit.es5.js'],
 					'./examples/conduit.es5.js': ['./js/conduit.es5.js'],
@@ -69,51 +60,26 @@ module.exports = function (grunt) {
 				}
 			}
 		},
-		browserSync: {
-			options: {
-				notify: true,
-				host: "localhost",
-				server: {
-					baseDir: './examples',
-					index: "index.html"
-				},
-				watchTask: true,
-				ghostMode: {
-					clicks: true,
-					scroll: true,
-					forms: true
-				}
-			},
-			bsFiles: {
-				src: [
-					'./examples/**/*.js',
-					'./examples/**/*.css',
-					'./examples/**/*.html'
-				]
-			}
-		},
 		watch: {
 			scripts: {
 				files: ['js/**/*.js'],
 				tasks: ['browserify:dist', 'karma:continuous'],
 				options: {
 					spawn: false,
-				},
-			},
+				}
+			}
 		}
 	});
 
 	grunt.loadNpmTasks('grunt-browserify');
 	grunt.loadNpmTasks('grunt-karma');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-browser-sync');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 
 	grunt.registerTask('default', [
 		'browserify:dist',
 		'karma:continuous'
 	]);
-	grunt.registerTask('build', ['browserify', 'uglify:dist']);
+	grunt.registerTask('build', ['browserify:dist', 'uglify:dist']);
 	grunt.registerTask('unit-test', ['karma:unit']);
-	grunt.registerTask('serve-examples', ['browserify:dist', 'karma:continuous', 'browserSync', 'watch']);
 };
