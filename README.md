@@ -1,10 +1,6 @@
 ## conduitjs
 
 A flexible js architecture library based on services, components and modules.
-If you are happy with angular, backbone, jquery, react or whatever your stack is,
-you might use those. We use those too! 
-But if you are curious about alternatives have a look at conduitjs.
-We enjoy coding and using it.
 
 It is possible to use this in an ES5 environment via dist/conduit.js. 
 But functionalities are limited and some does not work.

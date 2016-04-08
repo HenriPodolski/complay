@@ -1,6 +1,5 @@
 import Base from './base';
-
-const MODULE_TYPE = 'module';
+import {MODULE_TYPE} from './types';
 
 class Module extends Base {
 

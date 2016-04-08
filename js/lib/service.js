@@ -7,8 +7,7 @@ import ServiceReducers from '../helpers/service/reducers';
 import assign from '../helpers/object/assign';
 import isArrayLike from '../helpers/array/is-array-like';
 import merge from '../helpers/array/merge';
-
-const SERVICE_TYPE = 'service';
+import {SERVICE_TYPE} from './types';
 
 class Service extends Base {
 	

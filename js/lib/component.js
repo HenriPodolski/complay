@@ -6,8 +6,7 @@ import Base from './base';
 import assign from '../helpers/object/assign';
 import defaultConfig from '../default-config';
 import arrayFrom from '../helpers/array/from';
-
-const COMPONENT_TYPE = 'component';
+import {COMPONENT_TYPE} from './types';
 
 const DELEGATE_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
