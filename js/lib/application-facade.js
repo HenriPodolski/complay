@@ -1,6 +1,6 @@
 import Module from './module';
 
-import from from '../helpers/array/from';
+import arrayFrom from '../helpers/array/from';
 import assign from '../helpers/object/assign';
 import dasherize from '../helpers/string/dasherize';
 import domNodeArray from '../helpers/dom/dom-node-array';

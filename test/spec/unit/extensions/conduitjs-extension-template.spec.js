@@ -7,7 +7,7 @@ chai.should();
 
 let template = Handlebars.compile;
 
-describe('Conduitjs JS Template Plugin', ()=>{
+describe('Conduitjs JS Template Extension', ()=>{
 
 	it('should return a string', () => {
 		let str = '<h1>Something</h1>';

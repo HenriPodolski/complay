@@ -2,9 +2,10 @@
  * @module  lib/Component
  * used to create views and/or view mediators
  */
-import Module from './module';
-import defaultConfig from '../default-config';
+import Base from './base';
 import assign from '../helpers/object/assign';
+import defaultConfig from '../default-config';
+import arrayFrom from '../helpers/array/from';
 
 const COMPONENT_TYPE = 'component';
 
@@ -16,7 +17,7 @@ let matchesSelector = Element.prototype.matches ||
 	Element.prototype.msMatchesSelector ||
 	Element.prototype.oMatchesSelector;
 
-class Component extends Module {
+class Component extends Base {
 
 	static get type() {
 		return COMPONENT_TYPE;
@@ -55,16 +56,6 @@ class Component extends Module {
 			|| (options.app && options.app.template)
 			|| defaultConfig.template;
 
-		if (options.vent) {
-			// could be used standalone
-			this.vent = options.vent(options.app || this);
-		} else if (options.app && options.app.vent) {
-			// or within an application facade
-			this.vent = options.app.vent(options.app);			
-		} else {
-			this.vent = defaultConfig.vent(options.app || this);
-		}
-
 		this._domEvents = [];
 
 		this.ensureElement(options);
@@ -85,8 +76,17 @@ class Component extends Module {
 	createDom(str) {
 
 		let div = document.createElement('div');
+		let elNode;
+		
 		div.innerHTML = str;
-		return div.childNodes[0] || div;
+
+		Array.from(div.childNodes).forEach((node) => {
+			if (!elNode && node.nodeType === Node.ELEMENT_NODE) {
+				elNode = node;
+			}
+		})
+
+		return elNode || div;
 	}
 
 	ensureElement(options) {

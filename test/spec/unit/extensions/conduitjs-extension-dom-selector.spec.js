@@ -5,7 +5,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Plugin DOM Selector', ()=>{
+describe('Conduitjs JS Extension DOM Selector', ()=>{
 
 	let domNode = document.createElement('div');
 
@@ -106,8 +106,6 @@ describe('Conduitjs JS Plugin DOM Selector', ()=>{
 		testElement[0].click();
 		testElement[0].click();
 		testElement.trigger('focus');
-
-		console.log(counter);
 
 		testElement.off('click');
 		testElement.off('focus');

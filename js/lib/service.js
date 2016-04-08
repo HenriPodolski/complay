@@ -2,16 +2,15 @@
  * @module  lib/Service
  * used to create models, collections, proxies, adapters
  */
-import Module from './module';
+import Base from './base';
 import ServiceReducers from '../helpers/service/reducers';
 import assign from '../helpers/object/assign';
-import defaultConfig from '../default-config';
 import isArrayLike from '../helpers/array/is-array-like';
 import merge from '../helpers/array/merge';
 
 const SERVICE_TYPE = 'service';
 
-class Service extends Module {
+class Service extends Base {
 	
 	static get type() {
 		return SERVICE_TYPE;
@@ -39,7 +38,7 @@ class Service extends Module {
 
 		this.data = {};
 
-		// proxying ServiceReducers via this.data
+		// composing this with ServiceReducers via this.data
 		for (var method in ServiceReducers) {	
 			if (ServiceReducers.hasOwnProperty(method)) {
 				this.data[method] = ServiceReducers[method].bind(this);
@@ -49,16 +48,6 @@ class Service extends Module {
 		this.lastCommitId = null;
 		this.commitIds = [];
 		this.repository = {};
-
-		if (options.vent) {
-			// could be used standalone
-			this.vent = options.vent(this);
-		} else if (options.app && options.app.vent) {
-			// or within an application facade
-			this.vent = options.app.vent(options.app);			
-		} else {
-			this.vent = defaultConfig.vent(this);
-		}
 
 		if (options.data) {
 			this.merge(options.data);
@@ -135,7 +124,7 @@ class Service extends Module {
 	 */
 	connect() {
 		
-		let connectMethod = this.options.connectMethod || this.fallback;
+		let connectMethod = (this.options.strategy && this.options.strategy.connect) || this.fallback;
 
 		return connectMethod.apply(this, arguments);
 	}
@@ -146,7 +135,7 @@ class Service extends Module {
 	 */
 	disconnect() {
 
-		let disconnectMethod = this.options.disconnectMethod || this.fallback;
+		let disconnectMethod = (this.options.strategy && this.options.strategy.disconnect)|| this.fallback;
 
 		return disconnectMethod.apply(this, arguments);
 	}
@@ -157,9 +146,16 @@ class Service extends Module {
 	 */
 	fetch() {
 		
-		let fetchMethod = this.options.fetchMethod || this.fallback;
+		let fetchMethod = (this.options.strategy && this.options.strategy.fetch) || this.fallback;
 
 		return fetchMethod.apply(this, arguments);
+	}
+
+	parse() {
+		
+		let parseMethod = (this.options.strategy && this.options.strategy.parse) || this.fallback;
+
+		return parseMethod.apply(this, arguments);
 	}
 
 	/**
@@ -358,7 +354,7 @@ class Service extends Module {
 	 */
 	save() {
 		
-		let saveMethod = this.options.saveMethod || this.fallback;
+		let saveMethod = (this.options.strategy && this.options.strategy.save) || this.fallback;
 
 		return saveMethod.apply(this, arguments);
 	}
