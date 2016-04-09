@@ -38,7 +38,7 @@ exports.Module = _libModule2['default'];
 exports.Service = _libService2['default'];
 exports.Component = _libComponent2['default'];
 exports.ApplicationFacade = _libApplicationFacade2['default'];
-},{"./helpers/environment/get-global-object":8,"./lib/application-facade":14,"./lib/component":16,"./lib/module":17,"./lib/service":18,"plite":19}],2:[function(require,module,exports){
+},{"./helpers/environment/get-global-object":8,"./lib/application-facade":14,"./lib/component":16,"./lib/module":17,"./lib/service":18,"plite":20}],2:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -135,9 +135,11 @@ var _arrayFrom = require('../array/from');
 
 var _arrayFrom2 = _interopRequireDefault(_arrayFrom);
 
-function domNodeArray(item) {
+function domNodeArray(item, ctx) {
 
 	var retArray = [];
+
+	ctx = ctx || document;
 
 	// checks for type of given context
 	if (item && item.nodeType === Node.ELEMENT_NODE) {
@@ -145,7 +147,7 @@ function domNodeArray(item) {
 		retArray = [item];
 	} else if (typeof item === 'string') {
 		// selector case
-		retArray = Array.from(document.querySelectorAll(item));
+		retArray = Array.from(ctx.querySelectorAll(item));
 	} else if (item && item.length && Array.from(item).length > 0) {
 		// nodelist case
 		retArray = Array.from(item);
@@ -406,6 +408,8 @@ var _module2 = require('./module');
 
 var _module3 = _interopRequireDefault(_module2);
 
+var _types = require('./types');
+
 var _helpersArrayFrom = require('../helpers/array/from');
 
 var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
@@ -421,10 +425,6 @@ var _helpersStringDasherize2 = _interopRequireDefault(_helpersStringDasherize);
 var _helpersDomDomNodeArray = require('../helpers/dom/dom-node-array');
 
 var _helpersDomDomNodeArray2 = _interopRequireDefault(_helpersDomDomNodeArray);
-
-var MODULE_TYPE = 'module';
-var SERVICE_TYPE = 'service';
-var COMPONENT_TYPE = 'component';
 
 var ApplicationFacade = (function (_Module) {
 	_inherits(ApplicationFacade, _Module);
@@ -458,123 +458,22 @@ var ApplicationFacade = (function (_Module) {
 
 		this._modules = [];
 
-		this.moduleNodes = [];
-
 		this.vent = options.vent;
 		this.dom = options.dom;
 		this.template = options.template;
 
+		if (options.AppComponent) {
+			this.appComponent = new options.AppComponent(Object.assign(options, {
+				app: this,
+				context: options.context || document,
+				moduleSelector: options.moduleSelector || '[data-js-module]'
+			}));
+		}
+
 		if (options.modules) {
 			this.start.apply(this, options.modules);
 		}
-
-		if (options.observe) {
-			this.observe();
-		}
 	}
-
-	ApplicationFacade.prototype.observe = function observe() {
-		var _this = this;
-
-		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-		var config = {
-			attributes: true,
-			childList: true,
-			characterData: true
-		};
-
-		var observedNode = this.options.context || document.body;
-
-		config = Object.assign(options.config || {}, config);
-
-		if (window.MutationObserver) {
-
-			this.observer = new MutationObserver(function (mutations) {
-				mutations.forEach(function (mutation) {
-					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-						_this.onAddedNodes(mutation.addedNodes);
-					} else if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-						_this.onRemovedNodes(mutation.removedNodes);
-					}
-				});
-			});
-
-			this.observer.observe(observedNode, config);
-		} else {
-
-			// @todo: needs test in IE9 & IE10
-
-			this.onAddedNodesCallback = function (e) {
-				_this.onAddedNodes(e.target);
-			};
-			this.onRemovedNodesCallback = function (e) {
-				_this.onRemovedNodes(e.target);
-			};
-
-			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodesCallback, false);
-			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodesCallback, false);
-		}
-	};
-
-	ApplicationFacade.prototype.onAddedNodes = function onAddedNodes(addedNodes) {
-		var _this2 = this;
-
-		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach(function (item) {
-			var mod = item.module;
-
-			_helpersDomDomNodeArray2['default'](addedNodes).forEach(function (ctx) {
-				if (ctx.nodeType === Node.ELEMENT_NODE && ctx.dataset.jsModule) {
-					_this2.startComponents(mod, { context: ctx.parentElement }, true);
-				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
-					_this2.startComponents(mod, { context: ctx }, true);
-				}
-			});
-		});
-	};
-
-	ApplicationFacade.prototype.onRemovedNodes = function onRemovedNodes(removedNodes) {
-		var _this3 = this;
-
-		var componentRegistryItems = this.findMatchingRegistryItems(COMPONENT_TYPE);
-		var componentNodes = [];
-
-		_helpersDomDomNodeArray2['default'](removedNodes).forEach(function (node) {
-			// push outermost if module
-			if (node.dataset.jsModule) {
-				componentNodes.push(node);
-			}
-
-			// push children if module
-			_helpersDomDomNodeArray2['default'](node.querySelectorAll('[data-js-module]')).forEach(function (moduleEl) {
-				if (moduleEl.dataset.jsModule) {
-					componentNodes.push(moduleEl);
-				}
-			});
-		});
-
-		// iterate over component registry items
-		componentRegistryItems.forEach(function (registryItem) {
-			// iterate over started instances
-			registryItem.instances.forEach(function (inst) {
-				// if component el is within removeNodes
-				// destroy instance
-				if (componentNodes.indexOf(inst.el) > -1) {
-					_this3.destroy(inst);
-				}
-			});
-		});
-	};
-
-	ApplicationFacade.prototype.stopObserving = function stopObserving() {
-		if (window.MutationObserver) {
-			this.observer.disconnect();
-		} else {
-			var observedNode = this.options.context || document.body;
-			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodesCallback);
-			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
-		}
-	};
 
 	ApplicationFacade.prototype.findMatchingRegistryItems = function findMatchingRegistryItems(item) {
 
@@ -598,7 +497,7 @@ var ApplicationFacade = (function (_Module) {
   */
 
 	ApplicationFacade.prototype.start = function start() {
-		var _this4 = this;
+		var _this = this;
 
 		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 			args[_key] = arguments[_key];
@@ -606,7 +505,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this4.start(arg);
+				_this.start(arg);
 			});
 			return;
 		}
@@ -625,7 +524,7 @@ var ApplicationFacade = (function (_Module) {
 	};
 
 	ApplicationFacade.prototype.stop = function stop() {
-		var _this5 = this;
+		var _this2 = this;
 
 		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
 			args[_key2] = arguments[_key2];
@@ -633,7 +532,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this5.stop(arg);
+				_this2.stop(arg);
 			});
 			return;
 		}
@@ -645,10 +544,10 @@ var ApplicationFacade = (function (_Module) {
 
 			registryItem.instances.forEach(function (inst) {
 
-				if (module.type === COMPONENT_TYPE) {
+				if (module.type === _types.COMPONENT_TYPE) {
 					// undelegate events if component
 					inst.undelegateEvents();
-				} else if (module.type === SERVICE_TYPE) {
+				} else if (module.type === _types.SERVICE_TYPE) {
 					// disconnect if service
 					inst.disconnect();
 				}
@@ -666,14 +565,14 @@ var ApplicationFacade = (function (_Module) {
 
 		options.app = options.app || this;
 
-		if (item.type === COMPONENT_TYPE) {
+		if (item.type === _types.COMPONENT_TYPE) {
 			this.startComponents(item, options);
-		} else if (item.type === SERVICE_TYPE) {
+		} else if (item.type === _types.SERVICE_TYPE) {
 			this.startService(item, options);
-		} else if (item.type === MODULE_TYPE) {
+		} else if (item.type === _types.MODULE_TYPE) {
 			this.startModule(item, options);
 		} else {
-			throw new Error('Expected Module of type \n\t\t\t\t' + COMPONENT_TYPE + ', ' + SERVICE_TYPE + ' or ' + MODULE_TYPE + ', \n\t\t\t\tModule of type ' + item.type + ' is not allowed.');
+			throw new Error('Expected Module of type \n\t\t\t\t' + _types.COMPONENT_TYPE + ', ' + _types.SERVICE_TYPE + ' or ' + _types.MODULE_TYPE + ', \n\t\t\t\tModule of type ' + item.type + ' is not allowed.');
 		}
 
 		var registryItem = this._modules[this._modules.length - 1];
@@ -691,15 +590,13 @@ var ApplicationFacade = (function (_Module) {
 	};
 
 	/**
-  * @todo needs refactoring
+  * 
   */
 
 	ApplicationFacade.prototype.startComponents = function startComponents(item, options, observerStart) {
-		var _this6 = this;
+		var _this3 = this;
 
 		var elementArray = [];
-		var context = document;
-		var contexts = [];
 
 		// handle es5 extends and name property
 		if (!item.name && item.prototype._name) {
@@ -711,69 +608,22 @@ var ApplicationFacade = (function (_Module) {
 			options.context = this.options.context;
 		}
 
-		// checks for type of given context
-		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
-			// dom node case
-			context = options.context;
-		} else if (options.context && _helpersDomDomNodeArray2['default'](options.context).length > 1) {
-			var hasDomNode = false;
-			// selector or nodelist case
-			_helpersDomDomNodeArray2['default'](options.context).forEach(function (context) {
-				// pass current node element to options.context
-				if (context.nodeType === Node.ELEMENT_NODE) {
-					options.context = context;
-					_this6.startComponents(item, options, observerStart);
-					hasDomNode = true;
-				}
-			});
-
-			if (hasDomNode) {
-				return;
-			}
-		} else if (options.context && options.context.length === 1) {
-			context = options.context[0];
-		}
-
 		elementArray = _helpersDomDomNodeArray2['default'](options.el);
 
 		if (elementArray.length === 0) {
-			// context or parent context already queried for data-js-module and saved?
-			var modNodes = this.moduleNodes.filter(function (node) {
-				return node.context && // has context
-				node.componentClass === item && //saved component is item
-				!observerStart && ( // not a dom mutation
-				node.context === context || node.context.contains(context));
-			});
 
-			var modNode = modNodes[0];
-
-			// use saved elements for context!
-			if (modNode && modNode.elements) {
-				elementArray = modNode.elements;
-			} else {
-
-				// query elements for context!
-				elementArray = Array.from(context.querySelectorAll('[data-js-module]'));
-
-				elementArray = elementArray.filter(function (domNode) {
-					var name = item.name || item.es5name;
-					return name && domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](name)) !== -1;
-				});
-
-				if (elementArray.length) {
-					// save all data-js-module for later use!
-					this.moduleNodes.push({
-						context: context,
-						componentClass: item,
-						elements: elementArray
-					});
-				}
-			}
+			this.appComponent.elements = options;
+			elementArray = this.appComponent.elements;
 		}
 
 		elementArray.forEach(function (domNode) {
-			options.app = options.app || _this6;
-			_this6.startComponent(item, options, domNode);
+
+			var name = item.name || item.es5name;
+
+			if (name && domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](name)) !== -1) {
+				options.app = options.app || _this3;
+				_this3.startComponent(item, options, domNode);
+			}
 		});
 
 		// register module anyways for later use
@@ -823,7 +673,7 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initModule = function initModule(module) {
 
-		if (module.type !== MODULE_TYPE) {
+		if (module.type !== _types.MODULE_TYPE) {
 			throw new Error('Expected Module instance.');
 		}
 
@@ -832,7 +682,7 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initService = function initService(module) {
 
-		if (module.type !== SERVICE_TYPE) {
+		if (module.type !== _types.SERVICE_TYPE) {
 			throw new Error('Expected Service instance.');
 		}
 
@@ -846,7 +696,7 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initComponent = function initComponent(module) {
 
-		if (module.type !== COMPONENT_TYPE) {
+		if (module.type !== _types.COMPONENT_TYPE) {
 			throw new Error('Expected Component instance.');
 		}
 
@@ -880,7 +730,7 @@ var ApplicationFacade = (function (_Module) {
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);
 			}
-		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
+		} else if ([_types.SERVICE_TYPE, _types.COMPONENT_TYPE, _types.MODULE_TYPE].indexOf(module.type) > -1) {
 
 			var registryObject = {
 				type: module.type,
@@ -900,12 +750,12 @@ var ApplicationFacade = (function (_Module) {
 
 			this._modules.push(registryObject);
 		} else {
-			console.error('Expected Module of type \n\t\t\t\t' + COMPONENT_TYPE + ', ' + SERVICE_TYPE + ' or ' + MODULE_TYPE + ', \n\t\t\t\tModule of type ' + module.type + ' cannot be registered.');
+			console.error('Expected Module of type \n\t\t\t\t' + _types.COMPONENT_TYPE + ', ' + _types.SERVICE_TYPE + ' or ' + _types.MODULE_TYPE + ', \n\t\t\t\tModule of type ' + module.type + ' cannot be registered.');
 		}
 	};
 
 	ApplicationFacade.prototype.destroy = function destroy() {
-		var _this7 = this;
+		var _this4 = this;
 
 		for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
 			args[_key3] = arguments[_key3];
@@ -913,7 +763,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this7.destroy(arg);
+				_this4.destroy(arg);
 			});
 			return;
 		}
@@ -929,11 +779,11 @@ var ApplicationFacade = (function (_Module) {
 
 			iterateObj.forEach(function (inst) {
 
-				if (module.type === COMPONENT_TYPE) {
+				if (module.type === _types.COMPONENT_TYPE) {
 					// undelegate events if component
 					inst.undelegateEvents();
 					inst.remove();
-				} else if (module.type === SERVICE_TYPE) {
+				} else if (module.type === _types.SERVICE_TYPE) {
 					// disconnect if service
 					inst.disconnect();
 					inst.destroy();
@@ -942,16 +792,16 @@ var ApplicationFacade = (function (_Module) {
 				// undelegate vents for all
 				inst.undelegateVents();
 
-				var moduleInstances = _this7._modules[_this7._modules.indexOf(registryItem)].instances;
+				var moduleInstances = _this4._modules[_this4._modules.indexOf(registryItem)].instances;
 
 				if (moduleInstances.length > 1) {
-					_this7._modules[_this7._modules.indexOf(registryItem)].instances.splice(moduleInstances.indexOf(inst), 1);
+					_this4._modules[_this4._modules.indexOf(registryItem)].instances.splice(moduleInstances.indexOf(inst), 1);
 				} else {
-					_this7._modules[_this7._modules.indexOf(registryItem)].instances = [];
+					_this4._modules[_this4._modules.indexOf(registryItem)].instances = [];
 
 					// delete exposed instances
-					if (registryItem.appName && _this7[registryItem.appName]) {
-						delete _this7[registryItem.appName];
+					if (registryItem.appName && _this4[registryItem.appName]) {
+						delete _this4[registryItem.appName];
 					}
 				}
 			});
@@ -984,7 +834,7 @@ var ApplicationFacade = (function (_Module) {
 
 exports['default'] = ApplicationFacade;
 module.exports = exports['default'];
-},{"../helpers/array/from":4,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":11,"./module":17}],15:[function(require,module,exports){
+},{"../helpers/array/from":4,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":11,"./module":17,"./types":19}],15:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1182,7 +1032,7 @@ var Base = (function () {
 
 exports['default'] = Base;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":11,"../helpers/string/extract-object-name":12,"../helpers/string/named-uid":13,"plite":19}],16:[function(require,module,exports){
+},{"../default-config":2,"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":11,"../helpers/string/extract-object-name":12,"../helpers/string/named-uid":13,"plite":20}],16:[function(require,module,exports){
 /**
  * @module  lib/Component
  * used to create views and/or view mediators
@@ -1215,7 +1065,7 @@ var _helpersArrayFrom = require('../helpers/array/from');
 
 var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
 
-var COMPONENT_TYPE = 'component';
+var _types = require('./types');
 
 var DELEGATE_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
@@ -1227,7 +1077,7 @@ var Component = (function (_Base) {
 	_createClass(Component, [{
 		key: 'type',
 		get: function get() {
-			return COMPONENT_TYPE;
+			return _types.COMPONENT_TYPE;
 		}
 	}, {
 		key: 'events',
@@ -1248,7 +1098,7 @@ var Component = (function (_Base) {
 	}], [{
 		key: 'type',
 		get: function get() {
-			return COMPONENT_TYPE;
+			return _types.COMPONENT_TYPE;
 		}
 	}]);
 
@@ -1256,6 +1106,8 @@ var Component = (function (_Base) {
 		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 		_classCallCheck(this, Component);
+
+		options.context = options.context || document;
 
 		_Base.call(this, options);
 
@@ -1281,7 +1133,13 @@ var Component = (function (_Base) {
 		this.undelegateVents();
 	};
 
-	Component.prototype.createDom = function createDom(str) {
+	Component.prototype.createDomNode = function createDomNode(str) {
+
+		var selectedEl = this.options.context.querySelector(str);
+
+		if (selectedEl) {
+			return selectedEl;
+		}
 
 		var div = document.createElement('div');
 		var elNode = undefined;
@@ -1304,7 +1162,7 @@ var Component = (function (_Base) {
 		} else if (options.el instanceof Element) {
 			this.el = options.el;
 		} else if (typeof options.el === 'string') {
-			this.el = this.createDom(options.el);
+			this.el = this.createDomNode(options.el);
 		} else {
 			throw new TypeError('Parameter options.el of type ' + typeof options.el + ' is not a dom element.');
 		}
@@ -1432,7 +1290,7 @@ var Component = (function (_Base) {
 
 exports['default'] = Component;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/array/from":4,"../helpers/object/assign":9,"./base":15}],17:[function(require,module,exports){
+},{"../default-config":2,"../helpers/array/from":4,"../helpers/object/assign":9,"./base":15,"./types":19}],17:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1449,7 +1307,7 @@ var _base = require('./base');
 
 var _base2 = _interopRequireDefault(_base);
 
-var MODULE_TYPE = 'module';
+var _types = require('./types');
 
 var Module = (function (_Base) {
 	_inherits(Module, _Base);
@@ -1457,12 +1315,12 @@ var Module = (function (_Base) {
 	_createClass(Module, [{
 		key: 'type',
 		get: function get() {
-			return MODULE_TYPE;
+			return _types.MODULE_TYPE;
 		}
 	}], [{
 		key: 'type',
 		get: function get() {
-			return MODULE_TYPE;
+			return _types.MODULE_TYPE;
 		}
 	}]);
 
@@ -1482,7 +1340,7 @@ var Module = (function (_Base) {
 
 exports['default'] = Module;
 module.exports = exports['default'];
-},{"./base":15}],18:[function(require,module,exports){
+},{"./base":15,"./types":19}],18:[function(require,module,exports){
 /**
  * @module  lib/Service
  * used to create models, collections, proxies, adapters
@@ -1519,7 +1377,7 @@ var _helpersArrayMerge = require('../helpers/array/merge');
 
 var _helpersArrayMerge2 = _interopRequireDefault(_helpersArrayMerge);
 
-var SERVICE_TYPE = 'service';
+var _types = require('./types');
 
 var Service = (function (_Base) {
 	_inherits(Service, _Base);
@@ -1527,7 +1385,7 @@ var Service = (function (_Base) {
 	_createClass(Service, [{
 		key: 'type',
 		get: function get() {
-			return SERVICE_TYPE;
+			return _types.SERVICE_TYPE;
 		}
 	}, {
 		key: 'resource',
@@ -1540,7 +1398,7 @@ var Service = (function (_Base) {
 	}], [{
 		key: 'type',
 		get: function get() {
-			return SERVICE_TYPE;
+			return _types.SERVICE_TYPE;
 		}
 	}]);
 
@@ -1900,7 +1758,18 @@ var Service = (function (_Base) {
 
 exports['default'] = Service;
 module.exports = exports['default'];
-},{"../helpers/array/is-array-like":5,"../helpers/array/merge":6,"../helpers/object/assign":9,"../helpers/service/reducers":10,"./base":15}],19:[function(require,module,exports){
+},{"../helpers/array/is-array-like":5,"../helpers/array/merge":6,"../helpers/object/assign":9,"../helpers/service/reducers":10,"./base":15,"./types":19}],19:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+var MODULE_TYPE = 'module';
+var SERVICE_TYPE = 'service';
+var COMPONENT_TYPE = 'component';
+
+exports.MODULE_TYPE = MODULE_TYPE;
+exports.SERVICE_TYPE = SERVICE_TYPE;
+exports.COMPONENT_TYPE = COMPONENT_TYPE;
+},{}],20:[function(require,module,exports){
 function Plite(resolver) {
   var emptyFn = function () {},
       chain = emptyFn,

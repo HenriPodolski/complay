@@ -1,15 +1,45 @@
 import Component from './component';
 import {COMPONENT_TYPE} from './types';
 import domNodeArray from '../helpers/dom/dom-node-array';
+import uniques from '../helpers/array/uniques';
 
 class ApplicationDomComponent extends Component {
-	
+
+	set elements(moduleOptions = {}) {
+
+		let contexts = [];
+		let elements = [];
+
+		this._elements = this._elements || [];
+		
+		if (this.options.context.contains(moduleOptions.context)) {
+			contexts = domNodeArray(moduleOptions.context, this.options.context);	
+		} else if (!document.contains(moduleOptions.context)) {
+			
+			domNodeArray(moduleOptions.context).forEach((ctx) => {
+				let tempCtx = document.createDocumentFragment();
+				tempCtx.appendChild(ctx);
+				contexts.push(tempCtx);
+			});
+		}		
+
+		contexts.forEach((ctx) => {
+			elements = Array.from(ctx.querySelectorAll(this.options.moduleSelector));
+			this._elements = uniques(this._elements.concat(elements));
+		});
+	}
+
+	get elements() {
+
+		return this._elements;
+	}
+
 	constructor(options = {}) {
 
 		super(options);
 
 		if (options.observe) {
-			this.observe();
+			this.observe(options);
 		}
 	}
 
@@ -21,7 +51,12 @@ class ApplicationDomComponent extends Component {
 			characterData: true
 		};
 
-		let observedNode = this.options.context || document.body;
+		let observedNode = this.options.context;; 
+
+		// cannot observe document
+		if (observedNode.contains(document.body)) {
+			observedNode = document.body;
+		}		
 
 		config = Object.assign(options.config || {}, config);
 
@@ -59,7 +94,10 @@ class ApplicationDomComponent extends Component {
 		this.options.app.findMatchingRegistryItems(COMPONENT_TYPE).forEach((item) => {
 			let mod = item.module;
 			
-			domNodeArray(addedNodes).forEach((ctx) => {				
+			domNodeArray(addedNodes).forEach((ctx) => {	
+
+				console.log('CONTEXT', ctx);
+
 				if (ctx.nodeType === Node.ELEMENT_NODE && ctx.dataset.jsModule) {
 					this.options.app.startComponents(mod, {context: ctx.parentElement}, true);	
 				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
@@ -110,10 +148,6 @@ class ApplicationDomComponent extends Component {
 			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
 		}
 	}
-
-	getContext() {}
-
-	getElements() {}
 }
 
 export default ApplicationDomComponent;

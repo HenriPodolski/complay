@@ -29,15 +29,17 @@ class ApplicationFacade extends Module {
 		
 		this._modules = [];
 
-		this.moduleNodes = [];
-
 		this.vent = options.vent;
 		this.dom = options.dom;
 		this.template = options.template;
 
 		if (options.AppComponent) {
 			this.appComponent = new options.AppComponent(
-				Object.assign(options, {app: this})
+				Object.assign(options, {
+					app: this,
+					context: options.context || document,
+					moduleSelector: options.moduleSelector || '[data-js-module]'
+				})
 			);	
 		}		
 
@@ -152,13 +154,11 @@ class ApplicationFacade extends Module {
 	}
 
 	/**
-	 * @todo needs refactoring
+	 * 
 	 */
 	startComponents(item, options, observerStart) {
-		
+
 		let elementArray = [];
-		let context = document;
-		let contexts = [];
 
 		// handle es5 extends and name property
 		if (!item.name && item.prototype._name) {
@@ -170,71 +170,22 @@ class ApplicationFacade extends Module {
 			options.context = this.options.context;
 		}
 
-		// checks for type of given context
-		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
-			// dom node case
-			context = options.context;
-		} else if(options.context && domNodeArray(options.context).length > 1) {
-			let hasDomNode = false;
-			// selector or nodelist case
-			domNodeArray(options.context).forEach((context) => {
-				// pass current node element to options.context
-				if (context.nodeType === Node.ELEMENT_NODE) {
-					options.context = context;
-					this.startComponents(item, options, observerStart);	
-					hasDomNode = true;
-				}				
-			});
-
-			if (hasDomNode) {
-				return;	
-			}
-			
-		} else if (options.context && options.context.length === 1) {
-			context = options.context[0];
-		}
-
 		elementArray = domNodeArray(options.el);
 
 		if (elementArray.length === 0) {
-			// context or parent context already queried for data-js-module and saved?
-			let modNodes = this.moduleNodes.filter((node) => {
-				return  node.context && // has context
-						node.componentClass === item && //saved component is item
-						!observerStart && // not a dom mutation
-						(node.context === context || 
-						node.context.contains(context));
-			});
-
-			let modNode = modNodes[0];
-
-			// use saved elements for context!
-			if (modNode && modNode.elements) {
-				elementArray = modNode.elements;
-			} else {
-				
-				// query elements for context!
-				elementArray = Array.from(context.querySelectorAll(`[data-js-module]`));
-
-				elementArray = elementArray.filter((domNode) => {
-					let name = item.name || item.es5name;
-					return name && domNode.dataset.jsModule.indexOf(dasherize(name)) !== -1;
-				});
-				
-				if (elementArray.length) {
-					// save all data-js-module for later use!
-					this.moduleNodes.push({
-						context,
-						componentClass: item,
-						elements: elementArray
-					});
-				}
-			}
+			
+			this.appComponent.elements = options;
+			elementArray = this.appComponent.elements;
 		}
 
 		elementArray.forEach((domNode) => {
-			options.app = options.app || this;
-			this.startComponent(item, options, domNode);
+			
+			let name = item.name || item.es5name;
+			
+			if (name && domNode.dataset.jsModule.indexOf(dasherize(name)) !== -1) {
+				options.app = options.app || this;
+				this.startComponent(item, options, domNode);	
+			}			
 		});
 
 		// register module anyways for later use

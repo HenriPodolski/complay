@@ -44,6 +44,8 @@ class Component extends Base {
 
 	constructor(options={}) {
 
+		options.context = options.context || document;
+
 		super(options);
 
 		this.events = this.events || {};
@@ -72,7 +74,13 @@ class Component extends Base {
 		this.undelegateVents();
 	}
 
-	createDom(str) {
+	createDomNode(str) {
+
+		let selectedEl = this.options.context.querySelector(str);
+
+		if (selectedEl) {
+			return selectedEl;
+		}
 
 		let div = document.createElement('div');
 		let elNode;
@@ -95,7 +103,7 @@ class Component extends Base {
 		} else if (options.el instanceof Element) {
 			this.el = options.el;
 		} else if (typeof options.el === 'string') {
-			this.el = this.createDom(options.el);
+			this.el = this.createDomNode(options.el);
 		} else {
 			throw new TypeError(`Parameter options.el of type ${typeof options.el} is not a dom element.`);
 		}
