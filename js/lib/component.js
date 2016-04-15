@@ -48,31 +48,59 @@ class Component extends Base {
 
 		super(options);
 
-		this.events = this.events || {};
-		this.dom = options.dom 
-			|| (options.app && options.app.dom)
-			|| defaultConfig.dom;
-
-		this.template = options.template 
-			|| (options.app && options.app.template)
-			|| defaultConfig.template;
-
-		this._domEvents = [];
-
-		this.ensureElement(options);
-		this.initialize(options);
-		this.didMount();
+		this.mount();
 	}
 
-	didMount() {
-		this.delegateEvents();
-		this.delegateVents();
+	willMount() {
+
+		return true;
 	}
+
+	mount() {
+
+		if (this.willMount() !== false) {
+
+			this.events = this.events || {};
+			
+			this.dom = this.options.dom 
+				|| (this.app && this.app.dom)
+				|| defaultConfig.dom;
+
+			this.template = this.options.template 
+				|| (this.app && this.app.template)
+				|| defaultConfig.template;
+
+			this._domEvents = [];
+
+			this.ensureElement(this.options);
+			this.initialize(this.options);
+			this.delegateEvents();
+			this.delegateVents();
+			this.didMount();
+		}		
+	}
+
+	didMount() {}
 
 	willUnmount() {
-		this.undelegateEvents();
-		this.undelegateVents();
+		return true;
 	}
+
+	unmount() {
+		
+		if (this.willUnmount() !== false) {
+			
+			if (this.app && this.app.findMatchingRegistryItems().length > 0) {
+				this.app.destroy(this)
+			} else {
+				this.remove();	
+			}
+			
+			this.didUnmount();	
+		}		
+	}
+
+	didUnmount() {}
 
 	createDomNode(str) {
 
@@ -216,7 +244,7 @@ class Component extends Base {
 	}
 
 	remove() {
-
+		this.undelegateVents();
 		this.undelegateEvents();
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
 	}

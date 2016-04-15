@@ -109,7 +109,7 @@ class ApplicationDomComponent extends Component {
 
 	onRemovedNodes(removedNodes) {
 
-		let componentRegistryItems = this.options.app.findMatchingRegistryItems(COMPONENT_TYPE);
+		let componentRegistryItems = this.app.findMatchingRegistryItems(COMPONENT_TYPE);
 		let componentNodes = [];
 
 		domNodeArray(removedNodes).forEach((node) => {	
@@ -133,7 +133,7 @@ class ApplicationDomComponent extends Component {
 				// if component el is within removeNodes 
 				// destroy instance
 				if (componentNodes.indexOf(inst.el) > -1) {
-					this.options.app.destroy(inst);
+					this.app.destroy(inst);
 				}
 			});
 		});		

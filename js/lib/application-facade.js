@@ -264,8 +264,7 @@ class ApplicationFacade extends Module {
 			throw new Error(`Expected Component instance.`);
 		}
 
-		module.delegateVents();
-		module.delegateEvents();
+		module.mount();
 
 		if (module.autostart) {
 			module.render();
@@ -335,20 +334,7 @@ class ApplicationFacade extends Module {
 			let module = registryItem.module;
 			let iterateObj = isInstance ? [item] : registryItem.instances;
 
-			iterateObj.forEach((inst) => {
-				
-				if (module.type === COMPONENT_TYPE) {
-					// undelegate events if component
-					inst.undelegateEvents();
-					inst.remove();
-				} else if (module.type === SERVICE_TYPE) {
-					// disconnect if service
-					inst.disconnect();
-					inst.destroy();
-				}
-
-				// undelegate vents for all
-				inst.undelegateVents();	
+			iterateObj.forEach((inst) => {		
 
 				let moduleInstances = this._modules[this._modules.indexOf(registryItem)]
 					.instances;
@@ -365,7 +351,20 @@ class ApplicationFacade extends Module {
 						delete this[registryItem.appName];
 					}
 
-				}				
+				}	
+
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.unmount();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.undelegateVents();	
+					inst.disconnect();
+					inst.destroy();
+				} else {
+					// undelegate vents for all
+					inst.undelegateVents();		
+				}					
 			});
 		});
 
