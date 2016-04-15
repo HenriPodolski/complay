@@ -7,12 +7,14 @@ Unique position features:
 * scales from basic static page ui enrichment
 * ... to the limits of our imagination
 * decide how much or less of framework functionalities your software ships
+
 Unique build in technical features:
 * publish/subscribe
 * messaging
 * module lifecycle handling
 * memory management
 * mapping data resources or dom modules through class names
+
 Unique features through extensions or compositions:
 * object relational mapper
 * inversion of control for requesting and retrieving data from resources
@@ -25,6 +27,7 @@ Unique features through extensions or compositions:
 * jQuery integration
 * reactjs integration (proof of concept)
 * webcomponents integration (proof of concept)
+
 By-products:
 * an extensive and useful collection of helpers, used for conduitjs and ready to be used in our project code
 * a set of polyfills, which let's you use features that are not implemented in all JavaScript engines yet
