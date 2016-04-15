@@ -48,22 +48,6 @@ Work in progress. Write "how to" documentation!:
 * How to contribute to conduitjs base library?
 * How to contribute to conduitjs helpers and extension?
 
-### Setup
-```
-npm install
-```
-Run dev server:
-```
-grunt
-```
-Run unit tests:
-```
-grunt unit-test
-```
-Build using browserify:
-```
-grunt build
-```
 ### Definitions
 #### Modules
 We make use of Modules to implement everything, which is not related to responsabilities of services or components.
@@ -105,6 +89,23 @@ We created some basic extensions, which are located in the js/extensions folder.
 
 #### Helpers
 Our helpers submodule located in js/helpers gives use the tools and polyfills we will need to implement the library and might be useful in a project created with conduitjs or whatever we prefer.
+
+### Contribution setup
+```
+npm install
+```
+Run dev server:
+```
+grunt
+```
+Run unit tests:
+```
+grunt unit-test
+```
+Build using browserify:
+```
+grunt build
+```
 
 ### License(s)
 This lib make heavy use of great open source libraries and tools, including:
