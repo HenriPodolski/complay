@@ -3,7 +3,7 @@
  * used to create models, collections, proxies, adapters
  */
 import Base from './base';
-import ServiceReducers from '../helpers/service/reducers';
+import DefaultReducers as ServiceReducers from '../extensions/service/reducers/default-reducers';
 import assign from '../helpers/object/assign';
 import isArrayLike from '../helpers/array/is-array-like';
 import merge from '../helpers/array/merge';
