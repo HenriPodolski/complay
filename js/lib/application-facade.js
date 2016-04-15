@@ -1,13 +1,9 @@
 import Module from './module';
-
-import from from '../helpers/array/from';
+import {MODULE_TYPE, SERVICE_TYPE, COMPONENT_TYPE} from './types';
+import arrayFrom from '../helpers/array/from';
 import assign from '../helpers/object/assign';
 import dasherize from '../helpers/string/dasherize';
 import domNodeArray from '../helpers/dom/dom-node-array';
-
-const MODULE_TYPE = 'module';
-const SERVICE_TYPE = 'service';
-const COMPONENT_TYPE = 'component';
 
 class ApplicationFacade extends Module {
 
@@ -33,116 +29,22 @@ class ApplicationFacade extends Module {
 		
 		this._modules = [];
 
-		this.moduleNodes = [];
-
 		this.vent = options.vent;
 		this.dom = options.dom;
 		this.template = options.template;
 
+		if (options.AppComponent) {
+			this.appComponent = new options.AppComponent(
+				Object.assign(options, {
+					app: this,
+					context: options.context || document,
+					moduleSelector: options.moduleSelector || '[data-js-module]'
+				})
+			);	
+		}		
+
 		if (options.modules) {
 			this.start.apply(this, options.modules);
-		}
-
-		if (options.observe) {
-			this.observe();
-		}
-	}
-
-	observe(options={}) {
-
-		let config = {
-			attributes: true,
-			childList: true,
-			characterData: true
-		};
-
-		let observedNode = this.options.context || document.body;
-
-		config = Object.assign(options.config || {}, config);
-
-		if (window.MutationObserver) {
-			
-			this.observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-
-					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-						this.onAddedNodes(mutation.addedNodes);
-					} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-						this.onRemovedNodes(mutation.removedNodes);
-					}
-				});
-			});
-			
-			this.observer.observe(observedNode, config);	
-		} else {
-			
-			// @todo: needs test in IE9 & IE10
-			
-			this.onAddedNodesCallback = (e) => { 
-				this.onAddedNodes(e.target);
-			};
-			this.onRemovedNodesCallback = (e) => {
-				this.onRemovedNodes(e.target);
-			};
-
-			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodesCallback, false);
-			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodesCallback, false);
-		}		
-	}
-
-	onAddedNodes(addedNodes) {
-
-		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach((item) => {
-			let mod = item.module;
-			
-			domNodeArray(addedNodes).forEach((ctx) => {				
-				if (ctx) {
-					this.startComponents(mod, {context: ctx}, true);
-					this.startComponents(mod, {el: ctx}, true);	
-				}				
-			});			
-		});		
-	}
-
-	onRemovedNodes(removedNodes) {
-
-		let componentRegistryItems = this.findMatchingRegistryItems(COMPONENT_TYPE);
-		let componentNodes = [];
-
-		domNodeArray(removedNodes).forEach((node) => {	
-			// push outermost if module
-			if (node.dataset.jsModule) {
-				componentNodes.push(node);
-			}
-
-			// push children if module
-			domNodeArray(node.querySelectorAll('[data-js-module]')).forEach((moduleEl) => {
-				if (moduleEl.dataset.jsModule) {
-					componentNodes.push(moduleEl);
-				}
-			});
-		});
-
-		// iterate over component registry items
-		componentRegistryItems.forEach((registryItem) => {
-			// iterate over started instances
-			registryItem.instances.forEach((inst) => {
-				// if component el is within removeNodes 
-				// destroy instance
-				if (componentNodes.indexOf(inst.el) > -1) {
-					this.destroy(inst);
-				}
-			});
-		});		
-	}
-
-	stopObserving() {
-		if (window.MutationObserver) {
-			this.observer.disconnect();
-		} else {
-			let observedNode = this.options.context || document.body;
-			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodesCallback);
-			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
 		}
 	}
 
@@ -251,68 +153,39 @@ class ApplicationFacade extends Module {
 		this.register(item, itemInstance, options);
 	}
 
+	/**
+	 * 
+	 */
 	startComponents(item, options, observerStart) {
-		
-		let elementArray = [];
-		let context = document;
-		let contexts = [];
 
-		if (this.options.context && !options.context) {
-			options.context = this.options.context;
+		let elementArray = [];
+
+		// handle es5 extends and name property
+		if (!item.name && item.prototype._name) {
+			item.es5name = item.prototype._name;
 		}
 
-		// checks for type of given context
-		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
-			// dom node case
-			context = options.context;
-		} else if(options.context) {
-			// selector or nodelist case
-			domNodeArray(options.context).forEach((context) => {
-				// pass current node element to options.context
-				options.context = context;
-				this.startComponents(item, options, observerStart);
-			});
-
-			return;
+		if (this.options.context && !options.context) {
+			// this application facade is limited to a specific dom element
+			options.context = this.options.context;
 		}
 
 		elementArray = domNodeArray(options.el);
 
 		if (elementArray.length === 0) {
-			// context or parent context already queried for data-js-module and saved?
-			let modNodes = this.moduleNodes.filter((node) => {
-				return (node.context === context || 
-						node.context.contains(context)) && 
-						node.componentClass === item;
-			});
-
-			let modNode = modNodes[0];
-
-			// use saved elements for context!
-			if (modNode && modNode.elements) {
-				elementArray = modNode.elements;
-			} else {
-				
-				// query elements for context!
-				elementArray = Array.from(context.querySelectorAll(`[data-js-module]`));
-
-				elementArray = elementArray.filter((domNode) => {
-					return domNode.dataset.jsModule.indexOf(dasherize(item.name)) !== -1;
-				});
-				
-				if (elementArray.length) {
-					// save all data-js-module for later use!
-					this.moduleNodes.push({
-						context,
-						componentClass: item,
-						elements: elementArray
-					});
-				}
-			}
+			
+			this.appComponent.elements = options;
+			elementArray = this.appComponent.elements;
 		}
 
 		elementArray.forEach((domNode) => {
-			this.startComponent(item, options, domNode);
+			
+			let name = item.name || item.es5name;
+			
+			if (name && domNode.dataset.jsModule.indexOf(dasherize(name)) !== -1) {
+				options.app = options.app || this;
+				this.startComponent(item, options, domNode);	
+			}			
 		});
 
 		// register module anyways for later use
@@ -342,9 +215,12 @@ class ApplicationFacade extends Module {
 
 	parseOptions(el, item) {
 
-		let options = el.dataset.jsOptions;
+		let options = el && el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
+
+			let name = item.name || item.es5name;
+
 			// if <div data-js-options="{'show': true}"> is used, 
 			// instead of <div data-js-options='{"show": true}'>
 			// convert to valid json string and parse to JSON
@@ -353,7 +229,7 @@ class ApplicationFacade extends Module {
 				.replace(/'/g, '"');
 
 			options = JSON.parse(options);
-			options = options[dasherize(item.name)] || options[item.name] || options;
+			options = options[dasherize(name)] || options[name] || options;
 		}
 
 		return options || {};
@@ -388,8 +264,7 @@ class ApplicationFacade extends Module {
 			throw new Error(`Expected Component instance.`);
 		}
 
-		module.delegateVents();
-		module.delegateEvents();
+		module.mount();
 
 		if (module.autostart) {
 			module.render();
@@ -408,10 +283,12 @@ class ApplicationFacade extends Module {
 
 			let index = this._modules.indexOf(existingRegistryModuleItem);
 
+			// mixin named components using appName
 			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
 				this[options.appName] = inst;
 			}
 			
+			// push if instance not exists
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);	
 			}			
@@ -429,7 +306,7 @@ class ApplicationFacade extends Module {
 			if (options.appName && !this[options.appName] && registryObject.instances.length > 0) {
 				registryObject.appName = options.appName;
 				this[options.appName] = registryObject.instances[0];
-			} else {
+			} else if (options.appName) {
 				console.error(`appName ${options.appName} is already defined.`);
 			}
 
@@ -457,20 +334,7 @@ class ApplicationFacade extends Module {
 			let module = registryItem.module;
 			let iterateObj = isInstance ? [item] : registryItem.instances;
 
-			iterateObj.forEach((inst) => {
-				
-				if (module.type === COMPONENT_TYPE) {
-					// undelegate events if component
-					inst.undelegateEvents();
-					inst.remove();
-				} else if (module.type === SERVICE_TYPE) {
-					// disconnect if service
-					inst.disconnect();
-					inst.destroy();
-				}
-
-				// undelegate vents for all
-				inst.undelegateVents();	
+			iterateObj.forEach((inst) => {		
 
 				let moduleInstances = this._modules[this._modules.indexOf(registryItem)]
 					.instances;
@@ -487,7 +351,20 @@ class ApplicationFacade extends Module {
 						delete this[registryItem.appName];
 					}
 
-				}				
+				}	
+
+				if (module.type === COMPONENT_TYPE) {
+					// undelegate events if component
+					inst.unmount();
+				} else if (module.type === SERVICE_TYPE) {
+					// disconnect if service
+					inst.undelegateVents();	
+					inst.disconnect();
+					inst.destroy();
+				} else {
+					// undelegate vents for all
+					inst.undelegateVents();		
+				}					
 			});
 		});
 

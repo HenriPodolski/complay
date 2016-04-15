@@ -6,37 +6,28 @@ module.exports = function (grunt) {
 			options: {
 				browserifyOptions: {
 					debug: true
-				}
-			},
+				},
+				exclude: ['jquery'],
+				transform: [
+					[
+						'babelify',
+						{
+							'loose': 'all',
+							'sourceMaps': true,
+							'modules': 'common',
+							'optional': []
+						}
+					]
+			]},
 			dist: {
 				options: {
 					browserifyOptions: {
 						debug: false
-					},
-					exclude: ['jquery', 'underscore'],
-					transform: [
-						[
-							'babelify',
-							{
-								'loose': 'all',
-								'sourceMaps': true,
-								'modules': 'common',
-								'optional': []
-							}
-						],[
-							'aliasify', 
-							{
-								aliases: {
-									'backbone': 'exoskeleton'
-								},
-								global: true, // By default Aliasify only runs against your code (not node_modules). This flag tells it to remap third-party code too.
-								verbose: true
-							}
-					]
-				]},
+					}
+				},
 				files: { 
-					'./dist/conduit.js': ['./js/conduit.js'],
-					'./examples/conduit.js': ['./js/conduit.js']
+					'./dist/conduit.es5.js': ['./js/conduit.es5.js'],
+					'./dist/conduit.js': ['./js/conduit.js']
 				}
 			}
 		},
@@ -62,7 +53,17 @@ module.exports = function (grunt) {
 			},
 			dist: {
 				files: {
+					'dist/conduit.es5.min.js': ['./dist/conduit.es5.js'],
 					'dist/conduit.min.js': ['./dist/conduit.js']
+				}
+			}
+		},
+		watch: {
+			scripts: {
+				files: ['js/**/*.js'],
+				tasks: ['browserify:dist', 'karma:continuous'],
+				options: {
+					spawn: false,
 				}
 			}
 		}
@@ -71,11 +72,12 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-browserify');
 	grunt.loadNpmTasks('grunt-karma');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-contrib-watch');
 
 	grunt.registerTask('default', [
 		'browserify:dist',
 		'karma:continuous'
 	]);
-	grunt.registerTask('build', ['browserify', 'uglify:dist']);
+	grunt.registerTask('build', ['browserify:dist', 'uglify:dist']);
 	grunt.registerTask('unit-test', ['karma:unit']);
 };

@@ -1,5 +1,6 @@
 import chai from 'chai';
 import ApplicationFacade from '../../../js/lib/application-facade';
+import ApplicationDomComponent from '../../../js/lib/application-dom-component';
 import Module from '../../../js/lib/module';
 import Component from '../../../js/lib/component';
 import Service from '../../../js/lib/service';
@@ -8,7 +9,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Application Facade', ()=>{
+describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 
 	class Application extends ApplicationFacade {}
 	var application;
@@ -17,7 +18,9 @@ describe('Conduitjs JS Application Facade', ()=>{
 
 		beforeEach(() => {
 			// reset registered modules
-			application = new Application();
+			application = new Application({
+				AppComponent: ApplicationDomComponent
+			});
 		})
 
 		it('should register a module, when passed to start', () => {
@@ -84,6 +87,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			class AnotherModule extends Module {}
 
 			let app = new Application({
+				AppComponent: ApplicationDomComponent,
 				modules: [AnotherModule, AnotherModule]
 			});
 
@@ -111,7 +115,10 @@ describe('Conduitjs JS Application Facade', ()=>{
 			class SecondModule extends Module {}
 			class ThirdModule extends Module {}
 
-			let app = new Application({modules: [FirstModule, SecondModule, ThirdModule]});
+			let app = new Application({
+				AppComponent: ApplicationDomComponent,
+				modules: [FirstModule, SecondModule, ThirdModule]
+			});
 
 			expect(app.modules.length).to.equal(3);
 		});
@@ -140,7 +147,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 
 		beforeEach(() => {
 			// reset registered modules
-			application = new Application();
+			application = new Application({AppComponent: ApplicationDomComponent});
 		})
 
 		it('should respond to start', ()=> {
@@ -167,7 +174,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			expect(application.SomeMod).to.be.ok;
 		});
 		
-		it('should remove the the appName applied using options.appName when unregistering', () => {
+		it('should remove the appName applied using options.appName when unregistering', () => {
 			class SomeModule extends Module {}
 
 			application.start({module: SomeModule, options: {appName: 'SomeMod'}});
@@ -207,6 +214,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			appContainer.innerHTML = html;
 
 			application = new Application({
+				AppComponent: ApplicationDomComponent,
 				context: appContainer,
 				observe: true
 			});
@@ -220,6 +228,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 		it('should start component modules automatically, when observe option is set to true and new nodes are added', (done) => {
 			
 			application = new Application({
+				AppComponent: ApplicationDomComponent,
 				observe: true
 			});
 
@@ -250,6 +259,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			appContainer.innerHTML = html;
 
 			application = new Application({
+				AppComponent: ApplicationDomComponent,
 				observe: true,
 				context: appContainer
 			});
@@ -279,6 +289,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			appContainer.innerHTML = html;
 
 			application = new Application({
+				AppComponent: ApplicationDomComponent,
 				context: appContainer
 			});
 			
@@ -298,6 +309,7 @@ describe('Conduitjs JS Application Facade', ()=>{
 			appContainer.innerHTML = html;
 
 			application = new Application({
+				AppComponent: ApplicationDomComponent,
 				context: appContainer
 			});
 			

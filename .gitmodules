@@ -1,0 +1,6 @@
+[submodule "js/helpers"]
+	path = js/helpers
+	url = git@github.com:conduitjs/helpers.git
+[submodule "js/extensions"]
+	path = js/extensions
+	url = git@github.com:conduitjs/extensions.git

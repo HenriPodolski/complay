@@ -51,34 +51,40 @@ Conduit.Component.extend = _helpersObjectExtend2['default'];
 
 // replace or create in global namespace
 root.Conduit = Conduit;
-},{"./helpers/environment/get-global-object":8,"./helpers/object/extend":10,"./lib/application-facade":15,"./lib/component":17,"./lib/module":18,"./lib/service":19,"plite":23}],2:[function(require,module,exports){
+},{"./helpers/environment/get-global-object":8,"./helpers/object/extend":10,"./lib/application-facade":15,"./lib/component":17,"./lib/module":18,"./lib/service":19,"plite":21}],2:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _pluginsVentVent = require('./plugins/vent/vent');
+var _extensionsFallbackFallbackJs = require('./extensions/fallback/fallback.js');
 
-var _pluginsVentVent2 = _interopRequireDefault(_pluginsVentVent);
-
-var _pluginsDomDomSelector = require('./plugins/dom/dom-selector');
-
-var _pluginsDomDomSelector2 = _interopRequireDefault(_pluginsDomDomSelector);
-
-var _pluginsFallbackFallbackJs = require('./plugins/fallback/fallback.js');
-
-var _pluginsFallbackFallbackJs2 = _interopRequireDefault(_pluginsFallbackFallbackJs);
+var _extensionsFallbackFallbackJs2 = _interopRequireDefault(_extensionsFallbackFallbackJs);
 
 var defaultConfig = {
-	vent: _pluginsVentVent2['default'],
-	dom: _pluginsDomDomSelector2['default'],
-	template: _pluginsFallbackFallbackJs2['default']('template')
+	vent: _extensionsFallbackFallbackJs2['default']('vent'),
+	dom: _extensionsFallbackFallbackJs2['default']('dom'),
+	template: _extensionsFallbackFallbackJs2['default']('template')
 };
 
 exports['default'] = defaultConfig;
 module.exports = exports['default'];
-},{"./plugins/dom/dom-selector":20,"./plugins/fallback/fallback.js":21,"./plugins/vent/vent":22}],3:[function(require,module,exports){
+},{"./extensions/fallback/fallback.js":3}],3:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+
+exports['default'] = function (type) {
+	return function () {
+		var msgArray = ['Extension for "' + type + '" is not configured yet.\r\n', 'Please pass an extensions through ApplicationFacade constructor options.' + type + '\r\n', 'or directly through Module, Service or Component via options.app.' + type + '!'];
+		console.warn(msgArray.join(''));
+		return arguments[0];
+	};
+};
+
+module.exports = exports['default'];
+},{}],4:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -93,7 +99,7 @@ exports['default'] = (function () {
 }).call(undefined);
 
 module.exports = exports['default'];
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -109,7 +115,7 @@ function isArrayLike(obj) {
 }
 
 module.exports = exports["default"];
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -130,19 +136,6 @@ function merge(first, second) {
 }
 
 module.exports = exports["default"];
-},{}],6:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-exports['default'] = uniques;
-
-function uniques(arr) {
-	var a = [];
-	for (var i = 0, l = arr.length; i < l; i++) if (a.indexOf(arr[i]) === -1 && arr[i] !== '') a.push(arr[i]);
-	return a;
-}
-
-module.exports = exports['default'];
 },{}],7:[function(require,module,exports){
 'use strict';
 
@@ -155,9 +148,11 @@ var _arrayFrom = require('../array/from');
 
 var _arrayFrom2 = _interopRequireDefault(_arrayFrom);
 
-function domNodeArray(item) {
+function domNodeArray(item, ctx) {
 
 	var retArray = [];
+
+	ctx = ctx || document;
 
 	// checks for type of given context
 	if (item && item.nodeType === Node.ELEMENT_NODE) {
@@ -165,7 +160,7 @@ function domNodeArray(item) {
 		retArray = [item];
 	} else if (typeof item === 'string') {
 		// selector case
-		retArray = Array.from(document.querySelectorAll(item));
+		retArray = Array.from(ctx.querySelectorAll(item));
 	} else if (item && item.length && Array.from(item).length > 0) {
 		// nodelist case
 		retArray = Array.from(item);
@@ -175,7 +170,7 @@ function domNodeArray(item) {
 }
 
 module.exports = exports['default'];
-},{"../array/from":3}],8:[function(require,module,exports){
+},{"../array/from":4}],8:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -204,7 +199,7 @@ exports.__esModule = true;
 
 exports['default'] = (function () {
 
-	if (!Object.bla) {
+	if (!Object.assign) {
 		(function () {
 			var toObject = function toObject(val) {
 				if (val === null || val === undefined) {
@@ -217,7 +212,7 @@ exports['default'] = (function () {
 			var hasOwnProperty = Object.prototype.hasOwnProperty;
 			var propIsEnumerable = Object.prototype.propertyIsEnumerable;
 
-			Object.bla = function (target, source) {
+			Object.assign = function (target, source) {
 				var from;
 				var to = toObject(target);
 				var symbols;
@@ -481,6 +476,8 @@ var _module2 = require('./module');
 
 var _module3 = _interopRequireDefault(_module2);
 
+var _types = require('./types');
+
 var _helpersArrayFrom = require('../helpers/array/from');
 
 var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
@@ -496,10 +493,6 @@ var _helpersStringDasherize2 = _interopRequireDefault(_helpersStringDasherize);
 var _helpersDomDomNodeArray = require('../helpers/dom/dom-node-array');
 
 var _helpersDomDomNodeArray2 = _interopRequireDefault(_helpersDomDomNodeArray);
-
-var MODULE_TYPE = 'module';
-var SERVICE_TYPE = 'service';
-var COMPONENT_TYPE = 'component';
 
 var ApplicationFacade = (function (_Module) {
 	_inherits(ApplicationFacade, _Module);
@@ -533,68 +526,22 @@ var ApplicationFacade = (function (_Module) {
 
 		this._modules = [];
 
-		this.moduleNodes = [];
-
 		this.vent = options.vent;
 		this.dom = options.dom;
 		this.template = options.template;
 
+		if (options.AppComponent) {
+			this.appComponent = new options.AppComponent(Object.assign(options, {
+				app: this,
+				context: options.context || document,
+				moduleSelector: options.moduleSelector || '[data-js-module]'
+			}));
+		}
+
 		if (options.modules) {
 			this.start.apply(this, options.modules);
 		}
-
-		if (options.observe) {
-			this.observe();
-		}
 	}
-
-	ApplicationFacade.prototype.observe = function observe() {
-		var _this = this;
-
-		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-		var config = {
-			attributes: true,
-			childList: true,
-			characterData: true
-		};
-
-		var observedNode = this.options.context || document.body;
-
-		config = Object.assign(options.config || {}, config);
-
-		this.observer = new MutationObserver(function (mutations) {
-			mutations.forEach(function (mutation) {
-				if (mutation.addedNodes) {
-					_this.onAddedNodes(mutation.addedNodes);
-				}
-			});
-		});
-
-		this.observer.observe(observedNode, config);
-	};
-
-	ApplicationFacade.prototype.onAddedNodes = function onAddedNodes(addedNodes) {
-		var _this2 = this;
-
-		this.findMatchingRegistryItems(COMPONENT_TYPE).forEach(function (item) {
-			var mod = item.module;
-
-			console.info('New dom nodes added.', _helpersDomDomNodeArray2['default'](addedNodes));
-
-			_helpersDomDomNodeArray2['default'](addedNodes).forEach(function (ctx) {
-				if (ctx) {
-					_this2.startComponents(mod, { context: ctx }, true);
-					_this2.startComponents(mod, { el: ctx }, true);
-				}
-			});
-		});
-	};
-
-	ApplicationFacade.prototype.stopObserving = function stopObserving() {
-
-		this.observer.disconnect();
-	};
 
 	ApplicationFacade.prototype.findMatchingRegistryItems = function findMatchingRegistryItems(item) {
 
@@ -618,7 +565,7 @@ var ApplicationFacade = (function (_Module) {
   */
 
 	ApplicationFacade.prototype.start = function start() {
-		var _this3 = this;
+		var _this = this;
 
 		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
 			args[_key] = arguments[_key];
@@ -626,7 +573,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this3.start(arg);
+				_this.start(arg);
 			});
 			return;
 		}
@@ -645,7 +592,7 @@ var ApplicationFacade = (function (_Module) {
 	};
 
 	ApplicationFacade.prototype.stop = function stop() {
-		var _this4 = this;
+		var _this2 = this;
 
 		for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
 			args[_key2] = arguments[_key2];
@@ -653,7 +600,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this4.stop(arg);
+				_this2.stop(arg);
 			});
 			return;
 		}
@@ -665,10 +612,10 @@ var ApplicationFacade = (function (_Module) {
 
 			registryItem.instances.forEach(function (inst) {
 
-				if (module.type === COMPONENT_TYPE) {
+				if (module.type === _types.COMPONENT_TYPE) {
 					// undelegate events if component
 					inst.undelegateEvents();
-				} else if (module.type === SERVICE_TYPE) {
+				} else if (module.type === _types.SERVICE_TYPE) {
 					// disconnect if service
 					inst.disconnect();
 				}
@@ -686,14 +633,14 @@ var ApplicationFacade = (function (_Module) {
 
 		options.app = options.app || this;
 
-		if (item.type === COMPONENT_TYPE) {
+		if (item.type === _types.COMPONENT_TYPE) {
 			this.startComponents(item, options);
-		} else if (item.type === SERVICE_TYPE) {
+		} else if (item.type === _types.SERVICE_TYPE) {
 			this.startService(item, options);
-		} else if (item.type === MODULE_TYPE) {
+		} else if (item.type === _types.MODULE_TYPE) {
 			this.startModule(item, options);
 		} else {
-			throw new Error('Expected Module of type \n\t\t\t\t' + COMPONENT_TYPE + ', ' + SERVICE_TYPE + ' or ' + MODULE_TYPE + ', \n\t\t\t\tModule of type ' + item.type + ' is not allowed.');
+			throw new Error('Expected Module of type \n\t\t\t\t' + _types.COMPONENT_TYPE + ', ' + _types.SERVICE_TYPE + ' or ' + _types.MODULE_TYPE + ', \n\t\t\t\tModule of type ' + item.type + ' is not allowed.');
 		}
 
 		var registryItem = this._modules[this._modules.length - 1];
@@ -707,70 +654,44 @@ var ApplicationFacade = (function (_Module) {
 		var itemInstance = new item(options);
 
 		this.initModule(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	};
 
+	/**
+  * 
+  */
+
 	ApplicationFacade.prototype.startComponents = function startComponents(item, options, observerStart) {
-		var _this5 = this;
+		var _this3 = this;
 
 		var elementArray = [];
-		var context = document;
-		var contexts = [];
 
-		if (this.options.context && !options.context) {
-			options.context = this.options.context;
+		// handle es5 extends and name property
+		if (!item.name && item.prototype._name) {
+			item.es5name = item.prototype._name;
 		}
 
-		// checks for type of given context
-		if (options.context && options.context.nodeType === Node.ELEMENT_NODE) {
-			// dom node case
-			context = options.context;
-		} else if (options.context) {
-			// selector or nodelist case
-			_helpersDomDomNodeArray2['default'](options.context).forEach(function (context) {
-				// pass current node element to options.context
-				options.context = context;
-				_this5.startComponents(item, options, observerStart);
-			});
-
-			return;
+		if (this.options.context && !options.context) {
+			// this application facade is limited to a specific dom element
+			options.context = this.options.context;
 		}
 
 		elementArray = _helpersDomDomNodeArray2['default'](options.el);
 
 		if (elementArray.length === 0) {
-			// context or parent context already queried for data-js-module and saved?
-			var modNodes = this.moduleNodes.filter(function (node) {
-				return (node.context === context || node.context.contains(context)) && node.componentClass === item;
-			});
 
-			var modNode = modNodes[0];
-
-			// use saved elements for context!
-			if (modNode && modNode.elements) {
-				elementArray = modNode.elements;
-			} else {
-
-				// query elements for context!
-				elementArray = Array.from(context.querySelectorAll('[data-js-module]'));
-
-				elementArray = elementArray.filter(function (domNode) {
-					return domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](item.name)) !== -1;
-				});
-
-				if (elementArray.length) {
-					// save all data-js-module for later use!
-					this.moduleNodes.push({
-						context: context,
-						componentClass: item,
-						elements: elementArray
-					});
-				}
-			}
+			this.appComponent.elements = options;
+			elementArray = this.appComponent.elements;
 		}
 
 		elementArray.forEach(function (domNode) {
-			_this5.startComponent(item, options, domNode);
+
+			var name = item.name || item.es5name;
+
+			if (name && domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](name)) !== -1) {
+				options.app = options.app || _this3;
+				_this3.startComponent(item, options, domNode);
+			}
 		});
 
 		// register module anyways for later use
@@ -787,7 +708,7 @@ var ApplicationFacade = (function (_Module) {
 		var itemInstance = new item(options);
 
 		this.initComponent(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	};
 
 	ApplicationFacade.prototype.startService = function startService(item, options) {
@@ -795,21 +716,24 @@ var ApplicationFacade = (function (_Module) {
 		var itemInstance = new item(options);
 
 		this.initService(itemInstance);
-		this.register(item, itemInstance);
+		this.register(item, itemInstance, options);
 	};
 
 	ApplicationFacade.prototype.parseOptions = function parseOptions(el, item) {
 
-		var options = el.dataset.jsOptions;
+		var options = el && el.dataset.jsOptions;
 
 		if (options && typeof options === 'string') {
+
+			var _name = item.name || item.es5name;
+
 			// if <div data-js-options="{'show': true}"> is used,
 			// instead of <div data-js-options='{"show": true}'>
 			// convert to valid json string and parse to JSON
 			options = options.replace(/\\'/g, '\'').replace(/'/g, '"');
 
 			options = JSON.parse(options);
-			options = options[_helpersStringDasherize2['default'](item.name)] || options[item.name] || options;
+			options = options[_helpersStringDasherize2['default'](_name)] || options[_name] || options;
 		}
 
 		return options || {};
@@ -817,7 +741,7 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initModule = function initModule(module) {
 
-		if (module.type !== MODULE_TYPE) {
+		if (module.type !== _types.MODULE_TYPE) {
 			throw new Error('Expected Module instance.');
 		}
 
@@ -826,7 +750,7 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initService = function initService(module) {
 
-		if (module.type !== SERVICE_TYPE) {
+		if (module.type !== _types.SERVICE_TYPE) {
 			throw new Error('Expected Service instance.');
 		}
 
@@ -840,7 +764,7 @@ var ApplicationFacade = (function (_Module) {
 
 	ApplicationFacade.prototype.initComponent = function initComponent(module) {
 
-		if (module.type !== COMPONENT_TYPE) {
+		if (module.type !== _types.COMPONENT_TYPE) {
 			throw new Error('Expected Component instance.');
 		}
 
@@ -853,6 +777,7 @@ var ApplicationFacade = (function (_Module) {
 	};
 
 	ApplicationFacade.prototype.register = function register(module, inst) {
+		var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
 		if (arguments.length === 0) {
 			throw new Error('Module or module identifier expected');
@@ -864,26 +789,41 @@ var ApplicationFacade = (function (_Module) {
 
 			var index = this._modules.indexOf(existingRegistryModuleItem);
 
+			// mixin named components using appName
+			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
+				this[options.appName] = inst;
+			}
+
+			// push if instance not exists
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);
 			}
-		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
+		} else if ([_types.SERVICE_TYPE, _types.COMPONENT_TYPE, _types.MODULE_TYPE].indexOf(module.type) > -1) {
 
-			this._modules.push({
+			var registryObject = {
 				type: module.type,
 				module: module,
 				instances: inst ? [inst] : [],
 				autostart: !!module.autostart,
 				running: false,
 				uid: module.uid
-			});
+			};
+
+			if (options.appName && !this[options.appName] && registryObject.instances.length > 0) {
+				registryObject.appName = options.appName;
+				this[options.appName] = registryObject.instances[0];
+			} else if (options.appName) {
+				console.error('appName ' + options.appName + ' is already defined.');
+			}
+
+			this._modules.push(registryObject);
 		} else {
-			console.error('Expected Module of type \n\t\t\t\t' + COMPONENT_TYPE + ', ' + SERVICE_TYPE + ' or ' + MODULE_TYPE + ', \n\t\t\t\tModule of type ' + module.type + ' cannot be registered.');
+			console.error('Expected Module of type \n\t\t\t\t' + _types.COMPONENT_TYPE + ', ' + _types.SERVICE_TYPE + ' or ' + _types.MODULE_TYPE + ', \n\t\t\t\tModule of type ' + module.type + ' cannot be registered.');
 		}
 	};
 
 	ApplicationFacade.prototype.destroy = function destroy() {
-		var _this6 = this;
+		var _this4 = this;
 
 		for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
 			args[_key3] = arguments[_key3];
@@ -891,7 +831,7 @@ var ApplicationFacade = (function (_Module) {
 
 		if (args.length > 1) {
 			args.forEach(function (arg) {
-				_this6.destroy(arg);
+				_this4.destroy(arg);
 			});
 			return;
 		}
@@ -907,11 +847,11 @@ var ApplicationFacade = (function (_Module) {
 
 			iterateObj.forEach(function (inst) {
 
-				if (module.type === COMPONENT_TYPE) {
+				if (module.type === _types.COMPONENT_TYPE) {
 					// undelegate events if component
 					inst.undelegateEvents();
 					inst.remove();
-				} else if (module.type === SERVICE_TYPE) {
+				} else if (module.type === _types.SERVICE_TYPE) {
 					// disconnect if service
 					inst.disconnect();
 					inst.destroy();
@@ -920,12 +860,17 @@ var ApplicationFacade = (function (_Module) {
 				// undelegate vents for all
 				inst.undelegateVents();
 
-				var moduleInstances = _this6._modules[_this6._modules.indexOf(registryItem)].instances;
+				var moduleInstances = _this4._modules[_this4._modules.indexOf(registryItem)].instances;
 
 				if (moduleInstances.length > 1) {
-					_this6._modules[_this6._modules.indexOf(registryItem)].instances.splice(moduleInstances.indexOf(inst), 1);
+					_this4._modules[_this4._modules.indexOf(registryItem)].instances.splice(moduleInstances.indexOf(inst), 1);
 				} else {
-					_this6._modules[_this6._modules.indexOf(registryItem)].instances = [];
+					_this4._modules[_this4._modules.indexOf(registryItem)].instances = [];
+
+					// delete exposed instances
+					if (registryItem.appName && _this4[registryItem.appName]) {
+						delete _this4[registryItem.appName];
+					}
 				}
 			});
 		});
@@ -946,6 +891,7 @@ var ApplicationFacade = (function (_Module) {
 			if (this._modules.length > 1) {
 				this._modules.splice(this._modules.indexOf(mod), 1);
 			} else {
+
 				this._modules = [];
 			}
 		}
@@ -956,129 +902,205 @@ var ApplicationFacade = (function (_Module) {
 
 exports['default'] = ApplicationFacade;
 module.exports = exports['default'];
-},{"../helpers/array/from":3,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":12,"./module":18}],16:[function(require,module,exports){
+},{"../helpers/array/from":4,"../helpers/dom/dom-node-array":7,"../helpers/object/assign":9,"../helpers/string/dasherize":12,"./module":18,"./types":20}],16:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _helpersArrayIsArrayLike = require('../helpers/array/is-array-like');
+var _helpersStringDasherize = require('../helpers/string/dasherize');
 
-var _helpersArrayIsArrayLike2 = _interopRequireDefault(_helpersArrayIsArrayLike);
+var _helpersStringDasherize2 = _interopRequireDefault(_helpersStringDasherize);
 
-var _helpersArrayMerge = require('../helpers/array/merge');
+var _helpersStringExtractObjectName = require('../helpers/string/extract-object-name');
 
-var _helpersArrayMerge2 = _interopRequireDefault(_helpersArrayMerge);
+var _helpersStringExtractObjectName2 = _interopRequireDefault(_helpersStringExtractObjectName);
 
-var BaseCollection = (function () {
-	function BaseCollection(obj, context) {
-		_classCallCheck(this, BaseCollection);
+var _helpersStringNamedUid = require('../helpers/string/named-uid');
 
-		this.context = context || this;
-		this.length = 0;
+var _helpersStringNamedUid2 = _interopRequireDefault(_helpersStringNamedUid);
 
-		this.create(obj);
+var _helpersEnvironmentGetGlobalObject = require('../helpers/environment/get-global-object');
+
+var _helpersEnvironmentGetGlobalObject2 = _interopRequireDefault(_helpersEnvironmentGetGlobalObject);
+
+var _defaultConfig = require('../default-config');
+
+var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
+
+var _plite = require('plite');
+
+var _plite2 = _interopRequireDefault(_plite);
+
+var root = _helpersEnvironmentGetGlobalObject2['default']();
+
+// shim promises
+!root.Promise && (root.Promise = _plite2['default']);
+
+function generateName(obj) {
+
+	if (obj.name) {
+		return obj.name;
 	}
 
-	BaseCollection.prototype.create = function create(data) {
+	return _helpersStringExtractObjectName2['default'](obj);
+}
 
-		if (_helpersArrayIsArrayLike2['default'](data)) {
-			_helpersArrayMerge2['default'](this, data);
-		} else if (data) {
-			this.add(data);
+function generateDashedName(obj) {
+
+	if (obj.dashedName) {
+		return obj.dashedName;
+	}
+
+	return _helpersStringDasherize2['default'](generateName(obj));
+}
+
+function generateUid(obj) {
+	if (obj.uid) {
+		return obj.uid;
+	}
+
+	return _helpersStringNamedUid2['default'](generateName(obj));
+}
+
+var Base = (function () {
+	_createClass(Base, [{
+		key: 'vents',
+		set: function set(vents) {
+			this._vents = vents;
+		},
+		get: function get() {
+			return this._vents;
 		}
+	}, {
+		key: 'autostart',
+		set: function set(bool) {
+			this._autostart = bool;
+		},
+		get: function get() {
+			return this._autostart;
+		}
+	}, {
+		key: 'name',
+		set: function set(name) {
+			this._name = name;
+		},
+		get: function get() {
+			return this._name;
+		}
+	}, {
+		key: 'dashedName',
+		set: function set(dashedName) {
+			this._dashedName = dashedName;
+		},
+		get: function get() {
+			return this._dashedName;
+		}
+	}, {
+		key: 'uid',
+		get: function get() {
+			return this._uid;
+		},
+		set: function set(uid) {
+			this._uid = uid;
+		}
+	}]);
+
+	function Base() {
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+		_classCallCheck(this, Base);
+
+		this.name = generateName(this);
+		this.dashedName = generateDashedName(this);
+		this.uid = generateUid(this);
+
+		this.options = options;
+
+		if (options.app) {
+			this.app = options.app;
+		}
+
+		this.vents = options.vents || {};
+
+		this.autostart = !!options.autostart;
+
+		if (options.vent) {
+			// could be used standalone
+			this.vent = options.vent(this);
+		} else if (options.app && options.app.vent) {
+			// or within an application facade
+			this.vent = options.app.vent(options.app);
+		} else {
+			this.vent = _defaultConfig2['default'].vent(this);
+		}
+	}
+
+	Base.prototype.initialize = function initialize(options) {
+		// override
 	};
 
-	BaseCollection.prototype.each = function each(obj, callback) {
+	Base.prototype.delegateVents = function delegateVents() {
 
-		if (typeof obj === 'function') {
-			callback = obj;
-			obj = this;
+		if (!this.vent) {
+			return;
 		}
 
-		var isLikeArray = _helpersArrayIsArrayLike2['default'](obj);
-		var value = undefined;
-		var i = 0;
+		for (var vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				var callback = this.vents[vent];
 
-		if (isLikeArray) {
-
-			var _length = obj.length;
-
-			for (; i < _length; i++) {
-				value = callback.call(obj[i], i, obj[i]);
-
-				if (value === false) {
-					break;
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback];
+				} else if (typeof callback !== 'function') {
+					throw new Error('Expected callback method');
 				}
+
+				this.vent.on(vent, callback, this);
 			}
 		}
 
 		return this;
 	};
 
-	BaseCollection.prototype.add = function add(item) {
+	Base.prototype.undelegateVents = function undelegateVents() {
 
-		if (item) {
-			this[this.length++] = item;
+		if (!this.vent) {
+			return;
+		}
+
+		for (var vent in this.vents) {
+			if (this.vents.hasOwnProperty(vent)) {
+				var callback = this.vents[vent];
+
+				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+					callback = this[callback];
+				} else if (typeof callback !== 'function') {
+					throw new Error('Expected callback method');
+				}
+
+				this.vent.off(vent, callback, this);
+			}
 		}
 
 		return this;
 	};
 
-	BaseCollection.prototype.reset = function reset() {
-		var _this = this;
-
-		var i = 0;
-
-		this.each(function (i) {
-			delete _this[i];
-		});
-
-		this.length = 0;
+	Base.prototype.toString = function toString() {
+		return this.uid;
 	};
 
-	BaseCollection.prototype.toArray = function toArray() {
-		var _this2 = this;
-
-		var arr = [];
-		var i = 0;
-
-		this.each(function (i) {
-			arr.push(_this2[i]);
-		});
-
-		return arr;
-	};
-
-	BaseCollection.prototype.findIndex = function findIndex(item) {
-
-		return this.toArray().indexOf(item);
-	};
-
-	BaseCollection.prototype.remove = function remove(index) {
-		var howMuch = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
-
-		var tmpArray = this.toArray();
-		tmpArray.splice(index, howMuch);
-		this.reset();
-		this.create(tmpArray);
-
-		return this;
-	};
-
-	return BaseCollection;
+	return Base;
 })();
 
-function Collection(data) {
-	return new BaseCollection(data);
-}
-
-exports['default'] = Collection;
-exports.BaseCollection = BaseCollection;
-},{"../helpers/array/is-array-like":4,"../helpers/array/merge":5}],17:[function(require,module,exports){
+exports['default'] = Base;
+module.exports = exports['default'];
+},{"../default-config":2,"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":12,"../helpers/string/extract-object-name":13,"../helpers/string/named-uid":14,"plite":21}],17:[function(require,module,exports){
 /**
  * @module  lib/Component
  * used to create views and/or view mediators
@@ -1095,31 +1117,35 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _module2 = require('./module');
+var _base = require('./base');
 
-var _module3 = _interopRequireDefault(_module2);
-
-var _defaultConfig = require('../default-config');
-
-var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
+var _base2 = _interopRequireDefault(_base);
 
 var _helpersObjectAssign = require('../helpers/object/assign');
 
 var _helpersObjectAssign2 = _interopRequireDefault(_helpersObjectAssign);
 
-var COMPONENT_TYPE = 'component';
+var _defaultConfig = require('../default-config');
+
+var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
+
+var _helpersArrayFrom = require('../helpers/array/from');
+
+var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
+
+var _types = require('./types');
 
 var DELEGATE_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
 var matchesSelector = Element.prototype.matches || Element.prototype.webkitMatchesSelector || Element.prototype.mozMatchesSelector || Element.prototype.msMatchesSelector || Element.prototype.oMatchesSelector;
 
-var Component = (function (_Module) {
-	_inherits(Component, _Module);
+var Component = (function (_Base) {
+	_inherits(Component, _Base);
 
 	_createClass(Component, [{
 		key: 'type',
 		get: function get() {
-			return COMPONENT_TYPE;
+			return _types.COMPONENT_TYPE;
 		}
 	}, {
 		key: 'events',
@@ -1140,7 +1166,7 @@ var Component = (function (_Module) {
 	}], [{
 		key: 'type',
 		get: function get() {
-			return COMPONENT_TYPE;
+			return _types.COMPONENT_TYPE;
 		}
 	}]);
 
@@ -1149,36 +1175,52 @@ var Component = (function (_Module) {
 
 		_classCallCheck(this, Component);
 
-		_Module.call(this, options);
+		options.context = options.context || document;
 
-		this.events = {};
+		_Base.call(this, options);
+
+		this.events = this.events || {};
 		this.dom = options.dom || options.app && options.app.dom || _defaultConfig2['default'].dom;
 
 		this.template = options.template || options.app && options.app.template || _defaultConfig2['default'].template;
-
-		if (options.vent) {
-			// could be used standalone
-			this.vent = options.vent(options.app || this);
-		} else if (options.app && options.app.vent) {
-			// or within an application facade
-			this.vent = options.app.vent(options.app);
-		} else {
-			this.vent = _defaultConfig2['default'].vent(options.app || this);
-		}
 
 		this._domEvents = [];
 
 		this.ensureElement(options);
 		this.initialize(options);
-		this.delegateEvents();
-		this.delegateVents();
+		this.didMount();
 	}
 
-	Component.prototype.createDom = function createDom(str) {
+	Component.prototype.didMount = function didMount() {
+		this.delegateEvents();
+		this.delegateVents();
+	};
+
+	Component.prototype.willUnmount = function willUnmount() {
+		this.undelegateEvents();
+		this.undelegateVents();
+	};
+
+	Component.prototype.createDomNode = function createDomNode(str) {
+
+		var selectedEl = this.options.context.querySelector(str);
+
+		if (selectedEl) {
+			return selectedEl;
+		}
 
 		var div = document.createElement('div');
+		var elNode = undefined;
+
 		div.innerHTML = str;
-		return div.childNodes[0] || div;
+
+		Array.from(div.childNodes).forEach(function (node) {
+			if (!elNode && node.nodeType === Node.ELEMENT_NODE) {
+				elNode = node;
+			}
+		});
+
+		return elNode || div;
 	};
 
 	Component.prototype.ensureElement = function ensureElement(options) {
@@ -1188,7 +1230,7 @@ var Component = (function (_Module) {
 		} else if (options.el instanceof Element) {
 			this.el = options.el;
 		} else if (typeof options.el === 'string') {
-			this.el = this.createDom(options.el);
+			this.el = this.createDomNode(options.el);
 		} else {
 			throw new TypeError('Parameter options.el of type ' + typeof options.el + ' is not a dom element.');
 		}
@@ -1312,11 +1354,11 @@ var Component = (function (_Module) {
 	};
 
 	return Component;
-})(_module3['default']);
+})(_base2['default']);
 
 exports['default'] = Component;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/object/assign":9,"./module":18}],18:[function(require,module,exports){
+},{"../default-config":2,"../helpers/array/from":4,"../helpers/object/assign":9,"./base":16,"./types":20}],18:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1327,115 +1369,26 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _helpersStringDasherize = require('../helpers/string/dasherize');
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _helpersStringDasherize2 = _interopRequireDefault(_helpersStringDasherize);
+var _base = require('./base');
 
-var _helpersStringExtractObjectName = require('../helpers/string/extract-object-name');
+var _base2 = _interopRequireDefault(_base);
 
-var _helpersStringExtractObjectName2 = _interopRequireDefault(_helpersStringExtractObjectName);
+var _types = require('./types');
 
-var _helpersStringNamedUid = require('../helpers/string/named-uid');
+var Module = (function (_Base) {
+	_inherits(Module, _Base);
 
-var _helpersStringNamedUid2 = _interopRequireDefault(_helpersStringNamedUid);
-
-var _helpersEnvironmentGetGlobalObject = require('../helpers/environment/get-global-object');
-
-var _helpersEnvironmentGetGlobalObject2 = _interopRequireDefault(_helpersEnvironmentGetGlobalObject);
-
-var _defaultConfig = require('../default-config');
-
-var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
-
-var _plite = require('plite');
-
-var _plite2 = _interopRequireDefault(_plite);
-
-var root = _helpersEnvironmentGetGlobalObject2['default']();
-
-var MODULE_TYPE = 'module';
-var SERVICE_TYPE = 'service';
-var COMPONENT_TYPE = 'component';
-
-// shim promises
-!root.Promise && (root.Promise = _plite2['default']);
-
-function generateName(obj) {
-
-	if (obj.name) {
-		return obj.name;
-	}
-
-	return _helpersStringExtractObjectName2['default'](obj);
-}
-
-function generateDashedName(obj) {
-
-	if (obj.dashedName) {
-		return obj.dashedName;
-	}
-
-	return _helpersStringDasherize2['default'](generateName(obj));
-}
-
-function generateUid(obj) {
-	if (obj.uid) {
-		return obj.uid;
-	}
-
-	return _helpersStringNamedUid2['default'](generateName(obj));
-}
-
-var Module = (function () {
 	_createClass(Module, [{
 		key: 'type',
 		get: function get() {
-			return MODULE_TYPE;
-		}
-	}, {
-		key: 'autostart',
-		set: function set(bool) {
-			this._autostart = bool;
-		},
-		get: function get() {
-			return this._autostart;
-		}
-	}, {
-		key: 'vents',
-		set: function set(vents) {
-			this._vents = vents;
-		},
-		get: function get() {
-			return this._vents;
-		}
-	}, {
-		key: 'name',
-		set: function set(name) {
-			this._name = name;
-		},
-		get: function get() {
-			return this._name;
-		}
-	}, {
-		key: 'dashedName',
-		set: function set(dashedName) {
-			this._dashedName = dashedName;
-		},
-		get: function get() {
-			return this._dashedName;
-		}
-	}, {
-		key: 'uid',
-		get: function get() {
-			return this._uid;
-		},
-		set: function set(uid) {
-			this._uid = uid;
+			return _types.MODULE_TYPE;
 		}
 	}], [{
 		key: 'type',
 		get: function get() {
-			return MODULE_TYPE;
+			return _types.MODULE_TYPE;
 		}
 	}]);
 
@@ -1444,99 +1397,18 @@ var Module = (function () {
 
 		_classCallCheck(this, Module);
 
-		this.options = options;
+		_Base.call(this, options);
 
-		this.name = generateName(this);
-		this.dashedName = generateDashedName(this);
-
-		if (options.app) {
-			this.app = options.app;
-		}
-
-		this.vents = options.vents || {};
-
-		this.uid = generateUid(this);
-
-		this.autostart = !!options.autostart;
-
-		// if not extended by component or service
-		if (this.type !== SERVICE_TYPE || this.type !== COMPONENT_TYPE) {
-
-			if (options.vent) {
-				// could be used standalone
-				this.vent = options.vent(this);
-			} else if (options.app && options.app.vent) {
-				// or within an application facade
-				this.vent = options.app.vent(options.app);
-			} else {
-				this.vent = _defaultConfig2['default'].vent(this);
-			}
-
-			this.initialize(options);
-			this.delegateVents();
-		}
+		this.initialize(options);
+		this.delegateVents();
 	}
 
-	Module.prototype.initialize = function initialize(options) {
-		// override
-	};
-
-	Module.prototype.delegateVents = function delegateVents() {
-
-		if (!this.vent) {
-			return;
-		}
-
-		for (var vent in this.vents) {
-			if (this.vents.hasOwnProperty(vent)) {
-				var callback = this.vents[vent];
-
-				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
-					callback = this[callback];
-				} else if (typeof callback !== 'function') {
-					throw new Error('Expected callback method');
-				}
-
-				this.vent.on(vent, callback, this);
-			}
-		}
-
-		return this;
-	};
-
-	Module.prototype.undelegateVents = function undelegateVents() {
-
-		if (!this.vent) {
-			return;
-		}
-
-		for (var vent in this.vents) {
-			if (this.vents.hasOwnProperty(vent)) {
-				var callback = this.vents[vent];
-
-				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
-					callback = this[callback];
-				} else if (typeof callback !== 'function') {
-					throw new Error('Expected callback method');
-				}
-
-				this.vent.off(vent, callback, this);
-			}
-		}
-
-		return this;
-	};
-
-	Module.prototype.toString = function toString() {
-		return this.uid;
-	};
-
 	return Module;
-})();
+})(_base2['default']);
 
 exports['default'] = Module;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/environment/get-global-object":8,"../helpers/string/dasherize":12,"../helpers/string/extract-object-name":13,"../helpers/string/named-uid":14,"plite":23}],19:[function(require,module,exports){
+},{"./base":16,"./types":20}],19:[function(require,module,exports){
 /**
  * @module  lib/Service
  * used to create models, collections, proxies, adapters
@@ -1553,9 +1425,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _module2 = require('./module');
+var _base = require('./base');
 
-var _module3 = _interopRequireDefault(_module2);
+var _base2 = _interopRequireDefault(_base);
 
 var _helpersServiceReducers = require('../helpers/service/reducers');
 
@@ -1565,10 +1437,6 @@ var _helpersObjectAssign = require('../helpers/object/assign');
 
 var _helpersObjectAssign2 = _interopRequireDefault(_helpersObjectAssign);
 
-var _defaultConfig = require('../default-config');
-
-var _defaultConfig2 = _interopRequireDefault(_defaultConfig);
-
 var _helpersArrayIsArrayLike = require('../helpers/array/is-array-like');
 
 var _helpersArrayIsArrayLike2 = _interopRequireDefault(_helpersArrayIsArrayLike);
@@ -1577,15 +1445,15 @@ var _helpersArrayMerge = require('../helpers/array/merge');
 
 var _helpersArrayMerge2 = _interopRequireDefault(_helpersArrayMerge);
 
-var SERVICE_TYPE = 'service';
+var _types = require('./types');
 
-var Service = (function (_Module) {
-	_inherits(Service, _Module);
+var Service = (function (_Base) {
+	_inherits(Service, _Base);
 
 	_createClass(Service, [{
 		key: 'type',
 		get: function get() {
-			return SERVICE_TYPE;
+			return _types.SERVICE_TYPE;
 		}
 	}, {
 		key: 'resource',
@@ -1598,7 +1466,7 @@ var Service = (function (_Module) {
 	}], [{
 		key: 'type',
 		get: function get() {
-			return SERVICE_TYPE;
+			return _types.SERVICE_TYPE;
 		}
 	}]);
 
@@ -1607,7 +1475,7 @@ var Service = (function (_Module) {
 
 		_classCallCheck(this, Service);
 
-		_Module.call(this, options);
+		_Base.call(this, options);
 
 		this.length = 0;
 
@@ -1615,7 +1483,7 @@ var Service = (function (_Module) {
 
 		this.data = {};
 
-		// proxying ServiceReducers via this.data
+		// composing this with ServiceReducers via this.data
 		for (var method in _helpersServiceReducers2['default']) {
 			if (_helpersServiceReducers2['default'].hasOwnProperty(method)) {
 				this.data[method] = _helpersServiceReducers2['default'][method].bind(this);
@@ -1625,16 +1493,6 @@ var Service = (function (_Module) {
 		this.lastCommitId = null;
 		this.commitIds = [];
 		this.repository = {};
-
-		if (options.vent) {
-			// could be used standalone
-			this.vent = options.vent(this);
-		} else if (options.app && options.app.vent) {
-			// or within an application facade
-			this.vent = options.app.vent(options.app);
-		} else {
-			this.vent = _defaultConfig2['default'].vent(this);
-		}
 
 		if (options.data) {
 			this.merge(options.data);
@@ -1713,7 +1571,7 @@ var Service = (function (_Module) {
 
 	Service.prototype.connect = function connect() {
 
-		var connectMethod = this.options.connectMethod || this.fallback;
+		var connectMethod = this.options.strategy && this.options.strategy.connect || this.fallback;
 
 		return connectMethod.apply(this, arguments);
 	};
@@ -1725,7 +1583,7 @@ var Service = (function (_Module) {
 
 	Service.prototype.disconnect = function disconnect() {
 
-		var disconnectMethod = this.options.disconnectMethod || this.fallback;
+		var disconnectMethod = this.options.strategy && this.options.strategy.disconnect || this.fallback;
 
 		return disconnectMethod.apply(this, arguments);
 	};
@@ -1737,9 +1595,16 @@ var Service = (function (_Module) {
 
 	Service.prototype.fetch = function fetch() {
 
-		var fetchMethod = this.options.fetchMethod || this.fallback;
+		var fetchMethod = this.options.strategy && this.options.strategy.fetch || this.fallback;
 
 		return fetchMethod.apply(this, arguments);
+	};
+
+	Service.prototype.parse = function parse() {
+
+		var parseMethod = this.options.strategy && this.options.strategy.parse || this.fallback;
+
+		return parseMethod.apply(this, arguments);
 	};
 
 	/**
@@ -1951,166 +1816,28 @@ var Service = (function (_Module) {
 
 	Service.prototype.save = function save() {
 
-		var saveMethod = this.options.saveMethod || this.fallback;
+		var saveMethod = this.options.strategy && this.options.strategy.save || this.fallback;
 
 		return saveMethod.apply(this, arguments);
 	};
 
 	return Service;
-})(_module3['default']);
+})(_base2['default']);
 
 exports['default'] = Service;
 module.exports = exports['default'];
-},{"../default-config":2,"../helpers/array/is-array-like":4,"../helpers/array/merge":5,"../helpers/object/assign":9,"../helpers/service/reducers":11,"./module":18}],20:[function(require,module,exports){
+},{"../helpers/array/is-array-like":5,"../helpers/array/merge":6,"../helpers/object/assign":9,"../helpers/service/reducers":11,"./base":16,"./types":20}],20:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
+var MODULE_TYPE = 'module';
+var SERVICE_TYPE = 'service';
+var COMPONENT_TYPE = 'component';
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _helpersArrayUniques = require('../../helpers/array/uniques');
-
-var _helpersArrayUniques2 = _interopRequireDefault(_helpersArrayUniques);
-
-var _helpersArrayFrom = require('../../helpers/array/from');
-
-var _helpersArrayFrom2 = _interopRequireDefault(_helpersArrayFrom);
-
-var _libCollection = require('../../lib/collection');
-
-exports['default'] = (function () {
-
-	function domSelector(selector) {
-		var context = arguments.length <= 1 || arguments[1] === undefined ? document : arguments[1];
-
-		return new DomSelector(selector, context);
-	}
-
-	var DomSelector = (function (_BaseCollection) {
-		_inherits(DomSelector, _BaseCollection);
-
-		function DomSelector(selector, context) {
-			_classCallCheck(this, DomSelector);
-
-			var isString = typeof selector === 'string';
-
-			if (isString) {
-				if (context.nodeType) {
-					selector = context.querySelectorAll(selector);
-				} else {
-					(function () {
-						var nodeArray = [];
-
-						domSelector(context).each(function (i, contextNode) {
-							var elArray = Array.from(contextNode.querySelectorAll(selector));
-							nodeArray = nodeArray.concat(elArray);
-						});
-
-						selector = _helpersArrayUniques2['default'](nodeArray);
-					})();
-				}
-			}
-
-			_BaseCollection.call(this, selector, context);
-		}
-
-		DomSelector.prototype.find = function find(selector) {
-			return domSelector.call(this, selector, this);
-		};
-
-		DomSelector.prototype.on = function on(evtName, fn) {
-
-			this.each(function (i, elem) {
-				elem.addEventListener(evtName, fn);
-			});
-
-			return this;
-		};
-
-		DomSelector.prototype.off = function off(evtName, fn) {
-
-			this.each(function (i, elem) {
-				elem.removeEventListener(evtName, fn);
-			});
-
-			return this;
-		};
-
-		return DomSelector;
-	})(_libCollection.BaseCollection);
-
-	return domSelector;
-}).call(undefined);
-
-module.exports = exports['default'];
-},{"../../helpers/array/from":3,"../../helpers/array/uniques":6,"../../lib/collection":16}],21:[function(require,module,exports){
-"use strict";
-
-exports.__esModule = true;
-
-exports["default"] = function (type) {
-	return function () {
-		console.warn("Plugin engine for type \"" + type + "\" not implemented yet.");
-		return arguments[0];
-	};
-};
-
-module.exports = exports["default"];
-},{}],22:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-exports['default'] = Vent;
-var target = undefined;
-var events = {};
-
-function Vent(newTarget) {
-	var empty = [];
-
-	if (typeof target === 'undefined' || newTarget !== target) {
-		target = newTarget || this;
-
-		if (!target.name) {
-			target.name = Math.random() + '';
-		}
-
-		events[target.name] = {};
-	}
-
-	/**
-  *  On: listen to events
-  */
-	target.on = function (type, func, ctx) {
-		(events[target.name][type] = events[target.name][type] || []).push([func, ctx]);
-	};
-	/**
-  *  Off: stop listening to event / specific callback
-  */
-	target.off = function (type, func) {
-		type || (events[target.name] = {});
-		var list = events[target.name][type] || empty,
-		    i = list.length = func ? list.length : 0;
-		while (i--) func == list[i][0] && list.splice(i, 1);
-	};
-	/** 
-  * Trigger: send event, callbacks will be triggered
-  */
-	target.trigger = function (type) {
-		var list = events[target.name][type] || empty,
-		    i = 0,
-		    j;
-		while (j = list[i++]) j[0].apply(j[1], empty.slice.call(arguments, 1));
-	};
-
-	return target;
-}
-
-module.exports = exports['default'];
-},{}],23:[function(require,module,exports){
+exports.MODULE_TYPE = MODULE_TYPE;
+exports.SERVICE_TYPE = SERVICE_TYPE;
+exports.COMPONENT_TYPE = COMPONENT_TYPE;
+},{}],21:[function(require,module,exports){
 function Plite(resolver) {
   var emptyFn = function () {},
       chain = emptyFn,

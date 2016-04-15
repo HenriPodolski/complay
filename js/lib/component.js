@@ -2,11 +2,11 @@
  * @module  lib/Component
  * used to create views and/or view mediators
  */
-import Module from './module';
-import defaultConfig from '../default-config';
+import Base from './base';
 import assign from '../helpers/object/assign';
-
-const COMPONENT_TYPE = 'component';
+import defaultConfig from '../default-config';
+import arrayFrom from '../helpers/array/from';
+import {COMPONENT_TYPE} from './types';
 
 const DELEGATE_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
@@ -16,7 +16,7 @@ let matchesSelector = Element.prototype.matches ||
 	Element.prototype.msMatchesSelector ||
 	Element.prototype.oMatchesSelector;
 
-class Component extends Module {
+class Component extends Base {
 
 	static get type() {
 		return COMPONENT_TYPE;
@@ -44,40 +44,84 @@ class Component extends Module {
 
 	constructor(options={}) {
 
+		options.context = options.context || document;
+
 		super(options);
 
-		this.events = {};
-		this.dom = options.dom 
-			|| (options.app && options.app.dom)
-			|| defaultConfig.dom;
-
-		this.template = options.template 
-			|| (options.app && options.app.template)
-			|| defaultConfig.template;
-
-		if (options.vent) {
-			// could be used standalone
-			this.vent = options.vent(options.app || this);
-		} else if (options.app && options.app.vent) {
-			// or within an application facade
-			this.vent = options.app.vent(options.app);			
-		} else {
-			this.vent = defaultConfig.vent(options.app || this);
-		}
-
-		this._domEvents = [];
-
-		this.ensureElement(options);
-		this.initialize(options);
-		this.delegateEvents();
-		this.delegateVents();
+		this.mount();
 	}
 
-	createDom(str) {
+	willMount() {
+
+		return true;
+	}
+
+	mount() {
+
+		if (this.willMount() !== false) {
+
+			this.events = this.events || {};
+			
+			this.dom = this.options.dom 
+				|| (this.app && this.app.dom)
+				|| defaultConfig.dom;
+
+			this.template = this.options.template 
+				|| (this.app && this.app.template)
+				|| defaultConfig.template;
+
+			this._domEvents = [];
+
+			this.ensureElement(this.options);
+			this.initialize(this.options);
+			this.delegateEvents();
+			this.delegateVents();
+			this.didMount();
+		}		
+	}
+
+	didMount() {}
+
+	willUnmount() {
+		return true;
+	}
+
+	unmount() {
+		
+		if (this.willUnmount() !== false) {
+			
+			if (this.app && this.app.findMatchingRegistryItems().length > 0) {
+				this.app.destroy(this)
+			} else {
+				this.remove();	
+			}
+			
+			this.didUnmount();	
+		}		
+	}
+
+	didUnmount() {}
+
+	createDomNode(str) {
+
+		let selectedEl = this.options.context.querySelector(str);
+
+		if (selectedEl) {
+			return selectedEl;
+		}
 
 		let div = document.createElement('div');
+		let elNode;
+		
 		div.innerHTML = str;
-		return div.childNodes[0] || div;
+
+		Array.from(div.childNodes).forEach((node) => {
+			if (!elNode && node.nodeType === Node.ELEMENT_NODE) {
+				elNode = node;
+			}
+		})
+
+		return elNode || div;
 	}
 
 	ensureElement(options) {
@@ -87,7 +131,7 @@ class Component extends Module {
 		} else if (options.el instanceof Element) {
 			this.el = options.el;
 		} else if (typeof options.el === 'string') {
-			this.el = this.createDom(options.el);
+			this.el = this.createDomNode(options.el);
 		} else {
 			throw new TypeError(`Parameter options.el of type ${typeof options.el} is not a dom element.`);
 		}
@@ -200,7 +244,7 @@ class Component extends Module {
 	}
 
 	remove() {
-
+		this.undelegateVents();
 		this.undelegateEvents();
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
 	}
