@@ -35,7 +35,7 @@ By-products:
 ### Further information
 To be honest, some things like for example templating, you nearly implement on your own. But we provide a recommended documented way to dock this onto conduitjs.
 It is possible that we use this in an ES5 environment via dist/conduit.js. 
-But functionalities are limited and some, like custom combination, will not work.
+But functionalities are limited and some will not work.
 An ES6 setup which imports the files might work much better.
 
 Version: 0.0.1
