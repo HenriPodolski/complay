@@ -1,4 +1,5 @@
 import ajaxExtension from '../../../../../js/extensions/services/remote/ajax';
+import jsonParserExtension from '../../../../../js/extensions/services/parser/json';
 import Service from '../../../../../js/lib/service';
 import mix from '../../../../../js/helpers/object/mix';
 import chai from 'chai';
@@ -48,7 +49,7 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				requests.push(xhr);
 			};
 
-			ajaxExtension.resource = {url: 'https://example.com/test', method: 'GET'}
+			ajaxExtension.resource = {url: 'https://example.com/test'}
 		});
 
 		afterEach(function() {
@@ -75,7 +76,25 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 		});
 
 		it('should send data to the server', () => {
-			expect(false).to.equal('Todo: Implement this!');
+
+			let mixedObj = {
+				save: ajaxExtension.save,
+				parse: jsonParserExtension.parse
+			};
+
+			mixedObj.save({url: 'https://example.com/test'})
+				.then((res) => { 
+					expect(res).to.deep.equal({"success": true}); 
+					done();
+				})
+				.catch((err) => { console.log(err); });
+
+			expect(glob.requests.length).to.equal(1);
+			
+			glob.requests[0].respond(200,
+				{"Content-Type": "application/json"},
+				'{"success": true}'
+			);
 		});
 	});
 });

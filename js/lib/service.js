@@ -150,7 +150,7 @@ class Service extends Base {
 		return fetchMethod.apply(this, arguments);
 	}
 
-	parse() {
+	parse(rawData) {
 		
 		let parseMethod = (this.options.strategy && this.options.strategy.parse) || this.fallback;
 
