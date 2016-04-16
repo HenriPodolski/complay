@@ -59,8 +59,8 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 	    it('should fetch data from the server', (done) => {
 			
 			ajaxExtension.fetch()
-				.then((res) => { 
-					expect(JSON.parse(res)).to.deep.equal({"id": 1, "name": "foo"}); 
+				.then((params) => { 
+					expect(JSON.parse(params.res)).to.deep.equal({"id": 1, "name": "foo"}); 
 					done();
 				})
 				.catch((err) => { console.log(err); });
@@ -83,8 +83,8 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 			};
 
 			mixedObj.save({url: 'https://example.com/test'})
-				.then((res) => { 
-					expect(res).to.deep.equal({"success": true}); 
+				.then((params) => { 
+					expect(params.res).to.deep.equal({"success": true}); 
 					done();
 				})
 				.catch((err) => { console.log(err); });
@@ -95,6 +95,58 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				{"Content-Type": "application/json"},
 				'{"success": true}'
 			);
+		});
+	});
+
+	describe('fetch/save with Service', () => {
+
+		let ajaxService;
+
+		beforeEach(function() {
+			
+			glob.xhr = sinon.useFakeXMLHttpRequest();
+			var requests = glob.requests = [];
+
+			glob.xhr.onCreate = function (xhr) {
+				requests.push(xhr);
+			};
+
+			class AjaxService extends mix(Service).with({
+				fetch: ajaxExtension.fetch,
+				parse: jsonParserExtension.parse,
+				save: ajaxExtension.save
+			}) {}
+
+			ajaxService = new AjaxService({
+				resource: {
+					url: 'https://example.com/test'
+				}
+			});
+		});
+
+		afterEach(function() {
+			glob.xhr.restore();
+		});
+
+	    it('should fetch data from the server', (done) => {
+			
+			ajaxService.fetch()
+				.then((params) => {
+					console.log(params);
+					params.service.create(params.res); 					
+					return params.service;
+				})
+				.catch((err) => { console.log(err); })
+				.then((service) => {
+					console.log(service.length);
+					done();
+				});
+
+			glob.requests[0].respond(200,
+				{"Content-Type": "application/json"},
+				'[{"id": 1, "name": "foo"}, {"id": 2, "name": "bar"}]'
+			);
+			// sinon.assert.calledWith(callback, {"id": 1, "name": "foo"});
 		});
 	});
 });
