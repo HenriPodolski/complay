@@ -1,5 +1,5 @@
-import ajaxExtension from '../../../../../js/extensions/services/remote/ajax';
-import jsonParserExtension from '../../../../../js/extensions/services/parser/json';
+import AjaxExtension from '../../../../../js/extensions/services/remote/ajax';
+import JsonParserExtension from '../../../../../js/extensions/services/parser/json';
 import Service from '../../../../../js/lib/service';
 import mix from '../../../../../js/helpers/object/mix';
 import chai from 'chai';
@@ -10,6 +10,7 @@ var asset = chai.assert;
 chai.should();
 
 let glob = {};
+let ajaxExtension;
 
 describe('Conduitjs JS Ajax Extension', ()=>{
 
@@ -23,6 +24,7 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				requests.push(xhr);
 			};
 
+			ajaxExtension = new AjaxExtension();
 			ajaxExtension.resource = {url: 'https://example.com/test'}
 		});
 
@@ -59,11 +61,10 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 	    it('should fetch data from the server', (done) => {
 			
 			ajaxExtension.fetch()
-				.then((params) => { 
-					expect(JSON.parse(params.res)).to.deep.equal({"id": 1, "name": "foo"}); 
+				.then((res) => { 
+					expect(JSON.parse(res)).to.deep.equal({"id": 1, "name": "foo"}); 
 					done();
-				})
-				.catch((err) => { console.log(err); });
+				});
 			
 			expect(glob.requests.length).to.equal(1);
 			
@@ -77,17 +78,16 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 
 		it('should send data to the server', () => {
 
-			let mixedObj = {
-				save: ajaxExtension.save,
-				parse: jsonParserExtension.parse
-			};
+			class SomeAjaxServiceWithJsonParser extends mix(Service)
+				.with(AjaxExtension, JsonParserExtension) {};
 
-			mixedObj.save({url: 'https://example.com/test'})
-				.then((params) => { 
-					expect(params.res).to.deep.equal({"success": true}); 
+			let mixedObj = new SomeAjaxServiceWithJsonParser();
+
+			ajaxExtension.save({url: 'https://example.com/test'})
+				.then((res) => { 
+					expect(res).to.deep.equal({success: true}); 
 					done();
-				})
-				.catch((err) => { console.log(err); });
+				});
 
 			expect(glob.requests.length).to.equal(1);
 			
@@ -111,41 +111,38 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				requests.push(xhr);
 			};
 
-			class AjaxService extends mix(Service).with({
-				fetch: ajaxExtension.fetch,
-				parse: jsonParserExtension.parse,
-				save: ajaxExtension.save
-			}) {}
+			class AjaxService extends mix(Service)
+				.with(AjaxExtension, JsonParserExtension) {}
 
 			ajaxService = new AjaxService({
 				resource: {
 					url: 'https://example.com/test'
 				}
-			});
+			});		
 		});
 
 		afterEach(function() {
 			glob.xhr.restore();
 		});
 
-	    it('should fetch data from the server', (done) => {
+	    it('should fetch data from the server and apply the data to service', (done) => {
 			
+	    	let result = [{"id": 1, "name": "foo"}, {"id": 2, "name": "bar"}];
+
 			ajaxService.fetch()
-				.then((params) => {
-					console.log(params);
-					params.service.create(params.res); 					
-					return params.service;
-				})
-				.catch((err) => { console.log(err); })
-				.then((service) => {
-					console.log(service.length);
-					done();
+				.then((res) => {
+					ajaxService.create(res);
 				});
 
 			glob.requests[0].respond(200,
 				{"Content-Type": "application/json"},
-				'[{"id": 1, "name": "foo"}, {"id": 2, "name": "bar"}]'
+				JSON.stringify(result)
 			);
+
+			setTimeout(() => {
+				expect(ajaxService.toArray()).to.deep.equal(result);				
+				done();	
+			}, 100);
 			// sinon.assert.calledWith(callback, {"id": 1, "name": "foo"});
 		});
 	});
