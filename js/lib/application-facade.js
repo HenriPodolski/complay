@@ -141,10 +141,6 @@ class ApplicationFacade extends Module {
 
 		let registryItem = this._modules[this._modules.length - 1];
 
-		if (!registryItem) {
-			console.log(item, options, this._modules);
-		}
-
 		registryItem.running = true;
 
 		return registryItem;
