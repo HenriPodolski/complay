@@ -249,6 +249,11 @@ class Component extends Base {
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
 	}
 
+	update() {
+
+		return this;
+	}
+
 	render() {
 		
 		return this;
