@@ -11,20 +11,32 @@ class ApplicationDomComponent extends Component {
 		let elements = [];
 
 		this._elements = this._elements || [];
-		
-		if (this.options.context.contains(moduleOptions.context)) {
+		this._newElements = [];
+
+		// if item has no context, pass application dom context
+		if (this.options.context && !moduleOptions.context) {
+			// this application facade is limited to a specific dom element
+			moduleOptions.context = this.options.context;
+			contexts = domNodeArray(this.options.context);
+		} else if (this.options.context === moduleOptions.context) {
+			// if module context is same like app context
+			contexts = domNodeArray(this.options.context);
+		} else if (this.options.context.contains(moduleOptions.context)) {
+			// if module context is included in current context
 			contexts = domNodeArray(moduleOptions.context, this.options.context);	
-		} else if (!document.contains(moduleOptions.context)) {
-			
+		} else {
+			// else if it is not in the dom,
+			// create fragment and use this as context
 			domNodeArray(moduleOptions.context).forEach((ctx) => {
 				let tempCtx = document.createDocumentFragment();
 				tempCtx.appendChild(ctx);
 				contexts.push(tempCtx);
 			});
-		}		
+		}
 
 		contexts.forEach((ctx) => {
 			elements = Array.from(ctx.querySelectorAll(this.options.moduleSelector));
+			this._newElements = elements;
 			this._elements = uniques(this._elements.concat(elements));
 		});
 	}
@@ -32,6 +44,10 @@ class ApplicationDomComponent extends Component {
 	get elements() {
 
 		return this._elements;
+	}
+
+	get newElements() {
+		return this._newElements;
 	}
 
 	constructor(options = {}) {

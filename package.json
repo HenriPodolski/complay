@@ -5,7 +5,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "grunt unit-test"
+    "test": "grunt unit-test",
+    "build": "grunt build"
   },
   "author": "",
   "license": "MIT",

@@ -274,7 +274,10 @@ function domNodeArray(item, ctx) {
 	ctx = ctx || document;
 
 	// checks for type of given context
-	if (item && item.nodeType === Node.ELEMENT_NODE) {
+	if (item === ctx) {
+		// context is item case
+		retArray = [item];
+	} else if (item && item.nodeType === Node.ELEMENT_NODE) {
 		// dom node case
 		retArray = [item];
 	} else if (typeof item === 'string') {
@@ -630,6 +633,11 @@ var ApplicationFacade = (function (_Module) {
 		}
 
 		var registryItem = this._modules[this._modules.length - 1];
+
+		if (!registryItem) {
+			console.log(item, options, this._modules);
+		}
+
 		registryItem.running = true;
 
 		return registryItem;
@@ -657,18 +665,15 @@ var ApplicationFacade = (function (_Module) {
 			item.es5name = item.prototype._name;
 		}
 
-		if (this.options.context && !options.context) {
-			// this application facade is limited to a specific dom element
-			options.context = this.options.context;
-		}
-
 		elementArray = _helpersDomDomNodeArray2['default'](options.el);
 
 		if (elementArray.length === 0) {
 
 			this.appComponent.elements = options;
-			elementArray = this.appComponent.elements;
+			elementArray = this.appComponent.newElements;
 		}
+
+		var hasRegistered = false;
 
 		elementArray.forEach(function (domNode) {
 
@@ -677,11 +682,12 @@ var ApplicationFacade = (function (_Module) {
 			if (name && domNode.dataset.jsModule.indexOf(_helpersStringDasherize2['default'](name)) !== -1) {
 				options.app = options.app || _this3;
 				_this3.startComponent(item, options, domNode);
+				hasRegistered = true;
 			}
 		});
 
 		// register module anyways for later use
-		if (elementArray.length === 0) {
+		if (!hasRegistered) {
 			this.register(item);
 		}
 	};
@@ -1359,6 +1365,11 @@ var Component = (function (_Base) {
 		this.undelegateVents();
 		this.undelegateEvents();
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
+	};
+
+	Component.prototype.update = function update() {
+
+		return this;
 	};
 
 	Component.prototype.render = function render() {

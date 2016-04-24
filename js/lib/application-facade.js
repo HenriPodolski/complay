@@ -140,6 +140,11 @@ class ApplicationFacade extends Module {
 		}
 
 		let registryItem = this._modules[this._modules.length - 1];
+
+		if (!registryItem) {
+			console.log(item, options, this._modules);
+		}
+
 		registryItem.running = true;
 
 		return registryItem;
@@ -165,18 +170,15 @@ class ApplicationFacade extends Module {
 			item.es5name = item.prototype._name;
 		}
 
-		if (this.options.context && !options.context) {
-			// this application facade is limited to a specific dom element
-			options.context = this.options.context;
-		}
-
 		elementArray = domNodeArray(options.el);
 
 		if (elementArray.length === 0) {
 			
 			this.appComponent.elements = options;
-			elementArray = this.appComponent.elements;
+			elementArray = this.appComponent.newElements;
 		}
+
+		let hasRegistered = false;
 
 		elementArray.forEach((domNode) => {
 			
@@ -184,12 +186,13 @@ class ApplicationFacade extends Module {
 			
 			if (name && domNode.dataset.jsModule.indexOf(dasherize(name)) !== -1) {
 				options.app = options.app || this;
-				this.startComponent(item, options, domNode);	
-			}			
+				this.startComponent(item, options, domNode);
+				hasRegistered = true;
+			}
 		});
 
 		// register module anyways for later use
-		if (elementArray.length === 0) {
+		if (!hasRegistered) {
 			this.register(item);	
 		}		
 	}
