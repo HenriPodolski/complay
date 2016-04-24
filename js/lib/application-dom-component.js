@@ -5,7 +5,7 @@ import uniques from '../helpers/array/uniques';
 
 class ApplicationDomComponent extends Component {
 
-	set elements(moduleOptions = {}) {
+	set elements(moduleOptions) {
 
 		let contexts = [];
 		let elements = [];
