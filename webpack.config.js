@@ -70,7 +70,7 @@ module.exports = {
                 query: {
                     presets: ['react', 'es2015']
                 },
-                include: path.resolve(__dirname, 'js')
+                include: path.join(__dirname, 'js')
             }
         ]
     },

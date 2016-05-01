@@ -48,7 +48,7 @@ module.exports = {
   ],
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'conduit.js',
+    filename: 'conduit.min.js',
     publicPath: '/dist/'
   },
   resolve: {

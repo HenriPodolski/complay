@@ -5,6 +5,15 @@
 
 var webpack = require('karma-webpack');
 var path = require('path');
+var specDir = path.join(__dirname, '/test/spec/unit');
+var jsDir = path.join(__dirname, '/js');
+var specFilePattern = specDir + '/**/*.js';
+var jsFilePattern = jsDir + '/**/*.js';
+var preprocessors = {};
+var preprocessorActions = ['webpack', 'sourcemap']
+
+preprocessors[specFilePattern] = preprocessorActions;
+preprocessors[jsFilePattern] = preprocessorActions;
 
 module.exports = function(config) {
 	'use strict';
@@ -26,7 +35,7 @@ module.exports = function(config) {
 
 	// list of files / patterns to load in the browser
 	files: [
-		'./test/spec/unit/**/*.js'
+		specFilePattern
 	],
 
 	// list of files / patterns to exclude
@@ -40,10 +49,7 @@ module.exports = function(config) {
 	// cli runner port
 	runnerPort: 9100,
 
-	preprocessors: {
-		'../test/spec/unit/**/*.js': ['webpack', 'sourcemap'],
-		'../js/**/*.js': ['webpack', 'sourcemap']
-	},
+	preprocessors: preprocessors,
 
 	reporters: ['spec', 'coverage'],
 
@@ -57,6 +63,10 @@ module.exports = function(config) {
 	},
 
 	webpack: {
+		resolve: {
+			extensions: ['', '.js', '.jsx']
+		},
+		devtool: 'source-map',
 		module: {
 			loaders: [
 				{
@@ -67,8 +77,8 @@ module.exports = function(config) {
 						presets: ['react', 'es2015']
 					},
 					include: [
-						path.resolve(__dirname, 'js'),
-						path.resolve(__dirname, 'test/spec/unit')
+						specDir,
+						jsDir
 					]
 				}
 			],
@@ -76,7 +86,7 @@ module.exports = function(config) {
 				test: /\.jsx?$/,
 				exclude: /(node_modules|bower_components)/,
 				loaders: ['istanbul-instrumenter'],
-				include: path.resolve(__dirname, 'js')
+				include: jsDir
 			}]
 		}
 	},
