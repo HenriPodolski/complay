@@ -1,6 +1,8 @@
 // Karma configuration
 // http://karma-runner.github.io/0.12/config/configuration-file.html
 
+var webpack = require('karma-webpack');
+
 module.exports = function(config) {
 	'use strict';
 
@@ -14,10 +16,10 @@ module.exports = function(config) {
 		// testing framework to use (jasmine/mocha/qunit/...)
 		// as well as any additional frameworks (requirejs/chai/sinon/...)
 		frameworks: [
-				'mocha',
-				'chai',
-				'sinon',
-				'browserify'
+			'mocha',
+			'chai',
+			'sinon',
+			'browserify'
 		],
 
 		// list of files / patterns to load in the browser

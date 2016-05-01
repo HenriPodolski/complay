@@ -3,6 +3,9 @@
 // Generated on 2015-07-27 using
 // generator-karma 1.0.0
 
+var webpack = require('karma-webpack');
+var path = require('path');
+
 module.exports = function(config) {
 	'use strict';
 
@@ -11,21 +14,19 @@ module.exports = function(config) {
 	autoWatch: true,
 
 	// base path, that will be used to resolve files and exclude
-	basePath: '',
+	basePath: './',
 
 	// testing framework to use (jasmine/mocha/qunit/...)
 	// as well as any additional frameworks (requirejs/chai/sinon/...)
 	frameworks: [
 		'mocha',
 		'chai',
-		'sinon',
-		'browserify'
+		'sinon'
 	],
 
 	// list of files / patterns to load in the browser
 	files: [
-		'../../js/**/*.js',
-		'../spec/unit/**/*.js'
+		'./test/spec/unit/**/*.js'
 	],
 
 	// list of files / patterns to exclude
@@ -39,30 +40,48 @@ module.exports = function(config) {
 	// cli runner port
 	runnerPort: 9100,
 
-	watchify: {
-		poll: true
+	preprocessors: {
+		'../test/spec/unit/**/*.js': ['webpack', 'sourcemap'],
+		'../js/**/*.js': ['webpack', 'sourcemap']
 	},
 
-	browserify: {
-		debug: true,
-		transform: [
-			[
-				'babelify',
-				{
-					loose: 'all',
-					modules: 'common',
-					optional: []
-				}
-			]
+	reporters: ['spec', 'coverage'],
+
+	coverageReporter: {
+		dir: 'build/reports/coverage',
+		reporters: [
+			{ type: 'html', subdir: 'report-html' },
+			{ type: 'lcov', subdir: 'report-lcov' },
+			{ type: 'cobertura', subdir: '.', file: 'cobertura.txt' }
 		]
 	},
 
-	preprocessors: {
-		'../../js/**/*.js': ['browserify'],
-		'../spec/unit/**/*.js': ['browserify']
+	webpack: {
+		module: {
+			loaders: [
+				{
+					test: /\.jsx?$/,
+					loader: 'babel-loader',
+					exclude: /(node_modules|bower_components)/,
+					query: {
+						presets: ['react', 'es2015']
+					},
+					include: [
+						path.resolve(__dirname, 'js'),
+						path.resolve(__dirname, 'test/spec/unit')
+					]
+				}
+			],
+			postLoaders: [{
+				test: /\.jsx?$/,
+				exclude: /(node_modules|bower_components)/,
+				loaders: ['istanbul-instrumenter'],
+				include: path.resolve(__dirname, 'js')
+			}]
+		}
 	},
 
-	reporters: ['mocha'],
+	webpackMiddleware: { noInfo: true },
 
 	// Start these browsers, currently available:
 	// - Chrome
@@ -73,20 +92,22 @@ module.exports = function(config) {
 	// - PhantomJS
 	// - IE (only Windows)
 	browsers: [
-		"Chrome"
+		'Chrome'
 	],
 
 	// Which plugins to enable
 	plugins: [
-		"karma-mocha",
-		"karma-chai",
-		"karma-sinon",
-		"karma-browserify",
-		"karma-phantomjs-launcher",
-		"karma-chrome-launcher",
-		"karma-firefox-launcher",
-		"karma-ie-launcher",
-		"karma-mocha-reporter"
+		webpack,
+		'karma-mocha',
+		'karma-chai',
+		'karma-coverage',
+		'karma-sinon',
+		'karma-phantomjs-launcher',
+		'karma-chrome-launcher',
+		'karma-firefox-launcher',
+		'karma-ie-launcher',
+		'karma-sourcemap-loader',
+		'karma-spec-reporter'
 	],
 
 	// Continuous Integration mode
