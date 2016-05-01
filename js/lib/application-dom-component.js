@@ -115,9 +115,9 @@ class ApplicationDomComponent extends Component {
 				console.log('CONTEXT', ctx);
 
 				if (ctx.nodeType === Node.ELEMENT_NODE && ctx.dataset.jsModule) {
-					this.options.app.startComponents(mod, {context: ctx.parentElement}, true);	
+					this.options.app.startComponents(mod, {context: ctx.parentElement});
 				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
-					this.options.app.startComponents(mod, {context: ctx}, true);
+					this.options.app.startComponents(mod, {context: ctx});
 				}
 			});			
 		});		

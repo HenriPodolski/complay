@@ -157,7 +157,7 @@ class ApplicationFacade extends Module {
 	/**
 	 * 
 	 */
-	startComponents(item, options, observerStart) {
+	startComponents(item, options) {
 
 		let elementArray = [];
 
@@ -193,6 +193,12 @@ class ApplicationFacade extends Module {
 		}		
 	}
 
+	/**
+	 * @todo get rid of startComponents
+	 * - startComponents logic should be handled from appComponent
+	 * - parseOptions should be handled from appComponent
+	 * - example this.appComponent.createItem(item, options)
+	 */
 	startComponent(item, options, domNode) {
 
 		options.el = domNode;
