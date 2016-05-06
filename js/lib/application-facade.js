@@ -38,7 +38,7 @@ class ApplicationFacade extends Module {
 				Object.assign(options, {
 					app: this,
 					context: options.context || document,
-					moduleSelector: options.moduleSelector || '[data-js-module]'
+					moduleSelector: this.moduleSelector || '[data-js-module]'
 				})
 			);	
 		}		
@@ -181,7 +181,6 @@ class ApplicationFacade extends Module {
 			let name = item.name || item.es5name;
 			
 			if (name && domNode.dataset.jsModule.indexOf(dasherize(name)) !== -1) {
-				options.app = options.app || this;
 				this.startComponent(item, options, domNode);
 				hasRegistered = true;
 			}
@@ -203,6 +202,8 @@ class ApplicationFacade extends Module {
 
 		options.el = domNode;
 		options = Object.assign(this.parseOptions(options.el, item), options);
+		options.app = options.app || this;
+		options.moduleSelector = options.moduleSelector || this.options.moduleSelector;
 
 		let itemInstance = new item(options);
 
