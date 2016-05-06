@@ -38,11 +38,11 @@ class Service extends Base {
 		this.data = {};
 
 		// composing this with DefaultReducers via this.data
-		for (var method in DefaultReducers) {	
-			if (DefaultReducers.hasOwnProperty(method)) {
-				this.data[method] = DefaultReducers[method].bind(this);
-			}
-		}		
+		let composeMethods = ['reduce', 'filter', 'where', 'findByIndexes'];
+
+		for(let key in composeMethods) {
+			this.data[composeMethods[key]] = DefaultReducers[composeMethods[key]].bind(this);
+		}
 
 		this.lastCommitId = null;
 		this.commitIds = [];
@@ -150,7 +150,7 @@ class Service extends Base {
 		return fetchMethod.apply(this, arguments);
 	}
 
-	parse() {
+	parse(rawData) {
 		
 		let parseMethod = (this.options.strategy && this.options.strategy.parse) || this.fallback;
 

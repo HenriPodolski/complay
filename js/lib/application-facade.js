@@ -38,7 +38,7 @@ class ApplicationFacade extends Module {
 				Object.assign(options, {
 					app: this,
 					context: options.context || document,
-					moduleSelector: options.moduleSelector || '[data-js-module]'
+					moduleSelector: this.moduleSelector || '[data-js-module]'
 				})
 			);	
 		}		
@@ -140,6 +140,7 @@ class ApplicationFacade extends Module {
 		}
 
 		let registryItem = this._modules[this._modules.length - 1];
+
 		registryItem.running = true;
 
 		return registryItem;
@@ -156,7 +157,7 @@ class ApplicationFacade extends Module {
 	/**
 	 * 
 	 */
-	startComponents(item, options, observerStart) {
+	startComponents(item, options) {
 
 		let elementArray = [];
 
@@ -165,39 +166,44 @@ class ApplicationFacade extends Module {
 			item.es5name = item.prototype._name;
 		}
 
-		if (this.options.context && !options.context) {
-			// this application facade is limited to a specific dom element
-			options.context = this.options.context;
-		}
-
 		elementArray = domNodeArray(options.el);
 
 		if (elementArray.length === 0) {
 			
 			this.appComponent.elements = options;
-			elementArray = this.appComponent.elements;
+			elementArray = this.appComponent.newElements;
 		}
+
+		let hasRegistered = false;
 
 		elementArray.forEach((domNode) => {
 			
 			let name = item.name || item.es5name;
 			
 			if (name && domNode.dataset.jsModule.indexOf(dasherize(name)) !== -1) {
-				options.app = options.app || this;
-				this.startComponent(item, options, domNode);	
-			}			
+				this.startComponent(item, options, domNode);
+				hasRegistered = true;
+			}
 		});
 
 		// register module anyways for later use
-		if (elementArray.length === 0) {
+		if (!hasRegistered) {
 			this.register(item);	
 		}		
 	}
 
+	/**
+	 * @todo get rid of startComponents
+	 * - startComponents logic should be handled from appComponent
+	 * - parseOptions should be handled from appComponent
+	 * - example this.appComponent.createItem(item, options)
+	 */
 	startComponent(item, options, domNode) {
 
 		options.el = domNode;
 		options = Object.assign(this.parseOptions(options.el, item), options);
+		options.app = options.app || this;
+		options.moduleSelector = options.moduleSelector || this.options.moduleSelector;
 
 		let itemInstance = new item(options);
 

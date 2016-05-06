@@ -1,4 +1,5 @@
-import ajaxExtension from '../../../../../js/extensions/services/remote/ajax';
+import AjaxExtension from '../../../../../js/extensions/services/remote/ajax';
+import JsonParserExtension from '../../../../../js/extensions/services/parser/json';
 import Service from '../../../../../js/lib/service';
 import mix from '../../../../../js/helpers/object/mix';
 import chai from 'chai';
@@ -9,6 +10,7 @@ var asset = chai.assert;
 chai.should();
 
 let glob = {};
+let ajaxExtension;
 
 describe('Conduitjs JS Ajax Extension', ()=>{
 
@@ -22,6 +24,7 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				requests.push(xhr);
 			};
 
+			ajaxExtension = new AjaxExtension();
 			ajaxExtension.resource = {url: 'https://example.com/test'}
 		});
 
@@ -48,7 +51,8 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				requests.push(xhr);
 			};
 
-			ajaxExtension.resource = {url: 'https://example.com/test', method: 'GET'}
+			ajaxExtension = new AjaxExtension();
+			ajaxExtension.resource = {url: 'https://example.com/test'};
 		});
 
 		afterEach(function() {
@@ -61,8 +65,7 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				.then((res) => { 
 					expect(JSON.parse(res)).to.deep.equal({"id": 1, "name": "foo"}); 
 					done();
-				})
-				.catch((err) => { console.log(err); });
+				});
 			
 			expect(glob.requests.length).to.equal(1);
 			
@@ -75,7 +78,72 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 		});
 
 		it('should send data to the server', () => {
-			expect(false).to.equal('Todo: Implement this!');
+
+			class SomeAjaxServiceWithJsonParser extends mix(Service)
+				.with(AjaxExtension, JsonParserExtension) {};
+
+			let mixedObj = new SomeAjaxServiceWithJsonParser();
+
+			ajaxExtension.save({url: 'https://example.com/test'})
+				.then((res) => { 
+					expect(res).to.deep.equal({success: true}); 
+					done();
+				});
+
+			expect(glob.requests.length).to.equal(1);
+			
+			glob.requests[0].respond(200,
+				{"Content-Type": "application/json"},
+				'{"success": true}'
+			);
+		});
+	});
+
+	describe('fetch/save with Service', () => {
+
+		let ajaxService;
+
+		beforeEach(function() {
+			glob.xhr = sinon.useFakeXMLHttpRequest();
+			var requests = glob.requests = [];
+
+			glob.xhr.onCreate = function (xhr) {
+				requests.push(xhr);
+			};
+
+			class AjaxService extends mix(Service)
+				.with(AjaxExtension, JsonParserExtension) {}
+
+			ajaxService = new AjaxService({
+				resource: {
+					url: 'https://example.com/test'
+				}
+			});
+		});
+
+		afterEach(function() {
+			glob.xhr.restore();
+		});
+
+	    it('should fetch data from the server and apply the data to service', (done) => {
+			
+	    	let result = [{"id": 1, "name": "foo"}, {"id": 2, "name": "bar"}];
+
+			ajaxService.fetch({url: 'https://example.com/test', method: 'GET'})
+				.then((res) => {
+					ajaxService.create(res);
+				});
+
+			glob.requests[0].respond(200,
+				{"Content-Type": "application/json"},
+				JSON.stringify(result)
+			);
+
+			setTimeout(() => {
+				expect(ajaxService.toArray()).to.deep.equal(result);				
+				done();	
+			}, 100);
+			// sinon.assert.calledWith(callback, {"id": 1, "name": "foo"});
 		});
 	});
 });

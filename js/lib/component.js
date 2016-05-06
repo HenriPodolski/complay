@@ -48,6 +48,8 @@ class Component extends Base {
 
 		super(options);
 
+		this.moduleSelector = options.moduleSelector || '[data-js-module]';
+
 		this.mount();
 	}
 
@@ -137,9 +139,9 @@ class Component extends Base {
 		}
 
 		if (!this.el.dataset.jsModule) {
-			this.el.setAttribute('data-js-module', this.dashedName);
+			this.el.dataset.jsModule = this.dashedName;
 		} else if (this.el.dataset.jsModule.indexOf(this.dashedName) === -1) {
-			this.el.setAttribute('data-js-module', `${this.el.dataset.jsModule} ${this.dashedName}`);
+			this.el.dataset.jsModule = this.el.dataset.jsModule.length > 0 ? `,${this.dashedName}` : `${this.dashedName}`;
 		}
 
 		if (!this.el.componentUid) {
@@ -247,6 +249,11 @@ class Component extends Base {
 		this.undelegateVents();
 		this.undelegateEvents();
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
+	}
+
+	update() {
+
+		return this;
 	}
 
 	render() {
