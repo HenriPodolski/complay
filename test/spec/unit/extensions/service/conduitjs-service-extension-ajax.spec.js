@@ -51,7 +51,8 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				requests.push(xhr);
 			};
 
-			ajaxExtension.resource = {url: 'https://example.com/test'}
+			ajaxExtension = new AjaxExtension();
+			ajaxExtension.resource = {url: 'https://example.com/test'};
 		});
 
 		afterEach(function() {
@@ -103,7 +104,6 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 		let ajaxService;
 
 		beforeEach(function() {
-			
 			glob.xhr = sinon.useFakeXMLHttpRequest();
 			var requests = glob.requests = [];
 
@@ -118,7 +118,7 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 				resource: {
 					url: 'https://example.com/test'
 				}
-			});		
+			});
 		});
 
 		afterEach(function() {
@@ -129,7 +129,7 @@ describe('Conduitjs JS Ajax Extension', ()=>{
 			
 	    	let result = [{"id": 1, "name": "foo"}, {"id": 2, "name": "bar"}];
 
-			ajaxService.fetch()
+			ajaxService.fetch({url: 'https://example.com/test', method: 'GET'})
 				.then((res) => {
 					ajaxService.create(res);
 				});

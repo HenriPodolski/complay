@@ -137,9 +137,9 @@ class Component extends Base {
 		}
 
 		if (!this.el.dataset.jsModule) {
-			this.el.setAttribute('data-js-module', this.dashedName);
+			this.el.dataset.jsModule = this.dashedName;
 		} else if (this.el.dataset.jsModule.indexOf(this.dashedName) === -1) {
-			this.el.setAttribute('data-js-module', `${this.el.dataset.jsModule} ${this.dashedName}`);
+			this.el.dataset.jsModule = this.el.dataset.jsModule.length > 0 ? `,${this.dashedName}` : `${this.dashedName}`;
 		}
 
 		if (!this.el.componentUid) {

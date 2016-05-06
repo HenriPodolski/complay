@@ -74,7 +74,6 @@ describe('Conduitjs JS Component', ()=>{
 		});
 
 		it('should set attribute data-js-module when not present', () => {
-			
 			expect(component.el.dataset.jsModule).to.equal('component');
 		});
 

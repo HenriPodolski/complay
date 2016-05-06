@@ -12,8 +12,8 @@ let root = getGlobalObject();
 
 function generateName(obj) {
 		
-	if (obj.name) {
-		return obj.name;
+	if (obj._name) {
+		return obj._name;
 	}
 
 	return extractObjectName(obj);
@@ -21,16 +21,16 @@ function generateName(obj) {
 
 function generateDashedName(obj) {
 	
-	if (obj.dashedName) {
-		return obj.dashedName;
+	if (obj._dashedName) {
+		return obj._dashedName;
 	}
 
 	return dasherize(generateName(obj));
 }
 
 function generateUid(obj) {
-	if (obj.uid) {
-		return obj.uid;
+	if (obj._uid) {
+		return obj._uid;
 	}
 
 	return namedUid(generateName(obj));
