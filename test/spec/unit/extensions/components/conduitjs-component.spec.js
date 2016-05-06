@@ -32,11 +32,7 @@ describe('Conduitjs JS Component', ()=>{
 				</div>
 			`;
 
-			class TestComponent extends mix(Component).with(ItemSelectorToMembers) {
-				initialize() {
-					this.itemSelectorToMembers();
-				}
-			}
+			class TestComponent extends mix(Component).with(ItemSelectorToMembers) {}
 
 			component = new TestComponent({
 				el: testDom,
