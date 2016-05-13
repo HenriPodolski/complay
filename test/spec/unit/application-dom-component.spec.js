@@ -5,14 +5,14 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Application Dom Component', ()=>{
+describe('Complay JS Application Dom Component', ()=>{
 
 	let applicationComponent;
 	
 	describe('Start', ()=> {
 
 		beforeEach(() => {
-			// reset registered modules
+			// reset registered data
 			applicationComponent = new ApplicationDomComponent();
 		})
 

@@ -44,11 +44,11 @@ var path = require('path');
 
 module.exports = {
   entry: [
-    './js/conduit.js'
+    './js/complay.js'
   ],
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'conduit.min.js',
+    filename: 'complay.min.js',
     publicPath: '/dist/'
   },
   resolve: {

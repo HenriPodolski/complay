@@ -9,7 +9,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
+describe('Complay JS Application Facade with Application DOM Component', ()=>{
 
 	class Application extends ApplicationFacade {}
 	var application;
@@ -17,7 +17,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 	describe('Start and Registry', ()=> {
 
 		beforeEach(() => {
-			// reset registered modules
+			// reset registered data
 			application = new Application({
 				AppComponent: ApplicationDomComponent
 			});
@@ -83,7 +83,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 			expect(application.modules.length).to.equal(1);
 		});
 
-		it('should unregister all modules with the same name, when name is passed to destroy', () => {
+		it('should unregister all data with the same name, when name is passed to destroy', () => {
 			class AnotherModule extends Module {}
 
 			let app = new Application({
@@ -97,7 +97,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 			expect(app.modules.length).to.equal(0);
 		});
 		
-		it('should unregister all modules if * is passed to unregister', () => {
+		it('should unregister all data if * is passed to unregister', () => {
 			class FirstModule extends Module {}
 			class SecondModule extends Module {}
 			class ThirdModule extends Module {}
@@ -110,7 +110,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 		});
 		
 
-		it('should register all modules given to it\'s constructor', () => {
+		it('should register all data given to it\'s constructor', () => {
 			class FirstModule extends Module {}
 			class SecondModule extends Module {}
 			class ThirdModule extends Module {}
@@ -123,7 +123,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 			expect(app.modules.length).to.equal(3);
 		});
 
-		it('should register modules with the correct type: module, service or component', () => {
+		it('should register data with the correct type: module, service or component', () => {
 			class SomeModule extends Module {}
 			class SomeService extends Service {}
 			class SomeComponent extends Component {}
@@ -146,7 +146,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 	describe('Start/Stop', ()=> {
 
 		beforeEach(() => {
-			// reset registered modules
+			// reset registered data
 			application = new Application({AppComponent: ApplicationDomComponent});
 		})
 
@@ -191,7 +191,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 
 		// 	application.start({module: SomeService, options: {autostart: true, data: ['val-1', 'val-2', 'val-3']}});
 
-		// 	expect(application.modules[0].module.length).to.equal(3);
+		// 	expect(application.data[0].module.length).to.equal(3);
 		// });
 	});
 
@@ -203,7 +203,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 		class ComponentFirst extends Component {}
 		class ComponentSecond extends Component {}
 
-		it('should initialize multiple component modules for one container', () => {
+		it('should initialize multiple component data for one container', () => {
 
 			html = `
 				<div data-js-module="component-first, component-second">
@@ -225,7 +225,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 			expect(application.modules.length).to.equal(2);
 		});
 
-		it('should start component modules automatically, when observe option is set to true and new nodes are added', (done) => {
+		it('should start component data automatically, when observe option is set to true and new nodes are added', (done) => {
 			
 			application = new Application({
 				AppComponent: ApplicationDomComponent,
@@ -248,7 +248,7 @@ describe('Conduitjs JS Application Facade with Application DOM Component', ()=>{
 			}, 0);			
 		});
 
-		it('should stop component modules automatically, when observe option is set to true and nodes are removed', (done) => {
+		it('should stop component data automatically, when observe option is set to true and nodes are removed', (done) => {
 			
 			html = `
 				<div data-js-module="component-first" data-js-options="{'test': true}">

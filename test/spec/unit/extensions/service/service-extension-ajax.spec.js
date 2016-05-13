@@ -12,7 +12,7 @@ chai.should();
 let glob = {};
 let ajaxExtension;
 
-describe('Conduitjs JS Ajax Extension', ()=>{
+describe('Complay JS Ajax Extension', ()=>{
 
 	describe('base', () => {
 		beforeEach(function() {

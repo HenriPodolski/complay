@@ -8,25 +8,25 @@ import ApplicationDomComponent from './lib/application-dom-component';
 import Plite from 'plite';
 
 let root = getGlobalObject();
-let Conduit = root.Conduit || {};
+let Complay = root.Complay || {};
 
 // shim promises
 !root.Promise && (root.Promise = Plite);
 // export ApplicationFacade Class for creating multicore apps
-Conduit.ApplicationFacade = ApplicationFacade;
-Conduit.ApplicationFacade.extend = extend;
+Complay.ApplicationFacade = ApplicationFacade;
+Complay.ApplicationFacade.extend = extend;
 // export ApplicationDomComponent Class for creating dom views
-Conduit.ApplicationDomComponent = ApplicationDomComponent;
-Conduit.ApplicationDomComponent.extend = extend;
+Complay.ApplicationDomComponent = ApplicationDomComponent;
+Complay.ApplicationDomComponent.extend = extend;
 // export Module Class
-Conduit.Module = Module;
-Conduit.Module.extend = extend;
+Complay.Module = Module;
+Complay.Module.extend = extend;
 // export Service Class
-Conduit.Service = Service;
-Conduit.Service.extend = extend;
+Complay.Service = Service;
+Complay.Service.extend = extend;
 // export Component Class
-Conduit.Component = Component;
-Conduit.Component.extend = extend;
+Complay.Component = Component;
+Complay.Component.extend = extend;
 
 // replace or create in global namespace
-root.Conduit = Conduit;
+root.Complay = Complay;
