@@ -75,6 +75,12 @@ class Component extends Base {
 			this._domEvents = [];
 
 			this.ensureElement(this.options);
+
+			// call if extension itemSelectorToMembers is mixed in
+			if (typeof this.itemSelectorToMembers === 'function') {
+				this.itemSelectorToMembers();
+			}
+
 			this.initialize(this.options);
 			this.delegateEvents();
 			this.delegateVents();

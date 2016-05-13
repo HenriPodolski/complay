@@ -5,7 +5,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Extension DOM Selector', ()=>{
+describe('Complay JS Extension DOM Selector', ()=>{
 
 	let domNode = document.createElement('div');
 

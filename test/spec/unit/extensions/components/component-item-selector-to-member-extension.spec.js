@@ -10,7 +10,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Component', ()=>{
+describe('Complay JS ItemSelectorToMembers Extension', ()=>{
 	
 	var component;
 
@@ -32,11 +32,7 @@ describe('Conduitjs JS Component', ()=>{
 				</div>
 			`;
 
-			class TestComponent extends mix(Component).with(ItemSelectorToMembers) {
-				initialize() {
-					this.itemSelectorToMembers();
-				}
-			}
+			class TestComponent extends mix(Component).with(ItemSelectorToMembers) {}
 
 			component = new TestComponent({
 				el: testDom,

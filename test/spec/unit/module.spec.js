@@ -5,7 +5,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Module', ()=>{
+describe('Complay JS Module', ()=>{
 
 	describe('Module Base Class', ()=>{
 

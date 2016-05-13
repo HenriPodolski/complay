@@ -5,7 +5,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Types', ()=>{	
+describe('Complay JS Types', ()=>{	
 
 	it('should have a module type', () => {
 		expect(MODULE_TYPE).to.equal('module');

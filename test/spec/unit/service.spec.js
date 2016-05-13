@@ -5,7 +5,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Service', () => {
+describe('Complay JS Service', () => {
 
 	describe('Service Base Class', () => {
 

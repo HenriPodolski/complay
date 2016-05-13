@@ -10,7 +10,7 @@ var expect = chai.expect;
 var asset = chai.assert;
 chai.should();
 
-describe('Conduitjs JS Component', ()=>{
+describe('Complay JS Component', ()=>{
 	
 	var component;
 	var myComponent;
