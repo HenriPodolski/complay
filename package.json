@@ -8,7 +8,7 @@
     "test": "karma start --single-run --no-auto-watch karma.config.production.js",
     "tdd": "karma start karma.config.js",
     "build": "webpack --config webpack.config.production.js",
-    "watch": "webpack --config webpack.config.js",
+    "build-dev": "webpack --config webpack.config.js",
     "lint": "eslint ."
   },
   "author": "",
