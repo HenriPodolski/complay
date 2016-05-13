@@ -10,4 +10,7 @@ let root = getGlobalObject();
 // shim promises
 !root.Promise && (root.Promise = Plite);
 
-export {Module, Service, Component, ApplicationFacade};
+export {
+    Module, Service, Component,
+    ApplicationFacade
+};
