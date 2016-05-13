@@ -24,9 +24,11 @@ Unique features through extensions or compositions:
 * scoped css (in development)
 * two way data binding (in development)
 * integration of templating engine of your choice
-* jQuery integration
+* jQuery or similar dom library integration
 * reactjs integration (proof of concept)
 * webcomponents integration (proof of concept)
+* backbone/exoskeleton integration (proof of concept)
+
 
 By-products:
 * an extensive and useful collection of helpers, used for complay and ready to be used in our project code
