@@ -43,12 +43,13 @@ var webpack = require('webpack');
 var path = require('path');
 
 module.exports = {
-  entry: [
-    './js/complay.js'
-  ],
+  entry: {
+    'complay': './js/complay.js',
+    'complay.es5': './js/complay.es5.js'
+  },
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'complay.min.js',
+    filename: '[name].min.js',
     publicPath: '/dist/'
   },
   resolve: {
