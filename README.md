@@ -22,7 +22,7 @@ Unique features through extensions or compositions:
 * tiny dom abstraction library reduced to the bare minimum of our needs (jquery API but no drop in replacement)
 * game or animation loop control flow (in development)
 * scoped css (in development)
-* two way data binding (in development)
+* two way data binding
 * integration of templating engine of your choice
 * jQuery or similar dom library integration
 * reactjs integration (proof of concept)
