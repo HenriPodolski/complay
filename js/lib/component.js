@@ -49,6 +49,10 @@ class Component extends Base {
 		super(options);
 
 		this.moduleSelector = options.moduleSelector || '[data-js-module]';
+
+		if (!options.app) {
+			this.mount();
+		}
 	}
 
 	willMount() {
