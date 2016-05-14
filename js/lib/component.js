@@ -84,6 +84,8 @@ class Component extends Base {
 			}
 
 			this.initialize(this.options);
+			this.bindCustomEvents();
+			this.bindEvents();
 			this.delegateEvents();
 			this.delegateVents();
 			this.didMount();
@@ -168,6 +170,13 @@ class Component extends Base {
 		this.delegateEvents();
 		
 		return this;
+	}
+
+	/**
+	 * override
+	 */
+	bindEvents() {
+
 	}
 
 	delegateEvents(events) {
