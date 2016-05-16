@@ -1,7 +1,7 @@
-import AjaxExtension from '../../../../../js/extensions/services/remote/ajax';
-import JsonParserExtension from '../../../../../js/extensions/services/parser/json';
-import Service from '../../../../../js/lib/service';
-import mix from '../../../../../js/helpers/object/mix';
+import AjaxExtension from '../../../../../extensions/services/remote/ajax';
+import JsonParserExtension from '../../../../../extensions/services/parser/json';
+import Service from '../../../../../lib/service';
+import mix from '../../../../../helpers/object/mix';
 import chai from 'chai';
 import sinon from 'sinon';
 

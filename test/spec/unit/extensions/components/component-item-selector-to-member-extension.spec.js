@@ -1,10 +1,10 @@
 import chai from 'chai';
-import mix from '../../../../../js/helpers/object/mix';
-import Component from '../../../../../js/lib/component';
-import DomSelector from '../../../../../js/extensions/dom/dom-selector';
-import Vent from '../../../../../js/extensions/vent/vent';
-import Template from '../../../../../js/extensions/template/handlebars';
-import ItemSelectorToMembers from '../../../../../js/extensions/components/item-selector-to-members';
+import mix from '../../../../../helpers/object/mix';
+import Component from '../../../../../lib/component';
+import DomSelector from '../../../../../extensions/dom/dom-selector';
+import Vent from '../../../../../extensions/vent/vent';
+import Template from '../../../../../extensions/template/handlebars';
+import ItemSelectorToMembers from '../../../../../extensions/components/item-selector-to-members';
 
 var expect = chai.expect;
 var asset = chai.assert;

@@ -44,8 +44,8 @@ var path = require('path');
 
 module.exports = {
   entry: {
-    'complay': './js/complay.js',
-    'complay.es5': './js/complay.es5.js'
+    'complay': './complay.js',
+    'complay.es5': './complay.es5.js'
   },
   output: {
     path: path.join(__dirname, 'dist'),

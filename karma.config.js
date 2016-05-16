@@ -6,14 +6,20 @@
 var webpack = require('karma-webpack');
 var path = require('path');
 var specDir = path.join(__dirname, '/test/spec/unit');
-var jsDir = path.join(__dirname, '/js');
+var libDir = path.join(__dirname, '/lib');
+var extensionsDir = path.join(__dirname, '/extensions');
+var helpersDir = path.join(__dirname, '/helpers');
 var specFilePattern = specDir + '/**/*.js';
-var jsFilePattern = jsDir + '/**/*.js';
+var libFilePattern = libDir + '/**/*.js';
+var extensionsFilePattern = extensionsDir + '/**/*.js';
+var helpersFilePattern = helpersDir + '/**/*.js';
 var preprocessors = {};
 var preprocessorActions = ['webpack', 'sourcemap']
 
 preprocessors[specFilePattern] = preprocessorActions;
-preprocessors[jsFilePattern] = preprocessorActions;
+preprocessors[libFilePattern] = preprocessorActions;
+preprocessors[extensionsFilePattern] = preprocessorActions;
+preprocessors[helpersFilePattern] = preprocessorActions;
 
 module.exports = function(config) {
 	'use strict';
@@ -78,7 +84,9 @@ module.exports = function(config) {
 					},
 					include: [
 						specDir,
-						jsDir
+						helpersDir,
+						extensionsDir,
+						libDir
 					]
 				}
 			],
@@ -86,7 +94,11 @@ module.exports = function(config) {
 				test: /\.jsx?$/,
 				exclude: /(node_modules|bower_components)/,
 				loaders: ['istanbul-instrumenter'],
-				include: jsDir
+				include: [
+					helpersDir,
+					extensionsDir,
+					libDir
+				]
 			}]
 		}
 	},

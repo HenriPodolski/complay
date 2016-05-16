@@ -1,5 +1,5 @@
 import chai from 'chai';
-import Service from '../../../js/lib/service';
+import Service from '../../../lib/service';
 
 var expect = chai.expect;
 var asset = chai.assert;
