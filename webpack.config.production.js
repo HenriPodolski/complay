@@ -78,7 +78,14 @@ module.exports = {
         query: {
           presets: ['react', 'es2015']
         },
-        include: path.resolve(__dirname, 'js')
+        include: [
+          path.join(__dirname, 'helpers'),
+          path.join(__dirname, 'extensions'),
+          path.join(__dirname, 'lib'),
+          path.join(__dirname, 'default-config.js'),
+          path.join(__dirname, 'complay.js'),
+          path.join(__dirname, 'complay.es5.js')
+        ]
       }
     ]
   },
