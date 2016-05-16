@@ -13,10 +13,17 @@ logs
 results
 
 npm-debug.log
-node_modules
 .sass-cache
 .idea
 bower_components
 .DS_Store
-build
-/dist/
+
+.idea/
+build/
+docs/
+extensions/
+helpers/
+lib/
+node_modules/
+test/
+./*
