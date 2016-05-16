@@ -1,4 +1,4 @@
-import DomSelector from '../../../../js/extensions/dom/dom-selector';
+import DomSelector from '../../../../extensions/dom/dom-selector';
 import chai from 'chai';
 
 var expect = chai.expect;

@@ -1,5 +1,5 @@
 import chai from 'chai';
-import {SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE} from '../../../js/lib/types';
+import {SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE} from '../../../lib/types';
 
 var expect = chai.expect;
 var asset = chai.assert;

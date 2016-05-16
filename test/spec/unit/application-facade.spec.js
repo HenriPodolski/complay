@@ -1,9 +1,9 @@
 import chai from 'chai';
-import ApplicationFacade from '../../../js/lib/application-facade';
-import ApplicationDomComponent from '../../../js/lib/application-dom-component';
-import Module from '../../../js/lib/module';
-import Component from '../../../js/lib/component';
-import Service from '../../../js/lib/service';
+import ApplicationFacade from '../../../lib/application-facade';
+import ApplicationDomComponent from '../../../lib/application-dom-component';
+import Module from '../../../lib/module';
+import Component from '../../../lib/component';
+import Service from '../../../lib/service';
 
 var expect = chai.expect;
 var asset = chai.assert;

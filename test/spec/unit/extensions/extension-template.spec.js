@@ -1,4 +1,4 @@
-import Handlebars from '../../../../js/extensions/template/handlebars';
+import Handlebars from '../../../../extensions/template/handlebars';
 import chai from 'chai';
 
 var expect = chai.expect;

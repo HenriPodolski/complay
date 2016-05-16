@@ -1,5 +1,5 @@
 import chai from 'chai';
-import TwoWayDataBind from '../../../../../js/extensions/data/two-way-data-bind';
+import TwoWayDataBind from '../../../../../extensions/data/two-way-data-bind';
 
 var expect = chai.expect;
 var asset = chai.assert;

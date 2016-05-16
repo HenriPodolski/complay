@@ -1,5 +1,5 @@
 import chai from 'chai';
-import ApplicationDomComponent from '../../../js/lib/application-dom-component';
+import ApplicationDomComponent from '../../../lib/application-dom-component';
 
 var expect = chai.expect;
 var asset = chai.assert;

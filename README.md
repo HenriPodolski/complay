@@ -22,15 +22,34 @@ Unique features through extensions or compositions:
 * tiny dom abstraction library reduced to the bare minimum of our needs (jquery API but no drop in replacement)
 * game or animation loop control flow (in development)
 * scoped css (in development)
-* two way data binding (in development)
+* two way data binding
 * integration of templating engine of your choice
-* jQuery integration
+* jQuery or similar dom library integration
 * reactjs integration (proof of concept)
 * webcomponents integration (proof of concept)
+* backbone/exoskeleton integration (proof of concept)
 
 By-products:
 * an extensive and useful collection of helpers, used for complay and ready to be used in our project code
 * a set of polyfills, which let's you use features that are not implemented in all JavaScript engines yet
+
+### Getting started
+When using a js packager like browerify or webpack with babel, we will install complay using --save-dev
+```bash
+npm install complay --save-dev
+```
+Example: [Form Example](https://github.com/complayjs/examples/blob/master/src/examples/canvas-form-data/js/main.js)
+
+It is possible but **not recommended for production** to use a pre-built es5 version. Use this if you want to try out complay.
+```bash
+npm install complay --save
+```
+and in your HTML document include:
+```html
+<script src="node_modules/complay/dist/complay.es5.js"></script>
+```
+In the [examples directory](https://github.com/complayjs/examples/tree/master/src/examples/basic-es5-component) you will find
+an example on how to use this.
 
 ### Further information
 To be honest, some things like for example templating, you nearly implement on your own. But we provide a recommended documented way to dock this onto complay.
@@ -38,9 +57,9 @@ It is possible that we use this in an ES5 environment via dist/complay.js.
 But functionalities are limited and some will not work.
 An ES6 setup which imports the files might work much better.
 
-Version: 0.0.1
+Version: 0.0.7
 Our library is under active development and things might change. As soon as we think
-that our API is stable, we will release a major version.
+that our API is rock solid, we will release a major version.
 
 ### Todos
 Documentation Version: tbd.
@@ -49,7 +68,7 @@ Work in progress. Write "how to" documentation!:
 * How to extend or compose with complay (documentation, examples)
 * How to make architectural decisions, for building our stuff on top of complay?
 * How to contribute to complay base library?
-* How to contribute to complay helpers and extension?
+* How to contribute to complay helpers, extension and generics?
 
 ### Definitions
 #### Modules

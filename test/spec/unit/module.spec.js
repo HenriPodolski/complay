@@ -1,5 +1,5 @@
 import chai from 'chai';
-import Module from '../../../js/lib/module';
+import Module from '../../../lib/module';
 
 var expect = chai.expect;
 var asset = chai.assert;
