@@ -1,5 +1,5 @@
 import chai from 'chai';
-import {SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE} from '../../../lib/types';
+import {MODEL_TYPE, SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE} from '../../../lib/types';
 
 var expect = chai.expect;
 var asset = chai.assert;
@@ -17,5 +17,9 @@ describe('Complay JS Types', ()=>{
 
 	it('should have a component type', () => {
 		expect(COMPONENT_TYPE).to.equal('component');
-	});	
+	});
+
+	it('should have a model type', () => {
+		expect(MODEL_TYPE).to.equal('model');
+	});
 });

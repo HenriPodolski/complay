@@ -1,9 +1,16 @@
 import AjaxExtension from '../../../../../extensions/services/remote/ajax';
 import JsonParserExtension from '../../../../../extensions/services/parser/json';
 import Service from '../../../../../lib/service';
+import getGlobalObject from '../../../../../helpers/environment/get-global-object';
 import mix from '../../../../../helpers/object/mix';
+import Plite from 'plite';
 import chai from 'chai';
 import sinon from 'sinon';
+
+let root = getGlobalObject();
+
+// shim promises
+!root.Promise && (root.Promise = Plite);
 
 var expect = chai.expect;
 var asset = chai.assert;

@@ -1,5 +1,6 @@
 import chai from 'chai';
 import Service from '../../../lib/service';
+import Model from '../../../lib/model';
 
 var expect = chai.expect;
 var asset = chai.assert;
@@ -7,7 +8,7 @@ chai.should();
 
 describe('Complay JS Service', () => {
 
-	describe('Service Base Class', () => {
+	describe('Base Class', () => {
 
 		class SomeService extends Service {}
 
@@ -31,7 +32,7 @@ describe('Complay JS Service', () => {
 		});	
 	});
 
-	describe('Service data handling capabilities', () => {
+	describe('data handling capabilities', () => {
 
 		class SomeService extends Service {}
 
@@ -240,7 +241,7 @@ describe('Complay JS Service', () => {
 		});
 	});	
 
-	describe('Service data reducing and transforming capabilities', () => {
+	describe('data reducing and transforming capabilities', () => {
 
 		class SomeService extends Service {}
 
@@ -327,7 +328,59 @@ describe('Complay JS Service', () => {
 		});
 	});
 
-	describe('Service fetch and save injection', () => {
+	describe('Model reference', () => {
+
+		class SomeModel extends Model {}
+
+		class SomeService extends Service {
+			get Model() {
+				return SomeModel;
+			}
+		}
+
+		let someService;
+		let data;
+
+		beforeEach(() => {
+
+			data = [
+				{
+					id: 1,
+					value: [1,2,3,4],
+					type: 'array'
+				},
+				{
+					id: 2,
+					value: 'some text',
+					type: 'string'
+				},
+				{
+					id: 3,
+					value: true,
+					type: 'boolean'
+				}
+			];
+
+			someService = new SomeService({data});
+		})
+
+		it('should use a given model', () => {
+
+			expect(someService[0]).to.be.instanceof(SomeModel);
+		});
+
+		it('should assign all values to the model', () => {
+
+			expect(someService[0].data.id).to.equal(1);
+		});
+
+		it('should can use where when datasets are models', () => {
+
+			expect(someService.data.where({id: 3})[0].type).to.equal('boolean');
+		});
+	});
+
+	describe('fetch and save injection', () => {
 
 		class SomeService extends Service {}
 

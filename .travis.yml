@@ -1,0 +1,20 @@
+language: node_js
+sudo: false
+node_js:
+- '4'
+- '5'
+- '6'
+git:
+  submodules: true
+branches:
+  only:
+  - master
+  - develop
+deploy:
+  provider: npm
+  email: henrip@gmail.com
+  api_key:
+    secure: ItR8NzSeIxE0rlMRg4B44rdAK+6mkaEtX4CVhTVSnh7ycOBDpzIVDKZC526vgqP7+2zkmKm49EiuDmw5yode2s4aCMSgucx3oVf1px9DxZsEpIVM9AiemQSscRtRPMptxVoZmkXv1KHIi5sfjtiaTpLVIZwAwYXcVhnje1SB9WPukpYRWc3KBOLaUgg1PMjc32UmY3EcqegakpXv4jcJbNgzAnoepH5guyj32XaMx/QQXxWyIELQJwD7MrW+6Xb39DxTGRfZEGzeRknL13h0vX6Xyfvu/e7TuN7FWWkrdtdQVK62npTgRdlHSyFV5t4P9dnqRFHPI9EStiXVI8fJIIqbq4DUOJvnR1NkcIYgZ00fNePbgOCZSLQex7h4Ntb5aAeuY5QE+2QP8QKyX4TXmnBDghOsB2tItTNjJbH3IMje6zR7K7s5OaVHb4dQ1pjHyD/aOgYOZWp64xMo2xTtfnZz0p5F4XPvZ4uygo0XTM4NqFygTwmUFv4dIF7E90Moso282+RDamhhbhREPPHMQ68D7M/XGqP4koDHH0QkM0lndM3jeru/QVEepnEWpkGLU8RrRxig3f0hJ1c2EtKlumvujNHDvATxaxkr26Q6g0xM2WY67ouvmWOBD2iCtvC6bhUCRqs9O5ROB5EP+CEeWjK9sE9UIA2YvcxCwI1xaeU=
+  on:
+    tags: true
+    repo: HenriPodolski/complay

@@ -18,12 +18,10 @@ npm-debug.log
 bower_components
 .DS_Store
 
-.idea/
-build/
-docs/
-extensions/
-helpers/
-lib/
-node_modules/
-test/
-./*
+build
+docs
+extensions
+helpers
+lib
+node_modules
+test

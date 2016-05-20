@@ -48,9 +48,10 @@ module.exports = {
     'complay.es5': './complay.es5.js'
   },
   output: {
-    path: path.join(__dirname, 'dist'),
+    path: path.join(__dirname, 'dist/browser'),
     filename: '[name].min.js',
-    publicPath: '/dist/'
+    publicPath: '/dist/browser',
+    umdNamedDefine: true
   },
   resolve: {
     extensions: ['', '.js', '.jsx']
