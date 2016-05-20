@@ -1,6 +1,6 @@
 [submodule "extensions"]
 	path = extensions
-	url = git@github.com:complay/extensions.git
+	url = https://github.com/complayjs/extensions.git
 [submodule "helpers"]
 	path = helpers
-	url = git@github.com:complay/helpers.git
+	url = https://github.com/complayjs/helpers.git
