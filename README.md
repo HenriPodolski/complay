@@ -34,9 +34,9 @@ By-products:
 * a set of polyfills, which let's you use features that are not implemented in all JavaScript engines yet
 
 ### Getting started
-When using a js packager like browerify or webpack with babel, we will install complay using --save-dev
+When using a js packager like browerify or webpack with babel, we will install complay using
 ```bash
-npm install complay --save-dev
+npm install complay --save
 ```
 Example: [Form Example](https://github.com/complayjs/examples/blob/master/src/examples/canvas-form-data/js/main.js)
 
@@ -57,7 +57,7 @@ It is possible that we use this in an ES5 environment via dist/complay.js.
 But functionalities are limited and some will not work.
 An ES6 setup which imports the files might work much better.
 
-Version: 0.0.26
+Version: 0.0.27
 Our library is under active development and things might change. As soon as we think
 that our API is rock solid, we will release a major version.
 
