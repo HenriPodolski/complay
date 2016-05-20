@@ -116,17 +116,9 @@ Our helpers submodule located in js/helpers gives use the tools and polyfills we
 ```
 npm install
 ```
-Run dev server:
-```
-grunt
-```
 Run unit tests:
 ```
-grunt unit-test
-```
-Build using browserify:
-```
-grunt build
+npm run tdd
 ```
 
 ### License(s)
