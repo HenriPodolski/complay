@@ -7,7 +7,7 @@ chai.should();
 
 describe('Complay JS Module', ()=>{
 
-	describe('Module Base Class', ()=>{
+	describe('Base Class', ()=>{
 
 		it('should have a static getter property type', () => {
 			expect(Module).to.have.property('type');
