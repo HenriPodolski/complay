@@ -1,6 +1,7 @@
 import getGlobalObject from './helpers/environment/get-global-object';
 import extend from './helpers/object/extend';
 import Module from './lib/module';
+import Model from './lib/model';
 import Service from './lib/service';
 import Component from './lib/component';
 import ApplicationFacade from './lib/application-facade';
@@ -21,6 +22,9 @@ Complay.ApplicationDomComponent.extend = extend;
 // export Module Class
 Complay.Module = Module;
 Complay.Module.extend = extend;
+// export Module Class
+Complay.Model = Model;
+Complay.Model.extend = extend;
 // export Service Class
 Complay.Service = Service;
 Complay.Service.extend = extend;

@@ -1,6 +1,8 @@
 dist/*
+build/*
 node_modules/*
 **/node_modules/*
 test/*
 *.config.js
 *.config.production.js
+jquery*.js
