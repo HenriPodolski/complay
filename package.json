@@ -1,6 +1,6 @@
 {
   "name": "complay",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Complay is a flexible JavaScript architecture library which let's us build our own framework/stack as needed.",
   "main": "dist/complay.js",
   "files": [
