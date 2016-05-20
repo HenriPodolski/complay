@@ -1,4 +1,4 @@
-## complay [![Build Status](https://travis-ci.org/HenriPodolski/complay.svg?branch=develop)](https://travis-ci.org/HenriPodolski/complay)
+## complay [![Build Status](https://travis-ci.org/HenriPodolski/complay.svg?branch=master)](https://travis-ci.org/HenriPodolski/complay)
 
 complay is a flexible JavaScript architecture library which let's us build our own framework/stack as needed.
 Please be aware of the need to have a deep understanding of JavaScript, knowledge of ECMAScript specification and JavaScript Design Patterns in order to benefit from it's entire functionality. Consider complay to be a pro tool with a documented way for combining your own project framework, library or API. The outcome could easyly be used by JavaScript developers of all skill levels. To get us started right away, we have put together a standard package within js/complay.js (transpiled, bundled and gzipped < 10 KB) with some exquisite defaults.
