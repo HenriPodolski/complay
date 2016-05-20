@@ -1,7 +1,6 @@
-
 [submodule "extensions"]
 	path = extensions
-	url = git@github.com:conduitjs/extensions.git
+	url = git@github.com:complay/extensions.git
 [submodule "helpers"]
 	path = helpers
-	url = git@github.com:conduitjs/helpers.git
+	url = git@github.com:complay/helpers.git
