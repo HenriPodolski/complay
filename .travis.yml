@@ -6,10 +6,6 @@ node_js:
 - '6'
 git:
   submodules: true
-branches:
-  only:
-  - master
-  - develop
 deploy:
   provider: npm
   email: henrip@gmail.com
