@@ -1,6 +1,8 @@
 import chai from 'chai';
 import mix from '../../../helpers/object/mix';
 import Component from '../../../lib/component';
+import Model from '../../../lib/model';
+import Service from '../../../lib/service';
 import DomSelector from '../../../extensions/dom/dom-selector';
 import Vent from '../../../extensions/vent/vent';
 import Template from '../../../extensions/template/handlebars';
@@ -15,7 +17,7 @@ describe('Complay JS Component', ()=>{
 	var component;
 	var myComponent;
 
-	describe('Component Base Class', ()=>{
+	describe('Base Class', ()=>{
 
 		beforeEach(() => {
 			component = new Component({
@@ -49,7 +51,7 @@ describe('Complay JS Component', ()=>{
 		});
 	});
 
-	describe('Component Class DOM capabilities', ()=>{
+	describe('DOM capabilities', ()=>{
 
 		beforeEach(() => {
 			component = new Component({
@@ -85,8 +87,55 @@ describe('Complay JS Component', ()=>{
 			expect(myComponent.el.componentUid[0]).to.equal(myComponent.uid);
 		});
 	});
+	
+	describe('View Model, Model and Service', () => {
 
-	describe('Component Class ItemSelector to Members', ()=>{
+		class TestViewModel extends Model {}
+
+		class TestModel extends Model {}
+
+		class TestService extends Service {}
+
+		class TestComponent extends Component {}
+
+		beforeEach(() => {
+
+			component = new TestComponent({
+				viewModel: new TestViewModel(),
+				model: new TestModel(),
+				service: new TestService()
+			});
+		});
+
+		it('should have viewModel property', ()=> {
+
+			expect(component).to.have.property('viewModel');
+		});
+
+		it('should have an instance of a view model, if passed via viewModel option', () => {
+			expect(component.viewModel).to.be.instanceof(TestViewModel);
+		});
+
+		it('should have model property', ()=> {
+
+			expect(component).to.have.property('model');
+		});
+
+		it('should have an instance of a service, if passed via service option', () => {
+			expect(component.model).to.be.instanceof(TestModel);
+		});
+
+		it('should have service property', ()=> {
+
+			expect(component).to.have.property('service');
+		});
+
+		it('should have an instance of a service, if passed via service option', () => {
+			expect(component.service).to.be.instanceof(TestService);
+		});
+	});
+
+	describe('ItemSelector to Members', ()=>{
 
 		beforeEach(() => {
 
