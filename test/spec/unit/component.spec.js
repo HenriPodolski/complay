@@ -77,8 +77,8 @@ describe('Complay JS Component', ()=>{
 			expect(myComponent.el.tagName).to.equal('ARTICLE');
 		});
 
-		it('should set attribute data-js-module when not present', () => {
-			expect(component.el.dataset.jsModule).to.equal('component');
+		it('should set attribute data-js-component when not present', () => {
+			expect(component.el.dataset.jsComponent).to.equal('component');
 		});
 
 		it('should set property componentUid to the el', () => {
@@ -132,6 +132,54 @@ describe('Complay JS Component', ()=>{
 
 		it('should have an instance of a service, if passed via service option', () => {
 			expect(component.service).to.be.instanceof(TestService);
+		});
+	});
+
+	describe('DOM options parsing', () => {
+
+		let someComponent, otherComponent, someInnerComponent, otherInnerComponent;
+
+		beforeEach(() => {
+
+			let testDom = document.createElement('div');
+
+			testDom.innerHTML = `
+				<div data-js-component="some-component other-component" data-js-options="{'some-component': {'test': 1}, 'other-component': {'test': 2}}">
+					<div data-js-component="some-inner-component other-inner-component">
+						<script type="text/plain" data-js-options>
+							{
+								"some-inner-component": {
+									"test": 3
+								},
+								"other-inner-component": {
+									"test": 4
+								}
+							}
+						</script>					
+					</div>
+				</div>
+			`;
+
+			class SomeComponent extends Component {}
+			class OtherComponent extends Component {}
+			class SomeInnerComponent extends Component {}
+			class OtherInnerComponent extends Component {}
+
+
+			someComponent = new SomeComponent({context: testDom});
+			otherComponent = new OtherComponent({context: testDom});
+			someInnerComponent = new SomeInnerComponent({context: testDom});
+			otherInnerComponent = new OtherInnerComponent({context: testDom});
+		});
+
+		it('should parse component specific options from data-js-options attribute', ()=> {
+			expect(someComponent.options.test).to.equal(1);
+			expect(otherComponent.options.test).to.equal(2);
+		});
+
+		it('should parse component specific options from child script tag with data-js-options attribute', ()=> {
+			expect(someInnerComponent.options.test).to.equal(3);
+			expect(otherInnerComponent.options.test).to.equal(4);
 		});
 	});
 

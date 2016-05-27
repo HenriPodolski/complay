@@ -206,7 +206,7 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 		it('should initialize multiple component data for one container', () => {
 
 			html = `
-				<div data-js-module="component-first, component-second">
+				<div data-js-component="component-first, component-second">
 				</div>
 			`;
 
@@ -238,7 +238,7 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 			expect(application.modules[0].instances.length).to.equal(0);
 
 			let newNode = document.createElement('div');
-			newNode.setAttribute('data-js-module', 'component-first');
+			newNode.setAttribute('data-js-component', 'component-first');
 			document.body.appendChild(newNode);
 
 			// wait until mutation observer is aware of the change
@@ -251,7 +251,7 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 		it('should stop component data automatically, when observe option is set to true and nodes are removed', (done) => {
 			
 			html = `
-				<div data-js-module="component-first" data-js-options="{'test': true}">
+				<div data-js-component="component-first" data-js-options="{'test': true}">
 				</div>
 			`;
 
@@ -268,7 +268,7 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 
 			expect(application.modules.length).to.equal(1);
 
-			let nodeToRemove = appContainer.querySelector('[data-js-module="component-first"]');
+			let nodeToRemove = appContainer.querySelector('[data-js-component*="component-first"]');
 
 			appContainer.removeChild(nodeToRemove);
 
@@ -281,7 +281,7 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 
 		it('should use data-js-options, if available', () => {
 			html = `
-				<div data-js-module="component-first" data-js-options="{'test': true}">
+				<div data-js-component="component-first" data-js-options="{'test': true}">
 				</div>
 			`;
 
@@ -310,7 +310,8 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 
 			application = new Application({
 				AppComponent: ApplicationDomComponent,
-				context: appContainer
+				context: appContainer,
+				moduleSelector: '[data-js-module]'
 			});
 			
 			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});

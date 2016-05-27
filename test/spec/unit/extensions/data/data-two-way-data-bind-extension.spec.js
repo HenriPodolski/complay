@@ -93,9 +93,7 @@ describe('Complay JS Two Way Data Bind Extension', ()=>{
 				sourceKey: 'test',
 				bindObj: inputElement,
 				bindKey: 'value'
-			});
-
-			twoWayDataBind.sync({
+			},{
 				sourceObj: obj,
 				sourceKey: 'otherTest',
 				bindObj: inputElement.dataset,
@@ -129,9 +127,7 @@ describe('Complay JS Two Way Data Bind Extension', ()=>{
 				sourceKey: 'test',
 				bindObj: inputElement,
 				bindKey: 'value'
-			});
-
-			twoWayDataBind.sync({
+			},{
 				sourceObj: obj,
 				sourceKey: 'otherTest',
 				bindObj: inputElement.dataset,
