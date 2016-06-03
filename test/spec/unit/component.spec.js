@@ -113,7 +113,7 @@ describe('Complay JS Component', ()=>{
 		});
 
 		it('should have an instance of a view model, if passed via viewModel option', () => {
-			expect(component.viewModel.data).to.be.instanceof(TestViewModel);
+			expect(component.viewModel).to.be.instanceof(TestViewModel);
 		});
 
 		it('should have model property', ()=> {
@@ -122,7 +122,7 @@ describe('Complay JS Component', ()=>{
 		});
 
 		it('should have an instance of a model, if passed via model option', () => {
-			expect(component.model.data).to.be.instanceof(TestModel);
+			expect(component.model).to.be.instanceof(TestModel);
 		});
 
 		it('should have service property', ()=> {

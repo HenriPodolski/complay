@@ -20,7 +20,7 @@ describe('Complay JS Model', ()=>{
 
 	describe('adding and removing data', () => {
 		it('should add data when initialized', () => {
-			let model = new Model({data: {a:1, b:2 ,c:3}});
+			let model = new Model({data: {a:1, b:2 ,c:3}}).data;
 
 			expect(model.a).to.equal(1);
 			expect(model.b).to.equal(2);
@@ -28,25 +28,25 @@ describe('Complay JS Model', ()=>{
 		});
 
 		it('should add data when passed to add', () => {
-			let model = new Model();
+			let model = new Model().data;
 
-			model.data.add({d:4});
+			model.api.add({d:4});
 
 			expect(model.d).to.equal(4);
 		});
 
 		it('should remove exisiting data by key', () => {
-			let model = new Model();
+			let model = new Model().data;
 
-			model.data.add({a:1, b:2, c:3, d:4});
+			model.api.add({a:1, b:2, c:3, d:4});
 
 			expect(model.d).to.equal(4);
 
-			model.data.remove('d');
+			model.api.remove('d');
 
 			expect(model.d).to.be.not.ok;
 
-			model.data.remove(['a','b']);
+			model.api.remove(['a','b']);
 
 			expect(model.a).to.be.not.ok;
 			expect(model.b).to.be.not.ok;
@@ -56,13 +56,13 @@ describe('Complay JS Model', ()=>{
 		});
 
 		it('should update exisiting data', () => {
-			let model = new Model();
+			let model = new Model().data;
 
-			model.data.add({a:1, b:2, c:3, d:4});
+			model.api.add({a:1, b:2, c:3, d:4});
 
 			expect(model.d).to.equal(4);
 
-			model.data.update({'d': 5});
+			model.api.update({'d': 5});
 
 			expect(model.d).to.equal(5);
 		});
