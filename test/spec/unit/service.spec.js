@@ -365,27 +365,16 @@ describe('Complay JS Service', () => {
 		})
 
 		it('should use a given model', () => {
-
-			expect(someService[0]).to.be.instanceof(SomeModel);
+			expect(someService[0].data).to.be.instanceof(SomeModel);
 		});
 
 		it('should assign all values to the model', () => {
-
-			expect(someService[0].data.id).to.equal(1);
+			expect(someService[0].id).to.equal(1);
 		});
 
 		it('should can use where when datasets are models', () => {
 
 			expect(someService.data.where({id: 3})[0].type).to.equal('boolean');
-		});
-	});
-
-	describe('fetch and save injection', () => {
-
-		class SomeService extends Service {}
-
-		it('should transform the dataset', () => {
-			
 		});
 	});
 });
