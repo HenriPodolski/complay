@@ -57,7 +57,7 @@ It is possible that we use this in an ES5 environment via dist/complay.js.
 But functionalities are limited and some will not work.
 An ES6 setup which imports the files might work much better.
 
-Version: 0.0.28
+Version: 0.0.30
 Our library is under active development and things might change. As soon as we think
 that our API is rock solid, we will release a major version.
 
@@ -116,17 +116,9 @@ Our helpers submodule located in js/helpers gives use the tools and polyfills we
 ```
 npm install
 ```
-Run dev server:
-```
-grunt
-```
 Run unit tests:
 ```
-grunt unit-test
-```
-Build using browserify:
-```
-grunt build
+npm run tdd
 ```
 
 ### License(s)

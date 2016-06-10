@@ -20,51 +20,51 @@ describe('Complay JS Model', ()=>{
 
 	describe('adding and removing data', () => {
 		it('should add data when initialized', () => {
-			let model = new Model({data: {a:1, b:2 ,c:3}});
+			let model = new Model({data: {a:1, b:2 ,c:3}}).data;
 
-			expect(model.data.a).to.equal(1);
-			expect(model.data.b).to.equal(2);
-			expect(model.data.c).to.equal(3);
+			expect(model.a).to.equal(1);
+			expect(model.b).to.equal(2);
+			expect(model.c).to.equal(3);
 		});
 
 		it('should add data when passed to add', () => {
-			let model = new Model();
+			let model = new Model().data;
 
-			model.add({d:4});
+			model.api.add({d:4});
 
-			expect(model.data.d).to.equal(4);
+			expect(model.d).to.equal(4);
 		});
 
 		it('should remove exisiting data by key', () => {
-			let model = new Model();
+			let model = new Model().data;
 
-			model.add({a:1, b:2, c:3, d:4});
+			model.api.add({a:1, b:2, c:3, d:4});
 
-			expect(model.data.d).to.equal(4);
+			expect(model.d).to.equal(4);
 
-			model.remove('d');
+			model.api.remove('d');
 
-			expect(model.data.d).to.be.not.ok;
+			expect(model.d).to.be.not.ok;
 
-			model.remove(['a','b']);
+			model.api.remove(['a','b']);
 
-			expect(model.data.a).to.be.not.ok;
-			expect(model.data.b).to.be.not.ok;
-			expect(model.data.c).to.equal(3);
-			expect(model.data.d).to.be.not.ok;
+			expect(model.a).to.be.not.ok;
+			expect(model.b).to.be.not.ok;
+			expect(model.c).to.equal(3);
+			expect(model.d).to.be.not.ok;
 
 		});
 
 		it('should update exisiting data', () => {
-			let model = new Model();
+			let model = new Model().data;
 
-			model.add({a:1, b:2, c:3, d:4});
+			model.api.add({a:1, b:2, c:3, d:4});
 
-			expect(model.data.d).to.equal(4);
+			expect(model.d).to.equal(4);
 
-			model.update({'d': 5});
+			model.api.update({'d': 5});
 
-			expect(model.data.d).to.equal(5);
+			expect(model.d).to.equal(5);
 		});
 	});
 });

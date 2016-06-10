@@ -4,7 +4,7 @@ import Component from '../../../../../lib/component';
 import DomSelector from '../../../../../extensions/dom/dom-selector';
 import Vent from '../../../../../extensions/vent/vent';
 import Template from '../../../../../extensions/template/handlebars';
-import ItemSelectorToMembers from '../../../../../extensions/components/item-selector-to-members';
+import ItemSelectorToMembers from '../../../../../extensions/component/item-selector-to-members';
 
 var expect = chai.expect;
 var asset = chai.assert;

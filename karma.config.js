@@ -77,7 +77,7 @@ module.exports = function(config) {
 		resolve: {
 			extensions: ['', '.js', '.jsx']
 		},
-		devtool: 'source-map',
+		devtool: 'eval-source-map',
 		module: {
 			loaders: [
 				{
