@@ -1,7 +1,7 @@
 import chai from 'chai';
-import Service from '../../../../../lib/service';
-import WebstorageRepositoryExtension from '../../../../../extensions/services/client/webstorage-repository';
-import mix from '../../../../../helpers/object/mix';
+import Service from '../../../../../src/lib/service';
+import WebstorageRepositoryExtension from '../../../../../src/extensions/services/client/webstorage-repository';
+import mix from '../../../../../src/helpers/object/mix';
 
 var expect = chai.expect;
 var asset = chai.assert;

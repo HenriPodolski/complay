@@ -18,5 +18,11 @@ node_modules
 .idea
 bower_components
 .DS_Store
-build
-/dist/
+/build
+/dist
+/helpers
+/lib
+/extensions
+/browser
+/complay*
+/default-config*
