@@ -1,6 +1,6 @@
 import chai from 'chai';
-import Service from '../../../lib/service';
-import Model from '../../../lib/model';
+import Service from '../../../src/lib/service';
+import Model from '../../../src/lib/model';
 
 var expect = chai.expect;
 var asset = chai.assert;

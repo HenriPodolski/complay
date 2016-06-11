@@ -46,13 +46,13 @@ var path = require('path');
 
 module.exports = {
     entry: {
-        'complay': './complay.js',
-        'complay.es5': './complay.es5.js'
+        'complay': './src/complay.js',
+        'complay.es5': './src/complay.es5.js'
     },
     output: {
-        path: path.join(__dirname, 'dist/browser'),
+        path: path.join(__dirname, 'browser'),
         filename: '[name].js',
-        publicPath: '/dist/browser',
+        publicPath: 'browser',
         umdNamedDefine: true
     },
     resolve: {
@@ -73,12 +73,12 @@ module.exports = {
                     presets: ['react', 'es2015']
                 },
                 include: [
-                    path.join(__dirname, 'helpers'),
-                    path.join(__dirname, 'extensions'),
-                    path.join(__dirname, 'lib'),
-                    path.join(__dirname, 'default-config.js'),
-                    path.join(__dirname, 'complay.js'),
-                    path.join(__dirname, 'complay.es5.js')
+                    path.join(__dirname, 'src/helpers'),
+                    path.join(__dirname, 'src/extensions'),
+                    path.join(__dirname, 'src/lib'),
+                    path.join(__dirname, 'src/default-config.js'),
+                    path.join(__dirname, 'src/complay.js'),
+                    path.join(__dirname, 'src/complay.es5.js')
                 ]
             }
         ]

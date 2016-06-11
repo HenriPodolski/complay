@@ -1,5 +1,5 @@
 import chai from 'chai';
-import Model from '../../../lib/model';
+import Model from '../../../src/lib/model';
 
 var expect = chai.expect;
 var asset = chai.assert;
