@@ -19,7 +19,7 @@
     "prepublish": "npm run build",
     "test": "karma start --single-run --no-auto-watch karma.config.production.js",
     "tdd": "karma start karma.config.js",
-    "build": "npm run test && n-clean dist && npm shrinkwrap --dev && npm run build-all",
+    "build": "n-clean dist && npm shrinkwrap --dev && npm run build-all",
     "build-all": "npm run build-babel && npm run build-prebuild",
     "build-babel": "npm run build-babel-complay && npm run build-babel-config && npm run build-babel-lib && npm run build-babel-helpers && npm run build-babel-extensions",
     "build-babel-complay": "babel complay.js -s --presets babel-preset-es2015 --plugins transform-es2015-modules-umd --out-dir dist",
