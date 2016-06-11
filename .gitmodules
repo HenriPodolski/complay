@@ -1,6 +1,6 @@
-[submodule "extensions"]
-	path = extensions
-url=git@github.com:complayjs/extensions.git
-[submodule "helpers"]
-	path = helpers
-url=git@github.com:complayjs/helpers.git
+[submodule "src/extensions"]
+	path = src/extensions
+	url = git@github.com:complayjs/extensions.git
+[submodule "src/helpers"]
+	path = src/helpers
+	url = git@github.com:complayjs/helpers.git
