@@ -67,7 +67,7 @@ class ApplicationDomComponent extends Component {
 		let instances = [];
 
 		// handle es5 extends and name property
-		if (!item.name && item.prototype._name) {
+		if ((!item.name || item.name === 'child') && item.prototype._name) {
 			item.es5name = item.prototype._name;
 		}
 
@@ -92,7 +92,7 @@ class ApplicationDomComponent extends Component {
 	}
 
 	startComponent(item, options, domNode) {
-		let name = item.name || item.es5name;
+		let name = item.es5name || item.name;
 		let itemInstance;
 		let moduleAttribute = domNode.getAttribute(this.moduleAttribute);
 
