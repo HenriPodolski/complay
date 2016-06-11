@@ -20,8 +20,5 @@ bower_components
 
 build
 docs
-extensions
-helpers
-lib
 node_modules
 test
