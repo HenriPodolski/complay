@@ -9,10 +9,12 @@ var rootDir = path.join(__dirname);
 var specDir = path.join(__dirname, '/test/spec/unit');
 var libDir = path.join(__dirname, '/src/lib');
 var extensionsDir = path.join(__dirname, '/src/extensions');
+var genericsDir = path.join(__dirname, '/src/generics');
 var helpersDir = path.join(__dirname, '/src/helpers');
 var specFilePattern = specDir + '/**/*.js';
 var libFilePattern = libDir + '/**/*.js';
 var extensionsFilePattern = extensionsDir + '/**/*.js';
+var genericsFilePattern = genericsDir + '/**/*.js';
 var helpersFilePattern = helpersDir + '/**/*.js';
 var rootFilePattern = rootDir + '/src/complay*.js';
 var configFilePattern = rootDir + '/src/default-config.js';
@@ -23,6 +25,7 @@ preprocessors[rootFilePattern] = preprocessorActions;
 preprocessors[configFilePattern] = preprocessorActions;
 preprocessors[helpersFilePattern] = preprocessorActions;
 preprocessors[extensionsFilePattern] = preprocessorActions;
+preprocessors[genericsFilePattern] = preprocessorActions;
 preprocessors[specFilePattern] = preprocessorActions;
 preprocessors[libFilePattern] = preprocessorActions;
 
@@ -90,6 +93,7 @@ module.exports = function(config) {
 					include: [
 						helpersDir,
 						extensionsDir,
+						genericsDir,
 						specDir,
 						libDir,
 						configFilePattern

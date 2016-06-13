@@ -75,6 +75,7 @@ module.exports = {
                 include: [
                     path.join(__dirname, 'src/helpers'),
                     path.join(__dirname, 'src/extensions'),
+                    path.join(__dirname, 'src/generics'),
                     path.join(__dirname, 'src/lib'),
                     path.join(__dirname, 'src/default-config.js'),
                     path.join(__dirname, 'src/complay.js'),
