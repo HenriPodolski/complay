@@ -183,7 +183,12 @@ class ApplicationDomComponent extends Component {
 		let componentRegistryItems = this.app.findMatchingRegistryItems(COMPONENT_TYPE);
 		let componentNodes = [];
 
-		domNodeArray(removedNodes).forEach((node) => {	
+		domNodeArray(removedNodes).forEach((node) => {
+
+			if (node.nodeType !== Node.ELEMENT_NODE) {
+				return;
+			}
+
 			// push outermost if module
 			if (this.matchesSelector(node, this.options.moduleSelector)) {
 				componentNodes.push(node);
