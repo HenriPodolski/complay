@@ -265,6 +265,8 @@ class ApplicationFacade extends Module {
 			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
 				this[options.appName] = inst;
 			}
+
+			existingRegistryModuleItem.autostart = !!(inst ? inst.autostart : existingRegistryModuleItem.autostart);
 			
 			// push if instance not exists
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
@@ -276,7 +278,7 @@ class ApplicationFacade extends Module {
 				type: module.type,
 				module,
 				instances: (inst ? [inst] : []),
-				autostart: !!(module.autostart),
+				autostart: !!(inst ? inst.autostart : module.autostart),
 				running: false,
 				uid: module.uid
 			};

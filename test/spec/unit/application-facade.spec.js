@@ -186,6 +186,37 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 			expect(application.SomeMod).to.be.not.ok;
 		});
 
+		it('should autostart modules when option autostart is passed', () => {
+			class SomeModule extends Module {}
+
+			application.start({module: SomeModule, options: {autostart: true}});
+
+			expect(application._modules[0].autostart).to.be.ok;
+		});
+
+		it('should autostart services when option autostart is passed', () => {
+			class SomeService extends Service {}
+
+			application.start({service: SomeService, options: {autostart: true}});
+
+			expect(application._modules[0].autostart).to.be.ok;
+		});
+
+		it('should autostart components when option autostart is passed', () => {
+
+			let domContext = document.createElement('div');
+			domContext.innerHTML = '<div data-js-component="some-component"></div>';
+			let appWithContext = new Application({AppComponent: ApplicationDomComponent, context: domContext});
+
+			class SomeComponent extends Component {}
+
+			appWithContext.start({component: SomeComponent, options: {autostart: true}});
+
+			console.log(appWithContext._modules[0]);
+
+			expect(appWithContext._modules[0].autostart).to.be.ok;
+		});
+
 		// it('should fetch all resources when service module with option autostart is passed', () => {
 		// 	class SomeService extends Service {}
 

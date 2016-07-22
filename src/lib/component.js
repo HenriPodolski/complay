@@ -144,7 +144,9 @@ class Component extends Base {
 				this.itemSelectorToMembers();
 			}
 
+			this.beforeInitialize(this.options);
 			this.initialize(this.options);
+			this.afterInitialize(this.options);
 			this.bindCustomEvents();
 			this.bindEvents();
 			this.delegateEvents();
@@ -216,7 +218,9 @@ class Component extends Base {
 		if (!this.el.dataset.jsComponent) {
 			this.el.dataset.jsComponent = this.dashedName;
 		} else if (this.el.dataset.jsComponent.indexOf(this.dashedName) === -1) {
-			this.el.dataset.jsComponent = this.el.dataset.jsComponent.length > 0 ? `${this.el.dataset.jsComponent} ${this.dashedName}` : `${this.dashedName}`;
+			this.el.dataset.jsComponent = this.el.dataset.jsComponent.length > 0 ?
+				`${this.el.dataset.jsComponent} ${this.dashedName}` :
+				`${this.dashedName}`;
 		}
 
 		if (!this.el.componentUid) {

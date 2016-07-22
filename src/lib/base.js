@@ -89,8 +89,8 @@ class Base {
 			this.app = options.app;
 		}
 
-		this.vents = options.vents || {};		
-
+		this.vents = options.vents || {};
+		
 		this.autostart = !!(options.autostart);
 
 		if (options.vent) {
@@ -102,6 +102,14 @@ class Base {
 		} else {
 			this.vent = defaultConfig.vent(this);
 		}
+	}
+
+	beforeInitialize(options) {
+		// override and call super.beforeInitialize(options)}
+	}
+
+	afterInitialize(options) {
+		// override and call super.afterInitialize(options)}
 	}
 
 	initialize(options) {

@@ -68,14 +68,6 @@ class Service extends Base {
 		this.delegateVents();
 	}
 
-	beforeInitialize(options) {
-		// override and call super.beforeInitialize(options)}
-	}
-
-	afterInitialize(options) {
-		// override and call super.afterInitialize(options)}
-	}
-
 	model(dataset) {
 		if (this.Model && typeof dataset === 'object' && dataset !== null) {
 			dataset = new this.Model({data: dataset});
