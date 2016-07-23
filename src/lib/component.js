@@ -73,10 +73,11 @@ class Component extends Base {
 
 		super(options);
 
-		this.moduleSelector = options.moduleSelector || `[data-js-component*="${this.dashedName}"]`;
-
-		if (this.moduleSelector.indexOf('[data-') === 0) {
-			this.moduleAttribute = this.moduleSelector.replace(/^(\[)([a-zA-Z-_]+)(.*])$/, '$2');
+		this.selector = options.selector || `[data-js-component*="${this.dashedName}"]`;
+		this.componentMappingAttribute = `data-js-component`;
+		
+		if (this.selector.indexOf('[data-') === 0) {
+			this.componentMappingAttribute = this.selector.replace(/^(\[)([a-zA-Z-_]+)(.*])$/, '$2');
 		}
 
 		if (typeof options.context === 'string') {
@@ -166,7 +167,7 @@ class Component extends Base {
 		if (this.willUnmount() !== false) {
 			
 			if (this.app && this.app.findMatchingRegistryItems().length > 0) {
-				this.app.destroy(this)
+				this.app.destroy(this);
 			} else {
 				this.remove();	
 			}
@@ -207,8 +208,8 @@ class Component extends Base {
 			this.el = this.createDomNode(options.el);
 		} else if ( options.context &&
 					options.context.nodeType === Node.ELEMENT_NODE &&
-					this.moduleSelector) {
-			this.el = options.context.querySelector(this.moduleSelector);
+					this.selector) {
+			this.el = options.context.querySelector(this.selector);
 		}
 
 		if (!this.el) {

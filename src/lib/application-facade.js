@@ -38,11 +38,13 @@ class ApplicationFacade extends Module {
 				Object.assign(options, {
 					app: this,
 					context: options.context || document,
-					moduleSelector: options.moduleSelector || '[data-js-component]'
+					selector: options.selector || '[data-js-component]'
 				})
 			);	
 		}		
 
+		// module passed to constructor via modules options
+		// are started on instantiation
 		if (options.modules) {
 			this.start.apply(this, options.modules);
 		}

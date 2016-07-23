@@ -38,7 +38,7 @@ class ApplicationDomComponent extends Component {
 		}
 
 		contexts.forEach((ctx) => {
-			elements = Array.from(ctx.querySelectorAll(this.options.moduleSelector));
+			elements = Array.from(ctx.querySelectorAll(this.options.selector));
 			this._newElements = elements;
 			this._elements = uniques(this._elements.concat(elements));
 		});
@@ -92,14 +92,17 @@ class ApplicationDomComponent extends Component {
 	}
 
 	startComponent(item, options, domNode) {
+
 		let name = item.es5name || item.name;
 		let itemInstance;
-		let moduleAttribute = domNode.getAttribute(this.moduleAttribute);
+		let componentMappingNames = domNode.getAttribute(this.componentMappingAttribute);
+		let isElement = (options.el && options.el.nodeType && options.el.nodeType === Node.ELEMENT_NODE);
+		let isComponentClassDataSelector = !isElement && componentMappingNames && name && componentMappingNames.indexOf(dasherize(name)) !== -1;
 
-		if (name && moduleAttribute && moduleAttribute.indexOf(dasherize(name)) !== -1) {
+		if (isComponentClassDataSelector || isElement) {
 			options.el = domNode;
 			options.app = options.app || this.app;
-			options.moduleSelector = options.moduleSelector || this.options.moduleSelector;
+			options.selector = options.selector || this.options.selector;
 
 			itemInstance = new item(options);
 		}
@@ -169,7 +172,7 @@ class ApplicationDomComponent extends Component {
 
 				console.log('CONTEXT', ctx);
 
-				if (ctx.nodeType === Node.ELEMENT_NODE && this.matchesSelector(ctx, this.options.moduleSelector)) {
+				if (ctx.nodeType === Node.ELEMENT_NODE && this.matchesSelector(ctx, this.options.selector)) {
 					this.app.startComponent(mod, {context: ctx.parentElement});
 				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
 					this.app.startComponent(mod, {context: ctx});
@@ -190,13 +193,13 @@ class ApplicationDomComponent extends Component {
 			}
 
 			// push outermost if module
-			if (this.matchesSelector(node, this.options.moduleSelector)) {
+			if (this.matchesSelector(node, this.options.selector)) {
 				componentNodes.push(node);
 			}
 
 			// push children if module
-			domNodeArray(node.querySelectorAll(this.options.moduleSelector)).forEach((moduleEl) => {
-				if (this.matchesSelector(moduleEl, this.options.moduleSelector)) {
+			domNodeArray(node.querySelectorAll(this.options.selector)).forEach((moduleEl) => {
+				if (this.matchesSelector(moduleEl, this.options.selector)) {
 					componentNodes.push(moduleEl);
 				}
 			});

@@ -135,6 +135,27 @@ describe('Complay JS Component', ()=>{
 		});
 	});
 
+	describe('Selector to Component class name mapping', () => {
+
+		it('should assign a selector passed through options to selector member', ()=> {
+
+			component = new Component({
+				selector: '.js-component'
+			});
+
+			expect(component.selector).to.equal('.js-component');
+		});
+
+		it('should map a given selector to Component class', ()=> {
+
+			component = new Component({
+				selector: '.js-component'
+			});
+
+			expect(component.selector).to.equal('.js-component');
+		});
+	});
+
 	describe('DOM options parsing', () => {
 
 		let someComponent, otherComponent, someInnerComponent, otherInnerComponent;
@@ -209,7 +230,7 @@ describe('Complay JS Component', ()=>{
 
 			component = new TestComponent({
 				el: testDom,
-				moduleSelector: '[data-js-module]',
+				selector: '[data-js-module]',
 				dom: DomSelector,
 				vent: Vent,
 				template: Template

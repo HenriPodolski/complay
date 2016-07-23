@@ -36,7 +36,7 @@ describe('Complay JS ItemSelectorToMembers Extension', ()=>{
 
 			component = new TestComponent({
 				el: testDom,
-				moduleSelector: '[data-js-module]',
+				selector: '[data-js-module]',
 				dom: DomSelector,
 				vent: Vent,
 				template: Template

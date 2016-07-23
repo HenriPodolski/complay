@@ -212,8 +212,6 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 
 			appWithContext.start({component: SomeComponent, options: {autostart: true}});
 
-			console.log(appWithContext._modules[0]);
-
 			expect(appWithContext._modules[0].autostart).to.be.ok;
 		});
 
@@ -342,7 +340,7 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 			application = new Application({
 				AppComponent: ApplicationDomComponent,
 				context: appContainer,
-				moduleSelector: '[data-js-module]'
+				selector: '[data-js-module]'
 			});
 			
 			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});
