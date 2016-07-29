@@ -4,18 +4,14 @@
  */
 import Base from './base';
 import assign from '../helpers/object/assign';
-import arrayFrom from '../helpers/array/from';
-import dasherize from '../helpers/string/dasherize';
+import ensureElement from '../helpers/dom/ensure-element';
+import ensureComplayElementAttributes from '../helpers/dom/ensure-complay-element-attributes';
+import parseComplayOptions from '../helpers/dom/parse-complay-options';
+import matchesSelector from '../helpers/dom/matches-selector';
 import defaultConfig from '../default-config';
 import {COMPONENT_TYPE} from './types';
 
 const DELEGATE_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
-
-let matchesSelector = Element.prototype.matches ||
-	Element.prototype.webkitMatchesSelector ||
-	Element.prototype.mozMatchesSelector ||
-	Element.prototype.msMatchesSelector ||
-	Element.prototype.oMatchesSelector;
 
 class Component extends Base {
 
@@ -73,7 +69,11 @@ class Component extends Base {
 
 		super(options);
 
-		this.selector = options.selector || `[data-js-component*="${this.dashedName}"]`;
+        options.selector = options.selector || `[data-js-component*="${this.dashedName}"]`;
+        options.uid = options.uid || this.uid;
+        options.dataAttributeName = options.dataAttributeName || this.dashedName;
+
+        this.selector = options.selector;
 		this.componentMappingAttribute = `data-js-component`;
 		
 		if (this.selector.indexOf('[data-') === 0) {
@@ -84,9 +84,18 @@ class Component extends Base {
 			options.context = document.querySelector(options.context);
 		}
 
-		this.ensureElement(options);
+		this.el = options.el = ensureElement(options);
+
+        ensureComplayElementAttributes(options);
+
+        if (this.dom) {
+            this.$el = this.dom(element);
+        } else if(this.$) {
+            this.$el = this.$(element);
+        }
+
 		// parse options from markup and merge with existing
-		Object.assign(this.options, this.parseOptions(this.el, this.constructor), options);
+		Object.assign(this.options, parseComplayOptions(this.el, this.constructor), options);
 
 		if (options.service) {
 			this.service = options.service;
@@ -107,16 +116,6 @@ class Component extends Base {
 		if (!options.app) {
 			this.mount();
 		}
-	}
-
-	matchesSelector(el, selector) {
-
-		if (arguments.length === 1) {
-			selector = el;
-			el = this.el;
-		}
-
-		return matchesSelector.call(el, selector)
 	}
 
 	willMount() {
@@ -178,69 +177,10 @@ class Component extends Base {
 
 	didUnmount() {}
 
-	createDomNode(str) {
-
-		let selectedEl = this.options.context.querySelector(str);
-
-		if (selectedEl) {
-			return selectedEl;
-		}
-
-		let div = document.createElement('div');
-		let elNode;
-		
-		div.innerHTML = str;
-
-		Array.from(div.childNodes).forEach((node) => {
-			if (!elNode && node.nodeType === Node.ELEMENT_NODE) {
-				elNode = node;
-			}
-		})
-
-		return elNode || div;
-	}
-
-	ensureElement(options={}) {
-
-		if (options.el && options.el.nodeType === Node.ELEMENT_NODE) {
-			this.el = options.el;
-		} else if (typeof options.el === 'string') {
-			this.el = this.createDomNode(options.el);
-		} else if ( options.context &&
-					options.context.nodeType === Node.ELEMENT_NODE &&
-					this.selector) {
-			this.el = options.context.querySelector(this.selector);
-		}
-
-		if (!this.el) {
-			this.el = document.createElement('div');
-		}
-
-		if (!this.el.dataset.jsComponent) {
-			this.el.dataset.jsComponent = this.dashedName;
-		} else if (this.el.dataset.jsComponent.indexOf(this.dashedName) === -1) {
-			this.el.dataset.jsComponent = this.el.dataset.jsComponent.length > 0 ?
-				`${this.el.dataset.jsComponent} ${this.dashedName}` :
-				`${this.dashedName}`;
-		}
-
-		if (!this.el.componentUid) {
-			this.el.componentUid = [this.uid];
-		} else if (this.el.componentUid.indexOf(this.uid) === -1) {
-			this.el.componentUid.push(this.uid);
-		}
-
-		if (this.dom) {
-			this.$el = this.dom(this.el);
-		} else if(this.$) {
-			this.$el = this.$(this.el);
-		}
-	}
-
 	setElement(el) {
 		
 		this.undelegateEvents();
-		this.ensureElement({el});
+		ensureElement({el});
 		this.delegateEvents();
 		
 		return this;
@@ -251,39 +191,6 @@ class Component extends Base {
 	 */
 	bindEvents() {
 
-	}
-
-	parseOptions(el, item) {
-
-		let options = el && el.dataset.jsOptions;
-
-		if (!options) {
-
-			let jsonScriptBlock = Array.from(el.childNodes).filter(child => {
-				return child.nodeType === Node.ELEMENT_NODE && this.matchesSelector(child, 'script[data-js-options]');
-			});
-
-			if (jsonScriptBlock.length) {
-				options = jsonScriptBlock[0].innerText;
-			}
-		}
-
-		if (options && typeof options === 'string') {
-
-			let name = item.name || item.es5name;
-
-			// if <div data-js-options="{'show': true}"> is used,
-			// instead of <div data-js-options='{"show": true}'>
-			// convert to valid json string and parse to JSON
-			options = options
-				.replace(/\\'/g, '\'')
-				.replace(/'/g, '"');
-
-			options = JSON.parse(options);
-			options = options[dasherize(name)] || options[name] || options;
-		}
-
-		return options || {};
 	}
 
 	delegateEvents(events) {
@@ -313,7 +220,7 @@ class Component extends Base {
 			let node = e.target || e.srcElement;
 			
 			for (; node && node != root; node = node.parentNode) {
-				if (matchesSelector.call(node, selector)) {
+				if (matchesSelector(node, selector)) {
 					e.delegateTarget = node;
 					listener(e);
 				}

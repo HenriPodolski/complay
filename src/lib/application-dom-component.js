@@ -1,6 +1,8 @@
 import Component from './component';
 import {COMPONENT_TYPE} from './types';
 import domNodeArray from '../helpers/dom/dom-node-array';
+import isDomNode from '../helpers/dom/is-dom-node';
+import matchesSelector from '../helpers/dom/matches-selector';
 import dasherize from '../helpers/string/dasherize';
 import uniques from '../helpers/array/uniques';
 import arrayFrom from '../helpers/array/from';
@@ -96,7 +98,7 @@ class ApplicationDomComponent extends Component {
 		let name = item.es5name || item.name;
 		let itemInstance;
 		let componentMappingNames = domNode.getAttribute(this.componentMappingAttribute);
-		let isElement = (options.el && options.el.nodeType && options.el.nodeType === Node.ELEMENT_NODE);
+		let isElement = isDomNode(options.el);
 		let isComponentClassDataSelector = !isElement && componentMappingNames && name && componentMappingNames.indexOf(dasherize(name)) !== -1;
 
 		if (isComponentClassDataSelector || isElement) {
@@ -172,9 +174,9 @@ class ApplicationDomComponent extends Component {
 
 				console.log('CONTEXT', ctx);
 
-				if (ctx.nodeType === Node.ELEMENT_NODE && this.matchesSelector(ctx, this.options.selector)) {
+				if (isDomNode(ctx) && matchesSelector(ctx, this.options.selector)) {
 					this.app.startComponent(mod, {context: ctx.parentElement});
-				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
+				} else if (isDomNode(ctx)) {
 					this.app.startComponent(mod, {context: ctx});
 				}
 			});			
@@ -188,18 +190,18 @@ class ApplicationDomComponent extends Component {
 
 		domNodeArray(removedNodes).forEach((node) => {
 
-			if (node.nodeType !== Node.ELEMENT_NODE) {
+			if (!isDomNode(node, Node.ELEMENT_NODE)) {
 				return;
 			}
 
 			// push outermost if module
-			if (this.matchesSelector(node, this.options.selector)) {
+			if (matchesSelector(node, this.options.selector)) {
 				componentNodes.push(node);
 			}
 
 			// push children if module
 			domNodeArray(node.querySelectorAll(this.options.selector)).forEach((moduleEl) => {
-				if (this.matchesSelector(moduleEl, this.options.selector)) {
+				if (matchesSelector(moduleEl, this.options.selector)) {
 					componentNodes.push(moduleEl);
 				}
 			});
