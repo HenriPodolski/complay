@@ -115,16 +115,11 @@ class ReactDomComponent extends Base {
     }
 
     render() {
-
-        console.log(`${this}.render()`, this.el);
-
         const ReactComponent = this.reactComponent;
 
         this.$r = <ReactComponent {...this.props} />;
 
-        let tmp = ReactDOM.render(this.$r, this.el);
-
-        console.log(`${this}.render()`, tmp, this.el);
+        ReactDOM.render(this.$r, this.el);
 
         return this;
     }

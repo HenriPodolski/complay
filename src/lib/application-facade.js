@@ -33,6 +33,10 @@ class ApplicationFacade extends Module {
 		this.dom = options.dom;
 		this.template = options.template;
 
+        this.start = this.start.bind(this);
+        this.stop = this.stop.bind(this);
+        this.destroy = this.destroy.bind(this);
+
 		if (options.AppComponent) {
 			this.appComponent = new options.AppComponent(
 				Object.assign(options, {
@@ -40,7 +44,7 @@ class ApplicationFacade extends Module {
 					context: options.context || document,
 					selector: options.selector || '[data-js-component]'
 				})
-			);	
+			);
 		}		
 
 		// module passed to constructor via modules options

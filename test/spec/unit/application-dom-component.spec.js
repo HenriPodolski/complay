@@ -27,7 +27,7 @@ describe('Complay JS Application Dom Component', ()=>{
 				observe: true,
 				context: initialContext
 			});
-		})
+		});
 
 		it('should add nodes later on', (done) => {
 			class SomeComponent extends Component {}

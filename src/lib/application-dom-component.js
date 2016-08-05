@@ -2,7 +2,6 @@ import Component from './component';
 import {COMPONENT_TYPE} from './types';
 import domNodeArray from '../helpers/dom/dom-node-array';
 import isDomNode from '../helpers/dom/is-dom-node';
-import matchesSelector from '../helpers/dom/matches-selector';
 import dasherize from '../helpers/string/dasherize';
 import uniques from '../helpers/array/uniques';
 import arrayFrom from '../helpers/array/from';
@@ -58,6 +57,9 @@ class ApplicationDomComponent extends Component {
 	constructor(options = {}) {
 
 		super(options);
+
+        this.onAddedNodes = this.onAddedNodes.bind(this);
+        this.onRemovedNodes = this.onRemovedNodes.bind(this);
 
 		if (options.observe) {
 			this.observe(options);
@@ -151,16 +153,9 @@ class ApplicationDomComponent extends Component {
 		} else {
 			
 			// @todo: needs test in IE9 & IE10
-			
-			this.onAddedNodesCallback = (e) => { 
-				this.onAddedNodes(e.target);
-			};
-			this.onRemovedNodesCallback = (e) => {
-				this.onRemovedNodes(e.target);
-			};
 
-			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodesCallback, false);
-			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodesCallback, false);
+			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodes, false);
+			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodes, false);
 		}		
 	}
 
@@ -171,10 +166,6 @@ class ApplicationDomComponent extends Component {
 			let mod = item.module;
 			
 			domNodeArray(addedNodes).forEach((ctx) => {
-                /**
-                 * @todo something went wrong with context and selecting the element
-                 * ensureElement? overriding something in component see error below
-                 */
 
 				if (isDomNode(ctx)) {
                     ctx = ctx.parentElement || ctx;
@@ -191,21 +182,9 @@ class ApplicationDomComponent extends Component {
 
 		domNodeArray(removedNodes).forEach((node) => {
 
-			if (!isDomNode(node, Node.ELEMENT_NODE)) {
-				return;
+			if (isDomNode(node)) {
+                componentNodes.push(node);
 			}
-
-			// push outermost if module
-			if (matchesSelector(node, this.options.selector)) {
-				componentNodes.push(node);
-			}
-
-			// push children if module
-			domNodeArray(node.querySelectorAll(this.options.selector)).forEach((moduleEl) => {
-				if (matchesSelector(moduleEl, this.options.selector)) {
-					componentNodes.push(moduleEl);
-				}
-			});
 		});
 
 		// iterate over component registry items
@@ -226,8 +205,8 @@ class ApplicationDomComponent extends Component {
 			this.observer.disconnect();
 		} else {
 			let observedNode = this.options.context || document.body;
-			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodesCallback);
-			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
+			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodes);
+			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodes);
 		}
 	}
 }
