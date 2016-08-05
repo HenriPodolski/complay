@@ -1,6 +1,6 @@
 {
   "name": "complay",
-  "version": "0.0.37",
+  "version": "0.0.38",
   "description": "Complay is a flexible JavaScript architecture library which let's us build our own framework/stack as needed.",
   "main": "complay.js",
   "files": [
@@ -12,7 +12,7 @@
     "*.js",
     "!*.config.js"
   ],
-  "repository" : {
+  "repository": {
     "type": "git",
     "url": "https://github.com/HenriPodolski/complay.git"
   },
@@ -63,6 +63,7 @@
     "mocha": "^2.4.5",
     "npm-build-tools": "^2.2.5",
     "phantomjs-prebuilt": "^2.1.5",
+    "react-dom": "^15.2.1",
     "react-hot-loader": "^1.3.0",
     "sinon": "git+https://github.com/uberVU/Sinon.JS",
     "webpack": "^1.13.0"
@@ -70,6 +71,7 @@
   "dependencies": {
     "handlebars": "^4.0.5",
     "plite": "0.0.3",
-    "react": "^15.0.2"
+    "react": "^15.2.1",
+    "react-dom": "^15.2.1"
   }
 }

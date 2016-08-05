@@ -141,6 +141,16 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 			expect(application.modules[1].type).to.equal('service');
 			expect(application.modules[2].type).to.equal('component');
 		});
+
+        it('should register modules only once', () => {
+            class SomeModule extends Module {}
+
+            application.start(SomeModule);
+            application.start(SomeModule);
+            application.start({module: SomeModule}, {module: SomeModule});
+
+            expect(application.modules.length).to.equal(1);
+        });
 	});
 
 	describe('Start/Stop', ()=> {

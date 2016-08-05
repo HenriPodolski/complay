@@ -279,6 +279,7 @@ class ApplicationFacade extends Module {
 			let registryObject = {
 				type: module.type,
 				module,
+				options,
 				instances: (inst ? [inst] : []),
 				autostart: !!(inst ? inst.autostart : module.autostart),
 				running: false,

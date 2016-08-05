@@ -78,7 +78,7 @@ class Base {
 		this._uid = uid
 	}	
 
-	constructor(options = {}) {
+	constructor(options) {
 		this.name = generateName(this);
 		this.dashedName = generateDashedName(this);
 		this.uid = generateUid(this);

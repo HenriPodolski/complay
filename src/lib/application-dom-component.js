@@ -77,7 +77,7 @@ class ApplicationDomComponent extends Component {
 
 		if (elementArray.length === 0) {
 
-			this.elements = options;
+			this.elements = Object.assign({}, options);
 			elementArray = this.newElements;
 		}
 
@@ -170,14 +170,15 @@ class ApplicationDomComponent extends Component {
 
 			let mod = item.module;
 			
-			domNodeArray(addedNodes).forEach((ctx) => {	
+			domNodeArray(addedNodes).forEach((ctx) => {
+                /**
+                 * @todo something went wrong with context and selecting the element
+                 * ensureElement? overriding something in component see error below
+                 */
 
-				console.log('CONTEXT', ctx);
-
-				if (isDomNode(ctx) && matchesSelector(ctx, this.options.selector)) {
-					this.app.startComponent(mod, {context: ctx.parentElement});
-				} else if (isDomNode(ctx)) {
-					this.app.startComponent(mod, {context: ctx});
+				if (isDomNode(ctx)) {
+                    ctx = ctx.parentElement || ctx;
+					this.app.startComponent(mod, Object.assign(item.options || {}, {context: ctx}));
 				}
 			});			
 		});		

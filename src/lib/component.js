@@ -69,11 +69,11 @@ class Component extends Base {
 
 		super(options);
 
-        options.selector = options.selector || `[data-js-component*="${this.dashedName}"]`;
-        options.uid = options.uid || this.uid;
-        options.dataAttributeName = options.dataAttributeName || this.dashedName;
+        this.options.uid = options.uid = options.uid || this.uid;
+        this.options.selector = options.selector || `[data-js-component*="${this.dashedName}"]`;
+        this.options.dataAttributeName = options.dataAttributeName = options.dataAttributeName || this.dashedName;
 
-        this.selector = options.selector;
+        this.selector = this.options.selector;
 		this.componentMappingAttribute = `data-js-component`;
 		
 		if (this.selector.indexOf('[data-') === 0) {
@@ -165,7 +165,7 @@ class Component extends Base {
 		
 		if (this.willUnmount() !== false) {
 			
-			if (this.app && this.app.findMatchingRegistryItems().length > 0) {
+			if (this.app && this.app.findMatchingRegistryItems(this).length > 0) {
 				this.app.destroy(this);
 			} else {
 				this.remove();	
