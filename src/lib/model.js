@@ -34,7 +34,7 @@ class Model extends Base {
         this.initialize(options);
         this.afterInitialize(options);
         this.bindCustomEvents();
-        this.delegateVents();
+        this.delegateCustomEvents();
     }
 
     add(data) {

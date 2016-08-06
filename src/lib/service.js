@@ -65,7 +65,7 @@ class Service extends Base {
 		this.initialize(options);
 		this.afterInitialize(options);
 		this.bindCustomEvents();
-		this.delegateVents();
+		this.delegateCustomEvents();
 	}
 
 	model(dataset) {

@@ -104,8 +104,8 @@ describe('Complay JS Service', () => {
 			expect(new SomeService().toString().fallback).to.be.undefined;
 			expect(
 				new SomeService()
-					.delegateVents()
-					.undelegateVents()
+					.delegateCustomEvents()
+					.undelegateCustomEvents()
 					.fallback()
 					.commit()
 					.resetRepos()

@@ -40,11 +40,6 @@ describe('Complay JS Component', ()=>{
 			expect(component).to.have.property('dom');
 		});
 
-		it('should have property vent', () => {
-
-			expect(component).to.have.property('vent');
-		});
-
 		it('should have property template', () => {
 
 			expect(component).to.have.property('template');

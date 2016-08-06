@@ -157,7 +157,7 @@ class ApplicationFacade extends Module {
 				}
 
 				// undelegate vents for all
-				inst.undelegateVents();
+				inst.undelegateCustomEvents();
 			});
 			
 			// running false
@@ -225,7 +225,7 @@ class ApplicationFacade extends Module {
 			throw new Error(`Expected Module instance.`);
 		}
 
-		module.delegateVents();
+		module.delegateCustomEvents();
 	}
 
 	initService(module) {
@@ -234,7 +234,7 @@ class ApplicationFacade extends Module {
 			throw new Error(`Expected Service instance.`);
 		}
 
-		module.delegateVents();
+		module.delegateCustomEvents();
 		module.connect();
 
 		if (module.autostart) {
@@ -344,12 +344,12 @@ class ApplicationFacade extends Module {
 					inst.unmount();
 				} else if (module.type === SERVICE_TYPE) {
 					// disconnect if service
-					inst.undelegateVents();	
+					inst.undelegateCustomEvents();	
 					inst.disconnect();
 					inst.destroy();
 				} else {
 					// undelegate vents for all
-					inst.undelegateVents();		
+					inst.undelegateCustomEvents();		
 				}					
 			});
 		});

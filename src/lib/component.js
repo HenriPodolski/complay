@@ -150,7 +150,7 @@ class Component extends Base {
 			this.bindCustomEvents();
 			this.bindEvents();
 			this.delegateEvents();
-			this.delegateVents();
+			this.delegateCustomEvents();
 			this.didMount();
 		}		
 	}
@@ -277,7 +277,7 @@ class Component extends Base {
 	}
 
 	remove() {
-		this.undelegateVents();
+		this.undelegateCustomEvents();
 		this.undelegateEvents();
 		if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
 	}
