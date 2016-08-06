@@ -5,3 +5,6 @@
 [submodule "src/helpers"]
 	path = src/helpers
 	url = git@github.com:complayjs/helpers.git
+[submodule "src/generics"]
+	path = src/generics
+	url = git@github.com:complayjs/generics.git

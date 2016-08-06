@@ -1,12 +1,15 @@
-import Component from './component';
+import Module from './module';
 import {COMPONENT_TYPE} from './types';
+import ensureComplayElementAttributes from '../helpers/dom/ensure-complay-element-attributes';
+import matchesSelector from '../helpers/dom/matches-selector';
 import domNodeArray from '../helpers/dom/dom-node-array';
+import isDomNode from '../helpers/dom/is-dom-node';
 import dasherize from '../helpers/string/dasherize';
 import uniques from '../helpers/array/uniques';
 import arrayFrom from '../helpers/array/from';
 import assign from '../helpers/object/assign';
 
-class ApplicationDomComponent extends Component {
+class ApplicationDomComponent extends Module {
 
 	set elements(moduleOptions) {
 
@@ -38,7 +41,8 @@ class ApplicationDomComponent extends Component {
 		}
 
 		contexts.forEach((ctx) => {
-			elements = Array.from(ctx.querySelectorAll(this.options.moduleSelector));
+            let selector = moduleOptions.selector || this.options.selector;
+			elements = Array.from(ctx.querySelectorAll(selector));
 			this._newElements = elements;
 			this._elements = uniques(this._elements.concat(elements));
 		});
@@ -55,7 +59,24 @@ class ApplicationDomComponent extends Component {
 
 	constructor(options = {}) {
 
+        options.context = options.context || document;
+
 		super(options);
+
+        this.options.selector = options.selector || `[data-js-component*="${this.dashedName}"]`;
+        this.options.dataAttributeName = options.dataAttributeName = `${this.dashedName}`;
+
+        this.selector = this.options.selector;
+        this.componentMappingAttribute = `data-js-component`;
+
+        if (this.selector.indexOf('[data-') === 0) {
+            this.componentMappingAttribute = this.selector.replace(/^(\[)([a-zA-Z-_]+)(.*])$/, '$2');
+        }
+
+        ensureComplayElementAttributes(options, 'jsComplayApplication');
+
+        this.onAddedNodes = this.onAddedNodes.bind(this);
+        this.onRemovedNodes = this.onRemovedNodes.bind(this);
 
 		if (options.observe) {
 			this.observe(options);
@@ -65,17 +86,19 @@ class ApplicationDomComponent extends Component {
 	startComponents(item, options) {
 		let elementArray = [];
 		let instances = [];
+        let isElement = isDomNode(options.el)
 
 		// handle es5 extends and name property
 		if ((!item.name || item.name === 'child') && item.prototype._name) {
 			item.es5name = item.prototype._name;
 		}
 
-		elementArray = domNodeArray(options.el);
-
-		if (elementArray.length === 0) {
-
-			this.elements = options;
+        if (isElement) {
+            // if options.el then this is limited to this element
+            elementArray = domNodeArray(options.el);
+        } else {
+            // use data-attribute js class mapping
+			this.elements = Object.assign({}, options);
 			elementArray = this.newElements;
 		}
 
@@ -92,14 +115,17 @@ class ApplicationDomComponent extends Component {
 	}
 
 	startComponent(item, options, domNode) {
+
 		let name = item.es5name || item.name;
 		let itemInstance;
-		let moduleAttribute = domNode.getAttribute(this.moduleAttribute);
+		let componentMappingNames = domNode.getAttribute(this.componentMappingAttribute);
+        let isElement = isDomNode(domNode);
+        let hasSelector = options.selector && matchesSelector(domNode, options.selector);
+		let isComponentClassDataSelector = !hasSelector && componentMappingNames && name && componentMappingNames.indexOf(dasherize(name)) !== -1;
 
-		if (name && moduleAttribute && moduleAttribute.indexOf(dasherize(name)) !== -1) {
+		if (isElement && (hasSelector || isComponentClassDataSelector)) {
 			options.el = domNode;
 			options.app = options.app || this.app;
-			options.moduleSelector = options.moduleSelector || this.options.moduleSelector;
 
 			itemInstance = new item(options);
 		}
@@ -129,14 +155,8 @@ class ApplicationDomComponent extends Component {
 			this.observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
 					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-
-						console.log(mutation.addedNodes);
-
 						this.onAddedNodes(mutation.addedNodes);
 					} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-
-						console.log(mutation.removedNodes);
-
 						this.onRemovedNodes(mutation.removedNodes);
 					}
 				});
@@ -146,16 +166,9 @@ class ApplicationDomComponent extends Component {
 		} else {
 			
 			// @todo: needs test in IE9 & IE10
-			
-			this.onAddedNodesCallback = (e) => { 
-				this.onAddedNodes(e.target);
-			};
-			this.onRemovedNodesCallback = (e) => {
-				this.onRemovedNodes(e.target);
-			};
 
-			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodesCallback, false);
-			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodesCallback, false);
+			observedNode.addEventListener('DOMNodeInserted', this.onAddedNodes, false);
+			observedNode.addEventListener('DOMNodeRemoved', this.onRemovedNodes, false);
 		}		
 	}
 
@@ -165,14 +178,11 @@ class ApplicationDomComponent extends Component {
 
 			let mod = item.module;
 			
-			domNodeArray(addedNodes).forEach((ctx) => {	
+			domNodeArray(addedNodes).forEach((ctx) => {
 
-				console.log('CONTEXT', ctx);
-
-				if (ctx.nodeType === Node.ELEMENT_NODE && this.matchesSelector(ctx, this.options.moduleSelector)) {
-					this.app.startComponent(mod, {context: ctx.parentElement});
-				} else if (ctx.nodeType === Node.ELEMENT_NODE) {
-					this.app.startComponent(mod, {context: ctx});
+				if (isDomNode(ctx)) {
+                    ctx = ctx.parentElement || ctx;
+					this.app.startComponent(mod, Object.assign(item.options || {}, {context: ctx}));
 				}
 			});			
 		});		
@@ -183,18 +193,11 @@ class ApplicationDomComponent extends Component {
 		let componentRegistryItems = this.app.findMatchingRegistryItems(COMPONENT_TYPE);
 		let componentNodes = [];
 
-		domNodeArray(removedNodes).forEach((node) => {	
-			// push outermost if module
-			if (this.matchesSelector(node, this.options.moduleSelector)) {
-				componentNodes.push(node);
-			}
+		domNodeArray(removedNodes).forEach((node) => {
 
-			// push children if module
-			domNodeArray(node.querySelectorAll(this.options.moduleSelector)).forEach((moduleEl) => {
-				if (this.matchesSelector(moduleEl, this.options.moduleSelector)) {
-					componentNodes.push(moduleEl);
-				}
-			});
+			if (isDomNode(node)) {
+                componentNodes.push(node);
+			}
 		});
 
 		// iterate over component registry items
@@ -206,6 +209,11 @@ class ApplicationDomComponent extends Component {
 				if (componentNodes.indexOf(inst.el) > -1) {
 					this.app.destroy(inst);
 				}
+
+                // remove references to cached dom nodes
+                this._elements = this._elements.filter((referenceEl) => {
+                    return inst.el !== referenceEl;
+                })
 			});
 		});		
 	}
@@ -215,8 +223,8 @@ class ApplicationDomComponent extends Component {
 			this.observer.disconnect();
 		} else {
 			let observedNode = this.options.context || document.body;
-			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodesCallback);
-			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodesCallback);
+			observedNode.removeEventListener("DOMNodeInserted", this.onAddedNodes);
+			observedNode.removeEventListener("DOMNodeRemoved", this.onRemovedNodes);
 		}
 	}
 }

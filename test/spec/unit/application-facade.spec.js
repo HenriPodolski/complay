@@ -141,6 +141,16 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 			expect(application.modules[1].type).to.equal('service');
 			expect(application.modules[2].type).to.equal('component');
 		});
+
+        it('should register modules only once', () => {
+            class SomeModule extends Module {}
+
+            application.start(SomeModule);
+            application.start(SomeModule);
+            application.start({module: SomeModule}, {module: SomeModule});
+
+            expect(application.modules.length).to.equal(1);
+        });
 	});
 
 	describe('Start/Stop', ()=> {
@@ -184,6 +194,35 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 			application.destroy(SomeModule);
 
 			expect(application.SomeMod).to.be.not.ok;
+		});
+
+		it('should autostart modules when option autostart is passed', () => {
+			class SomeModule extends Module {}
+
+			application.start({module: SomeModule, options: {autostart: true}});
+
+			expect(application._modules[0].autostart).to.be.ok;
+		});
+
+		it('should autostart services when option autostart is passed', () => {
+			class SomeService extends Service {}
+
+			application.start({service: SomeService, options: {autostart: true}});
+
+			expect(application._modules[0].autostart).to.be.ok;
+		});
+
+		it('should autostart components when option autostart is passed', () => {
+
+			let domContext = document.createElement('div');
+			domContext.innerHTML = '<div data-js-component="some-component"></div>';
+			let appWithContext = new Application({AppComponent: ApplicationDomComponent, context: domContext});
+
+			class SomeComponent extends Component {}
+
+			appWithContext.start({component: SomeComponent, options: {autostart: true}});
+
+			expect(appWithContext._modules[0].autostart).to.be.ok;
 		});
 
 		// it('should fetch all resources when service module with option autostart is passed', () => {
@@ -311,7 +350,7 @@ describe('Complay JS Application Facade with Application DOM Component', ()=>{
 			application = new Application({
 				AppComponent: ApplicationDomComponent,
 				context: appContainer,
-				moduleSelector: '[data-js-module]'
+				selector: '[data-js-module]'
 			});
 			
 			let componentFirst = application.start({module: ComponentFirst, options: {autostart: true}});

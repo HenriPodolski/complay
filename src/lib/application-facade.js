@@ -33,16 +33,22 @@ class ApplicationFacade extends Module {
 		this.dom = options.dom;
 		this.template = options.template;
 
+        this.start = this.start.bind(this);
+        this.stop = this.stop.bind(this);
+        this.destroy = this.destroy.bind(this);
+
 		if (options.AppComponent) {
 			this.appComponent = new options.AppComponent(
 				Object.assign(options, {
 					app: this,
 					context: options.context || document,
-					moduleSelector: options.moduleSelector || '[data-js-component]'
+					selector: options.selector || '[data-js-component]'
 				})
-			);	
+			);
 		}		
 
+		// module passed to constructor via modules options
+		// are started on instantiation
 		if (options.modules) {
 			this.start.apply(this, options.modules);
 		}
@@ -151,7 +157,7 @@ class ApplicationFacade extends Module {
 				}
 
 				// undelegate vents for all
-				inst.undelegateVents();
+				inst.undelegateCustomEvents();
 			});
 			
 			// running false
@@ -219,7 +225,7 @@ class ApplicationFacade extends Module {
 			throw new Error(`Expected Module instance.`);
 		}
 
-		module.delegateVents();
+		module.delegateCustomEvents();
 	}
 
 	initService(module) {
@@ -228,7 +234,7 @@ class ApplicationFacade extends Module {
 			throw new Error(`Expected Service instance.`);
 		}
 
-		module.delegateVents();
+		module.delegateCustomEvents();
 		module.connect();
 
 		if (module.autostart) {
@@ -265,6 +271,8 @@ class ApplicationFacade extends Module {
 			if (existingRegistryModuleItem.appName && !this[options.appName] && inst) {
 				this[options.appName] = inst;
 			}
+
+			existingRegistryModuleItem.autostart = !!(inst ? inst.autostart : existingRegistryModuleItem.autostart);
 			
 			// push if instance not exists
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
@@ -275,8 +283,9 @@ class ApplicationFacade extends Module {
 			let registryObject = {
 				type: module.type,
 				module,
+				options,
 				instances: (inst ? [inst] : []),
-				autostart: !!(module.autostart),
+				autostart: !!(inst ? inst.autostart : module.autostart),
 				running: false,
 				uid: module.uid
 			};
@@ -335,13 +344,15 @@ class ApplicationFacade extends Module {
 					inst.unmount();
 				} else if (module.type === SERVICE_TYPE) {
 					// disconnect if service
-					inst.undelegateVents();	
+					inst.unregisterCustomEvents();
 					inst.disconnect();
 					inst.destroy();
 				} else {
 					// undelegate vents for all
-					inst.undelegateVents();		
-				}					
+					inst.unregisterCustomEvents();
+				}
+
+				inst.cleanCustomEvents && inst.cleanCustomEvents();
 			});
 		});
 

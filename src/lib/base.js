@@ -38,12 +38,12 @@ function generateUid(obj) {
 
 class Base {
 
-	set vents(vents) {
-		this._vents = vents;
+	set customEvents(customEvents) {
+		this._customEvents = customEvents;
 	}
 
-	get vents() {
-		return this._vents;
+	get customEvents() {
+		return this._customEvents;
 	}
 	
 	set autostart(bool) {
@@ -78,7 +78,7 @@ class Base {
 		this._uid = uid
 	}	
 
-	constructor(options = {}) {
+	constructor(options) {
 		this.name = generateName(this);
 		this.dashedName = generateDashedName(this);
 		this.uid = generateUid(this);
@@ -89,19 +89,27 @@ class Base {
 			this.app = options.app;
 		}
 
-		this.vents = options.vents || {};		
-
+		this.customEvents = options.customEvents || {};
+		
 		this.autostart = !!(options.autostart);
 
 		if (options.vent) {
 			// could be used standalone
-			this.vent = options.vent(this);
+			options.vent(this);
 		} else if (options.app && options.app.vent) {
 			// or within an application facade
-			this.vent = options.app.vent(options.app);			
+			options.app.vent(options.app);
 		} else {
-			this.vent = defaultConfig.vent(this);
+			defaultConfig.vent(this);
 		}
+	}
+
+	beforeInitialize(options) {
+		// override and call super.beforeInitialize(options)}
+	}
+
+	afterInitialize(options) {
+		// override and call super.afterInitialize(options)}
 	}
 
 	initialize(options) {
@@ -112,51 +120,98 @@ class Base {
 		// override
 	}
 
-	delegateVents() {
+    _executeForCustomEvents(executeCallback, destroy) {
 
-		if (!this.vent) {
-			return;
-		}
+        for (let key in this.customEvents) {
+            if (this.customEvents.hasOwnProperty(key)) {
+                this.customEvents[key].forEach(
+                    (customEventConfig, i) => {
+                        executeCallback(customEventConfig, i);
+                    }
+                );
+            }
+        }
+    }
 
-		for (let vent in this.vents) {
-			if (this.vents.hasOwnProperty(vent)) {
-				let callback = this.vents[vent];
-				
-				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
-					callback = this[callback]
-				} else if(typeof callback !== 'function') {
-					throw new Error('Expected callback method');
-				}
-				
-				this.vent.on(vent, callback, this);
-			}
-		}
+    delegateCustomEvent(eventConfig) {
 
-		return this;
+        let callback = eventConfig.callback;
+
+        if (typeof callback !== 'function' && typeof this[callback] === 'function') {
+            callback = this[callback]
+        } else if(typeof callback !== 'function') {
+            throw new Error('Expected callback method');
+        }
+
+        this.on(eventConfig.eventName, callback, eventConfig.scope || this);
+    }
+
+	delegateCustomEvents() {
+        
+        this._executeForCustomEvents(this.delegateCustomEvent.bind(this));
+
+        return this;
 	}
 
-	undelegateVents() {
+	registerCustomEvent(eventName, callback, delegate = false, scope = this) {
 
-		if (!this.vent) {
-			return;
-		}
+        let eventConfig = {eventName, callback, scope};
 
-		for (let vent in this.vents) {
-			if (this.vents.hasOwnProperty(vent)) {
-				let callback = this.vents[vent];
-				
-				if (typeof callback !== 'function' && typeof this[callback] === 'function') {
-					callback = this[callback]
-				} else if(typeof callback !== 'function') {
-					throw new Error('Expected callback method');
-				}
-				
-				this.vent.off(vent, callback, this);
-			}
-		}
+        this.customEvents[eventName] = this.customEvents[eventName] || [];
+        this.customEvents[eventName].push(eventConfig);
 
-		return this;
+        delegate && this.delegateCustomEvent(eventConfig);
+    }
+
+    undelegateCustomEvent(eventConfig) {
+
+        this.off(eventConfig.eventName, eventConfig.callback);
+    }
+
+	undelegateCustomEvents() {
+
+        this._executeForCustomEvents(this.undelegateCustomEvent.bind(this));
+
+        return this;
 	}
+
+	unregisterCustomEvent(eventName, callback, destroy = false) {
+        this.undelegateCustomEvent({eventName, callback});
+
+        if (destroy) {
+            this._executeForCustomEvents(
+                (eventConfig, i) => {
+                    if (eventName === eventConfig.eventName &&
+                        callback === eventConfig.callback &&
+                        (this.customEvents[eventName] instanceof Array)) {
+
+                        if (this.customEvents[eventName].length === 1) {
+							delete this.customEvents[eventName];
+                        } else {
+							this.customEvents[eventName].splice(i, 1);
+                        }
+                    } else if (eventName === eventConfig.eventName && !callback) {
+                        delete this.customEvents[eventName];
+                    }
+                }
+            );
+        }
+
+        return this;
+    }
+
+    unregisterCustomEvents() {
+        for (let key in this.customEvents) {
+            if (this.customEvents.hasOwnProperty(key)) {
+                this.customEvents[key].forEach(
+                    (customEventConfig, i) => {
+                        this.unregisterCustomEvent(customEventConfig.eventName, customEventConfig.callback, true);
+                    }
+                );
+            }
+        }
+        return this;
+    }
 
 	toString() {
 		return this.uid;

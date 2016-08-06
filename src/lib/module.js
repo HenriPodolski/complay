@@ -15,9 +15,11 @@ class Module extends Base {
 
 		super(options);
 
+		this.beforeInitialize(options);
 		this.initialize(options);
+		this.afterInitialize(options);
 		this.bindCustomEvents();
-		this.delegateVents();
+		this.delegateCustomEvents();
 	}
 }
 
