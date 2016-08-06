@@ -120,13 +120,13 @@ class Base {
 		// override
 	}
 
-    _executeForCustomEvents(executeCallback) {
+    _executeForCustomEvents(executeCallback, destroy) {
 
         for (let key in this.customEvents) {
             if (this.customEvents.hasOwnProperty(key)) {
                 this.customEvents[key].forEach(
-                    (customEventConfig, i, customEventsArray) => {
-                        executeCallback(customEventConfig, i, customEventsArray);
+                    (customEventConfig, i) => {
+                        executeCallback(customEventConfig, i);
                     }
                 );
             }
@@ -197,6 +197,19 @@ class Base {
             );
         }
 
+        return this;
+    }
+
+    unregisterCustomEvents() {
+        for (let key in this.customEvents) {
+            if (this.customEvents.hasOwnProperty(key)) {
+                this.customEvents[key].forEach(
+                    (customEventConfig, i) => {
+                        this.unregisterCustomEvent(customEventConfig.eventName, customEventConfig.callback, true);
+                    }
+                );
+            }
+        }
         return this;
     }
 

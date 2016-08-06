@@ -168,7 +168,8 @@ class Component extends Base {
 			if (this.app && this.app.findMatchingRegistryItems(this).length > 0) {
 				this.app.destroy(this);
 			} else {
-				this.remove();	
+				this.remove();
+				this.cleanCustomEvents && this.cleanCustomEvents();
 			}
 			
 			this.didUnmount();	

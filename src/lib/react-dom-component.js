@@ -45,7 +45,7 @@ class ReactDomComponent extends Base {
         // parse options from markup and merge with existing
         Object.assign(this.options, parseComplayOptions(this.el, this), options);
 
-        this.props = options.props;
+        this.props = options.props || {};
 
         if (options.service) {
             this.props.service = options.service;

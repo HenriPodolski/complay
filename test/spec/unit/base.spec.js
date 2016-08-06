@@ -195,11 +195,15 @@ describe('Complay JS Base', () => {
 
             someBase.undelegateCustomEvents();
             someBase.delegateCustomEvents();
-            console.log(`${someBase}`, someBase.customEvents);
             someBase.trigger('some:event', 5);
             expect(count).to.equal(6);
 
             someBase.undelegateCustomEvents();
+            someBase.trigger('some:event', 6);
+            expect(count).to.equal(6);
+
+            someBase.unregisterCustomEvents();
+            someBase.delegateCustomEvents();
             someBase.trigger('some:event', 6);
             expect(count).to.equal(6);
         });
