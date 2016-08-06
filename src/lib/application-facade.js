@@ -344,13 +344,15 @@ class ApplicationFacade extends Module {
 					inst.unmount();
 				} else if (module.type === SERVICE_TYPE) {
 					// disconnect if service
-					inst.undelegateCustomEvents();	
+					inst.unregisterCustomEvents();
 					inst.disconnect();
 					inst.destroy();
 				} else {
 					// undelegate vents for all
-					inst.undelegateCustomEvents();		
-				}					
+					inst.unregisterCustomEvents();
+				}
+
+				inst.cleanCustomEvents && inst.cleanCustomEvents();
 			});
 		});
 
