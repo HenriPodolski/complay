@@ -1,5 +1,7 @@
-import Component from './component';
+import Module from './module';
 import {COMPONENT_TYPE} from './types';
+import ensureComplayElementAttributes from '../helpers/dom/ensure-complay-element-attributes';
+import matchesSelector from '../helpers/dom/matches-selector';
 import domNodeArray from '../helpers/dom/dom-node-array';
 import isDomNode from '../helpers/dom/is-dom-node';
 import dasherize from '../helpers/string/dasherize';
@@ -7,7 +9,7 @@ import uniques from '../helpers/array/uniques';
 import arrayFrom from '../helpers/array/from';
 import assign from '../helpers/object/assign';
 
-class ApplicationDomComponent extends Component {
+class ApplicationDomComponent extends Module {
 
 	set elements(moduleOptions) {
 
@@ -39,7 +41,8 @@ class ApplicationDomComponent extends Component {
 		}
 
 		contexts.forEach((ctx) => {
-			elements = Array.from(ctx.querySelectorAll(this.options.selector));
+            let selector = moduleOptions.selector || this.options.selector;
+			elements = Array.from(ctx.querySelectorAll(selector));
 			this._newElements = elements;
 			this._elements = uniques(this._elements.concat(elements));
 		});
@@ -56,7 +59,21 @@ class ApplicationDomComponent extends Component {
 
 	constructor(options = {}) {
 
+        options.context = options.context || document;
+
 		super(options);
+
+        this.options.selector = options.selector || `[data-js-component*="${this.dashedName}"]`;
+        this.options.dataAttributeName = options.dataAttributeName = `${this.dashedName}`;
+
+        this.selector = this.options.selector;
+        this.componentMappingAttribute = `data-js-component`;
+
+        if (this.selector.indexOf('[data-') === 0) {
+            this.componentMappingAttribute = this.selector.replace(/^(\[)([a-zA-Z-_]+)(.*])$/, '$2');
+        }
+
+        ensureComplayElementAttributes(options, 'jsComplayApplication');
 
         this.onAddedNodes = this.onAddedNodes.bind(this);
         this.onRemovedNodes = this.onRemovedNodes.bind(this);
@@ -69,16 +86,18 @@ class ApplicationDomComponent extends Component {
 	startComponents(item, options) {
 		let elementArray = [];
 		let instances = [];
+        let isElement = isDomNode(options.el)
 
 		// handle es5 extends and name property
 		if ((!item.name || item.name === 'child') && item.prototype._name) {
 			item.es5name = item.prototype._name;
 		}
 
-		elementArray = domNodeArray(options.el);
-
-		if (elementArray.length === 0) {
-
+        if (isElement) {
+            // if options.el then this is limited to this element
+            elementArray = domNodeArray(options.el);
+        } else {
+            // use data-attribute js class mapping
 			this.elements = Object.assign({}, options);
 			elementArray = this.newElements;
 		}
@@ -100,13 +119,13 @@ class ApplicationDomComponent extends Component {
 		let name = item.es5name || item.name;
 		let itemInstance;
 		let componentMappingNames = domNode.getAttribute(this.componentMappingAttribute);
-		let isElement = isDomNode(options.el);
-		let isComponentClassDataSelector = !isElement && componentMappingNames && name && componentMappingNames.indexOf(dasherize(name)) !== -1;
+        let isElement = isDomNode(domNode);
+        let hasSelector = options.selector && matchesSelector(domNode, options.selector);
+		let isComponentClassDataSelector = !hasSelector && componentMappingNames && name && componentMappingNames.indexOf(dasherize(name)) !== -1;
 
-		if (isComponentClassDataSelector || isElement) {
+		if (isElement && (hasSelector || isComponentClassDataSelector)) {
 			options.el = domNode;
 			options.app = options.app || this.app;
-			options.selector = options.selector || this.options.selector;
 
 			itemInstance = new item(options);
 		}
@@ -136,14 +155,8 @@ class ApplicationDomComponent extends Component {
 			this.observer = new MutationObserver((mutations) => {
 				mutations.forEach((mutation) => {
 					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-
-						console.log(mutation.addedNodes);
-
 						this.onAddedNodes(mutation.addedNodes);
 					} else if(mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-
-						console.log(mutation.removedNodes);
-
 						this.onRemovedNodes(mutation.removedNodes);
 					}
 				});
@@ -196,6 +209,11 @@ class ApplicationDomComponent extends Component {
 				if (componentNodes.indexOf(inst.el) > -1) {
 					this.app.destroy(inst);
 				}
+
+                // remove references to cached dom nodes
+                this._elements = this._elements.filter((referenceEl) => {
+                    return inst.el !== referenceEl;
+                })
 			});
 		});		
 	}
