@@ -21,6 +21,9 @@ class Model extends Base {
         this.getters = {};
         this.setters = {};
 
+
+        this.beforeInitialize(options);
+
         if (options.data) {
             this.add(options.data);
         }
@@ -32,7 +35,6 @@ class Model extends Base {
             value: this
         });
 
-        this.beforeInitialize(options);
         this.initialize(options);
         this.afterInitialize(options);
         this.bindCustomEvents();
@@ -55,15 +57,19 @@ class Model extends Base {
             if (data.hasOwnProperty(key) && key
                 && typeof this.data[key] === 'undefined' && key !== 'data') {
 
-                this.getters[`${key}`] = this.defaultGet(key);
-                this.setters[`${key}`] = this.defaultSet(key);
+                this.getters[`${key}`] = this.defaultGetter.call(this, key);
+                this.setters[`${key}`] = this.defaultSetter.call(this, key);
 
                 Object.defineProperty(this.data, key, {
                     configurable: true,
                     enumerable: true,
                     writeable: true,
-                    get: this.getters[`${key}`],
-                    set: this.setters[`${key}`]
+                    get: () => {
+                        return this.getters[`${key}`]();
+                    },
+                    set: (val) => {
+                        this.setters[`${key}`](val);
+                    }
                 });
 
                 if (typeof data[key] !== 'undefined') {
@@ -81,13 +87,17 @@ class Model extends Base {
         return this;
     }
 
-    defaultGet(key) {
+    storage(key) {
+        return this._storage[`__${key}`];
+    }
+
+    defaultGetter(key) {
         return () => {
-            return this._storage[`__${key}`];
+            return this.storage(key);
         };
     }
 
-    defaultSet(key) {
+    defaultSetter(key) {
         return (val) => {
             let isInvalid;
             let methodKey = key.charAt(0).toUpperCase() + key.slice(1);
@@ -110,12 +120,12 @@ class Model extends Base {
         }
     }
 
-    overrideGet(override) {
-        this.getters[`${override.key}`] = override.method;
+    overrideGetter(key, method) {
+        this.getters[`${key}`] = method;
     }
 
-    overrideSet(override) {
-        this.setters[`${override.key}`] = override.method;
+    overrideSetter(key, method) {
+        this.setters[`${key}`] = method;
     }
 
     update(data) {
