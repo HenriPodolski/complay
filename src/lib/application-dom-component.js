@@ -86,17 +86,26 @@ class ApplicationDomComponent extends Module {
 	startComponents(item, options) {
 		let elementArray = [];
 		let instances = [];
-        let isElement = isDomNode(options.el)
+        let isElement = isDomNode(options.el);
 
-		// handle es5 extends and name property
-		if ((!item.name || item.name === 'child') && item.prototype._name) {
-			item.es5name = item.prototype._name;
-		}
+        if (item.prototype._name) {
+            item.identifier = item.prototype._name;
+        } else {
+            item.identifier = item.name;
+        }
 
         if (isElement) {
-            // if options.el then this is limited to this element
+			// if options.el then this is limited to this element
             elementArray = domNodeArray(options.el);
-        } else {
+        }
+
+        if (!options.selector && this.options.selector && item.identifier) {
+            let componentDataAttribute = this.options.selector.replace(/^(\[)([a-zA-Z-_]+)(.*])$/, '$2');
+
+            options.selector = `[${componentDataAttribute}*="${dasherize(item.identifier)}"]`;
+        }
+
+        if (options.selector) {
             // use data-attribute js class mapping
 			this.elements = Object.assign({}, options);
 			elementArray = this.newElements;
@@ -116,7 +125,7 @@ class ApplicationDomComponent extends Module {
 
 	startComponent(item, options, domNode) {
 
-		let name = item.es5name || item.name;
+		let name = item.identifier;
 		let itemInstance;
 		let componentMappingNames = domNode.getAttribute(this.componentMappingAttribute);
         let isElement = isDomNode(domNode);
@@ -182,7 +191,7 @@ class ApplicationDomComponent extends Module {
 
 				if (isDomNode(ctx)) {
                     ctx = ctx.parentElement || ctx;
-					this.app.startComponent(mod, Object.assign(item.options || {}, {context: ctx}));
+					this.app.startComponent(mod, Object.assign(item.options || {}, {context: ctx}), true);
 				}
 			});			
 		});		

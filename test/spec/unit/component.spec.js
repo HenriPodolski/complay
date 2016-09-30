@@ -49,6 +49,12 @@ describe('Complay JS Component', ()=>{
 	describe('DOM capabilities', ()=>{
 
 		beforeEach(() => {
+			// clear document
+			Array.from(document.querySelectorAll('[data-js-component]')).forEach((comp) => {
+				let parent = comp.parentElement;
+				parent.removeChild(comp);
+			})
+
 			component = new Component({
 				dom: DomSelector,
 				vent: Vent,
