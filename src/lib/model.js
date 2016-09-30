@@ -18,6 +18,11 @@ class Model extends Base {
         
         this.data = {};
         this._storage = {};
+        this.getters = {};
+        this.setters = {};
+
+
+        this.beforeInitialize(options);
 
         if (options.data) {
             this.add(options.data);
@@ -30,7 +35,6 @@ class Model extends Base {
             value: this
         });
 
-        this.beforeInitialize(options);
         this.initialize(options);
         this.afterInitialize(options);
         this.bindCustomEvents();
@@ -53,32 +57,18 @@ class Model extends Base {
             if (data.hasOwnProperty(key) && key
                 && typeof this.data[key] === 'undefined' && key !== 'data') {
 
+                this.getters[`${key}`] = this.defaultGetter.call(this, key);
+                this.setters[`${key}`] = this.defaultSetter.call(this, key);
+
                 Object.defineProperty(this.data, key, {
                     configurable: true,
                     enumerable: true,
-                    writeable: false,
+                    writeable: true,
                     get: () => {
-                        return this._storage[`__${key}`];
+                        return this.getters[`${key}`]();
                     },
                     set: (val) => {
-                        let isInvalid;
-                        let methodKey = key.charAt(0).toUpperCase() + key.slice(1);
-
-                        if (typeof this[`validate${methodKey}`] === 'function') {
-                            isInvalid = !(this[`validate${methodKey}`](val));
-                        }
-
-                        if (!isInvalid) {
-                            let oldVal = this._storage[`__${key}`];
-                            this._storage[`__${key}`] = val;
-                            // console.log(`set change trigger ${key}`, this, 'change', key);
-                            this.trigger(`change`, {model: this, key, val, oldVal});
-                            this.trigger(`change:${key}`, {model: this, val, oldVal});
-                        } else {
-                            // console.log('set invalid trigger', this, 'change', key);
-                            this.trigger(`invalid`, {model: this, key, val, isInvalid});
-                            this.trigger(`invalid:${key}`, {model: this, val, isInvalid});
-                        }
+                        this.setters[`${key}`](val);
                     }
                 });
 
@@ -95,6 +85,47 @@ class Model extends Base {
         }
 
         return this;
+    }
+
+    storage(key) {
+        return this._storage[`__${key}`];
+    }
+
+    defaultGetter(key) {
+        return () => {
+            return this.storage(key);
+        };
+    }
+
+    defaultSetter(key) {
+        return (val) => {
+            let isInvalid;
+            let methodKey = key.charAt(0).toUpperCase() + key.slice(1);
+
+            if (typeof this[`validate${methodKey}`] === 'function') {
+                isInvalid = !(this[`validate${methodKey}`](val));
+            }
+
+            if (!isInvalid) {
+                let oldVal = this._storage[`__${key}`];
+                this._storage[`__${key}`] = val;
+                // console.log(`set change trigger ${key}`, this, 'change', key);
+                this.trigger(`change`, {model: this, key, val, oldVal});
+                this.trigger(`change:${key}`, {model: this, val, oldVal});
+            } else {
+                // console.log('set invalid trigger', this, 'change', key);
+                this.trigger(`invalid`, {model: this, key, val, isInvalid});
+                this.trigger(`invalid:${key}`, {model: this, val, isInvalid});
+            }
+        }
+    }
+
+    overrideGetter(key, method) {
+        this.getters[`${key}`] = method;
+    }
+
+    overrideSetter(key, method) {
+        this.setters[`${key}`] = method;
     }
 
     update(data) {

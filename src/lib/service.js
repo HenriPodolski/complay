@@ -70,7 +70,7 @@ class Service extends Base {
 
 	model(dataset) {
 		if (this.Model && typeof dataset === 'object' && dataset !== null) {
-			dataset = new this.Model({data: dataset});
+			dataset = new this.Model(Object.assign(this.options, {data: dataset}));
 		}
 
 		return dataset;
