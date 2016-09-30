@@ -200,8 +200,6 @@ class ApplicationFacade extends Module {
 
 		options.appComponent = this.appComponent;
 
-		console.log(`${this}.startComponent()`, item, options, isMutation);
-
 		// register item without instances
 		// for later use, if no dom nodes
 		// are present yet
