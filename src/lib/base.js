@@ -12,8 +12,8 @@ let root = getGlobalObject();
 
 function generateName(obj) {
 		
-	if (obj._name) {
-		return obj._name;
+	if (obj.identifier) {
+		return obj.identifier;
 	}
 
 	return extractObjectName(obj);
@@ -55,11 +55,11 @@ class Base {
 	}
 
 	set name(name) {
-		this._name = name;
+		this.identifier = name;
 	}
 
 	get name() {
-		return this._name;
+		return this.identifier;
 	}
 
 	set dashedName(dashedName) {

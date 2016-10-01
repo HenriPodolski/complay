@@ -47,25 +47,12 @@ class ReactDomComponent extends Base {
 
         this.props = options.props || {};
 
-        if (options.service) {
-            this.props.service = options.service;
-        }
-
-        if (options.viewModel) {
-            this.props.viewModel = options.viewModel;
-        }
-
-        if (options.model) {
-            this.props.model = options.model;
-        }
-
-        if (options.appComponent) {
-            this.props.appComponent = options.appComponent;
-        }
-
-        if (options.reactComponent) {
-            this.reactComponent = options.reactComponent;
-        }
+        this.props.service = this.props.service || options.service;
+        this.props.viewModel = this.props.viewModel || options.viewModel;
+        this.props.model = this.props.model || options.model;
+        this.props.appComponent = this.props.appComponent || options.appComponent;
+        this.props.app = this.props.app || options.app;
+        this.reactComponent = options.reactComponent;
     }
 
     willMount() {

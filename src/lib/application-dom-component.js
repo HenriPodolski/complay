@@ -88,8 +88,8 @@ class ApplicationDomComponent extends Module {
 		let instances = [];
         let isElement = isDomNode(options.el);
 
-        if (item.prototype._name) {
-            item.identifier = item.prototype._name;
+        if (item.prototype.identifier) {
+            item.identifier = item.prototype.identifier;
         } else {
             item.identifier = item.name;
         }
@@ -191,7 +191,7 @@ class ApplicationDomComponent extends Module {
 
 				if (isDomNode(ctx)) {
                     ctx = ctx.parentElement || ctx;
-					this.app.startComponent(mod, Object.assign(item.options || {}, {context: ctx}), true);
+					this.app.startComponent(mod, Object.assign(item.options || {}, {context: ctx}));
 				}
 			});			
 		});		

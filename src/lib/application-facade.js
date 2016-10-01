@@ -196,14 +196,14 @@ class ApplicationFacade extends Module {
 		this.register(item, itemInstance, options);
 	}
 
-	startComponent(item, options, isMutation = false) {
+	startComponent(item, options) {
 
 		options.appComponent = this.appComponent;
 
 		// register item without instances
 		// for later use, if no dom nodes
 		// are present yet
-		!isMutation && this.register(item, null, options);
+		this.register(item, null, options);
 
 		this.appComponent.startComponents(item, options).forEach((itemInstance) => {
 			this.initComponent(itemInstance);
