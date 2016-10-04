@@ -21,7 +21,7 @@
     "test": "karma start --single-run --no-auto-watch karma.config.production.js",
     "tdd": "karma start karma.config.js",
     "build": "n-clean lib && n-clean extensions && n-clean helpers && npm shrinkwrap --dev && npm run build-all",
-    "build-all": "npm run build-babel && npm run build-prebuild",
+    "build-all": "npm run build-babel && npm run build-prebuild && npm run build-node",
     "build-babel": "npm run build-babel-complay && npm run build-babel-config && npm run build-babel-lib && npm run build-babel-helpers && npm run build-babel-extensions && npm run build-babel-generics",
     "build-babel-complay": "babel src/complay.js -s --out-file ./complay.js",
     "build-babel-config": "babel src/default-config.js -s --out-file ./default-config.js",
@@ -29,6 +29,7 @@
     "build-babel-helpers": "babel src/helpers -s --extensions .js --out-dir helpers",
     "build-babel-extensions": "babel src/extensions -s --extensions .js --out-dir extensions",
     "build-babel-generics": "babel src/generics -s --extensions .js --out-dir generics",
+    "build-node": "webpack --config webpack.config.node.js",
     "build-prebuild": "webpack --config webpack.config.production.js",
     "lint": "eslint ."
   },

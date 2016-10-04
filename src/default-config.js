@@ -3,8 +3,8 @@ import Vent from './extensions/vent/vent.js';
 
 const defaultConfig = {
 	vent: Vent,
-	dom: Fallback('dom'),
-	template: Fallback('template')
-}
+	dom: typeof Fallback === 'function' && Fallback('dom'),
+	template: typeof Fallback === 'function' && Fallback('template')
+};
 
 export default defaultConfig;
