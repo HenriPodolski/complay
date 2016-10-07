@@ -1,8 +1,9 @@
 import Module from './module';
-import {MODULE_TYPE, SERVICE_TYPE, COMPONENT_TYPE} from './types';
+import {MODULE_TYPE, SERVICE_TYPE, COMPONENT_TYPE, MODEL_TYPE, CONTROLLER_TYPE, ROUTER_TYPE} from './types';
 import getGlobalObject from '../helpers/environment/get-global-object';
 import assign from '../helpers/object/assign';
 
+const types = [MODULE_TYPE, SERVICE_TYPE, COMPONENT_TYPE, MODEL_TYPE, CONTROLLER_TYPE, ROUTER_TYPE];
 let root = getGlobalObject();
 
 class ApplicationFacade extends Module {
@@ -115,7 +116,7 @@ class ApplicationFacade extends Module {
 		let options = {};
 		let optionsKeyNames = ['setup', 'config', 'options'];
 		let optionsKey;
-		let moduleKeyNames = [MODULE_TYPE, SERVICE_TYPE, COMPONENT_TYPE];
+		let moduleKeyNames = types;
 		let moduleKey;
 
 		if (Object.getPrototypeOf(item) === Object.prototype) {
@@ -169,15 +170,17 @@ class ApplicationFacade extends Module {
 
 		options.app = options.app || this;
 
-		if (item.type === COMPONENT_TYPE) {
+		let type = item.type;
+
+		if (type === COMPONENT_TYPE) {
 			this.startComponent(item, options);
-		} else if(item.type === SERVICE_TYPE) {
+		} else if(type === SERVICE_TYPE) {
 			this.startService(item, options);
-		} else if(item.type === MODULE_TYPE) {
+		} else if((new RegExp(`${MODULE_TYPE}|${MODEL_TYPE}|${CONTROLLER_TYPE}|${ROUTER_TYPE}`)).test(type)) {
 			this.startModule(item, options);
 		} else {
 			throw new Error(`Expected Module of type 
-				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
+				${types.join(', ')}.
 				Module of type ${item.type} is not allowed.`);
 		}
 
@@ -221,8 +224,10 @@ class ApplicationFacade extends Module {
 
 	initModule(module) {
 
-		if (module.type !== MODULE_TYPE) {
-			throw new Error(`Expected Module instance.`);
+		let type = module.type;
+
+		if (!(new RegExp(`${MODULE_TYPE}|${MODEL_TYPE}|${CONTROLLER_TYPE}|${ROUTER_TYPE}`)).test(type)) {
+			throw new Error(`Expected instance of type ${MODULE_TYPE},${MODEL_TYPE},${CONTROLLER_TYPE} or ${ROUTER_TYPE}.`);
 		}
 
 		module.delegateCustomEvents();
@@ -278,7 +283,7 @@ class ApplicationFacade extends Module {
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
 				this._modules[index].instances.push(inst);	
 			}			
-		} else if ([SERVICE_TYPE, COMPONENT_TYPE, MODULE_TYPE].indexOf(module.type) > -1) {
+		} else if (types.indexOf(module.type) > -1) {
 
 			let registryObject = {
 				type: module.type,
@@ -299,7 +304,7 @@ class ApplicationFacade extends Module {
 			this._modules.push(registryObject);
 		} else {
 			console.error(`Expected Module of type 
-				${COMPONENT_TYPE}, ${SERVICE_TYPE} or ${MODULE_TYPE}, 
+				${types.join(', ')}.
 				Module of type ${module.type} cannot be registered.`);
 		}
 	}
