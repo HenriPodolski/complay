@@ -3,6 +3,7 @@ import Module from './lib/module';
 import Model from './lib/model';
 import Service from './lib/service';
 import ApplicationFacade from './lib/application-facade';
+import Controller from './lib/controller';
 import Plite from 'plite';
 
 let root = getGlobalObject();
@@ -12,5 +13,5 @@ let root = getGlobalObject();
 
 export {
     Module, Model, Service,
-    ApplicationFacade
+    ApplicationFacade, Controller
 };

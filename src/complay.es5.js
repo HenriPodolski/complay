@@ -4,6 +4,7 @@ import Module from './lib/module';
 import Model from './lib/model';
 import Service from './lib/service';
 import Component from './lib/component';
+import Controller from './lib/controller';
 import ApplicationFacade from './lib/application-facade';
 import ApplicationDomComponent from './lib/application-dom-component';
 import Plite from 'plite';
@@ -31,6 +32,9 @@ Complay.Service.extend = extend;
 // export Component Class
 Complay.Component = Component;
 Complay.Component.extend = extend;
+// export Component Class
+Complay.Controller = Controller;
+Complay.Controller.extend = extend;
 
 // replace or create in global namespace
 root.Complay = Complay;

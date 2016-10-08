@@ -281,7 +281,7 @@ class ApplicationFacade extends Module {
 			
 			// push if instance not exists
 			if (inst && this._modules[index].instances.indexOf(inst) === -1) {
-				this._modules[index].instances.push(inst);	
+				this._modules[index].instances.push(inst);
 			}			
 		} else if (types.indexOf(module.type) > -1) {
 
@@ -290,6 +290,9 @@ class ApplicationFacade extends Module {
 				module,
 				options,
 				instances: (inst ? [inst] : []),
+				get instance() {
+					return this.instances[this.instances.length - 1]
+				},
 				autostart: !!(inst ? inst.autostart : module.autostart),
 				running: false,
 				uid: module.uid

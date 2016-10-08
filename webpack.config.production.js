@@ -52,7 +52,7 @@ module.exports = {
     library: 'complay',
     libraryTarget: 'umd',
     umdNamedDefine: true,
-    filename: '[name].node.js'
+    filename: '[name].js'
   },
   resolve: {
     extensions: ['', '.js', '.jsx']
