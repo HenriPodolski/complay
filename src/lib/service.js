@@ -249,13 +249,18 @@ class Service extends Base {
 	/**
 	 * @name merge
 	 */
-	merge(data) {
+	merge(data, currentIndex, dataLength) {
 
 		if (isArrayLike(data)) {
-			Array.from(data).forEach((item) => this.merge(item));
+			let dataArray = Array.from(data);
+			dataArray.forEach((item, i) => this.merge(item, i, dataArray.length - 1));
 			return;
 		} else if(data) {
 			this.add(data);
+		}
+
+		if (isNaN(currentIndex) || currentIndex === dataLength) {
+			this.trigger('merge', this);
 		}
 
 		return this;
