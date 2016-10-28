@@ -78,12 +78,12 @@ class Base {
 		this._uid = uid
 	}	
 
-	constructor(options) {
+	constructor(options = {}) {
 		this.name = generateName(this);
 		this.dashedName = generateDashedName(this);
 		this.uid = generateUid(this);
 
-		this.options = options;		
+		this.options = options;
 
 		if (options.app) {
 			this.app = options.app;

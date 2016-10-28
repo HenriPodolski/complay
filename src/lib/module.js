@@ -11,7 +11,7 @@ class Module extends Base {
 		return MODULE_TYPE;
 	}
 
-	constructor(options={}) {
+	constructor(options) {
 
 		super(options);
 

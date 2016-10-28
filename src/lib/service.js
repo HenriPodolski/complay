@@ -7,7 +7,6 @@ import DefaultReducers from '../extensions/services/reducers/default-reducers';
 import assign from '../helpers/object/assign';
 import isArrayLike from '../helpers/array/is-array-like';
 import {SERVICE_TYPE} from './types';
-import namedUid from '../helpers/string/named-uid';
 
 class Service extends Base {
 	
@@ -85,10 +84,10 @@ class Service extends Base {
 	}
 
 	useModel(dataset, returnModel = false) {
-		if (this.Model && !returnModel) {
+		if (this.Model && !returnModel && dataset && dataset.data) {
 			let newDataset = {};
-			for (let key in dataset) {
-				newDataset[key] = dataset[key];
+			for (let key in dataset.data) {
+				newDataset[key] = dataset.data[key];
 			}
 
 			dataset = newDataset;
@@ -190,7 +189,7 @@ class Service extends Base {
 
 	/**
 	 * connect to a service
-	 * @return {mixed} this or promise
+	 * @return {Promise} this or promise
 	 */
 	connect() {
 		
@@ -201,7 +200,7 @@ class Service extends Base {
 
 	/**
 	 * disconnect from service
-	 * @return {mixed} this or promise
+	 * @return {Promise} this or promise
 	 */
 	disconnect() {
 
@@ -230,7 +229,7 @@ class Service extends Base {
 
 	/**
 	 * drop in replacement when working with this object instead of promises
-	 * @return {[type]} [description]
+	 * @return {Service} [description]
 	 */
 	then(cb) {
 		cb(this.toArray());
@@ -239,7 +238,7 @@ class Service extends Base {
 
 	/**
 	 * drop in replacement when working with this object instead of promises
-	 * @return {[type]} [description]
+	 * @return {Service} [description]
 	 */
 	catch() {
 		// never an error, while working with vanilla js
@@ -255,7 +254,7 @@ class Service extends Base {
 			let dataArray = Array.from(data);
 			dataArray.forEach((item, i) => this.merge(item, i, dataArray.length - 1));
 			return;
-		} else if(data) {
+		} else if (data) {
 			this.add(data);
 		}
 
@@ -310,7 +309,7 @@ class Service extends Base {
 	 * @alias  merge
 	 * @param  {mixed} data to be created on this service and on remote when save is called or
 	 *                      param remote is true
-	 * @return {mixed} newly created item or collection
+	 * @return {Service} newly created item or collection
 	 */
 	create(data) {
 		this.reset();
@@ -322,7 +321,7 @@ class Service extends Base {
 	/**
 	 * updates data sets identified by reduce
 	 * @param {mixed} reduce a function or a value or a key for reducing the data set 
-	 * @return {mixed} updated data set
+	 * @return {Service} updated data set
 	 */
 	update(updatesets = []) {
 
@@ -368,7 +367,7 @@ class Service extends Base {
 	 * adds an item
 	 * @param  {mixed} data to be created on this service and on remote when save is called or
 	 *                      param remote is true
-	 * @return {mixed} newly created item or collection
+	 * @return {Service} newly created item or collection
 	 */
 	add(item) {
 		
@@ -380,7 +379,6 @@ class Service extends Base {
 	}
 
 	reset(scope = this) {
-		let i = 0;
 		
 		this.each(scope, (i) => {
 			delete scope[i];
@@ -391,10 +389,8 @@ class Service extends Base {
 		return this;
 	}
 
-	toArray(scope = this, useModels = false) {
+	toArray(useModels = true, scope = this) {
 		let arr = [];
-		let i = 0;
-		let that = this;
 
 		if ((scope instanceof Array)) {
 			return scope;
@@ -409,7 +405,7 @@ class Service extends Base {
 
 	toDataString() {
 
-		return JSON.stringify(this.toArray());
+		return JSON.stringify(this.toArray(false));
 	}
 
 	/**
